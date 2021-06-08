@@ -34,3 +34,8 @@ dependencies {
 
     compile "ch.poole:OpeningHoursParser:0.23.2"
 }
+
+task testCI(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "openinghoursevaluator.Library"
+}

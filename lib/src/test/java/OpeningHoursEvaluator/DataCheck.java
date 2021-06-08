@@ -19,6 +19,11 @@ import ch.poole.openinghoursparser.OpeningHoursParser;
 import ch.poole.openinghoursparser.ParseException;
 
 public class DataCheck {
+    /**
+     * Test if the input time value strings are legal according to the opening hours specification 
+     * (because I'll be using it for developing the evaluator)
+     *    
+     */
     @Test
     public void inputTimeFolderLegalTest() {
         assertTrue(inputTimeFileLegalTest("test-data/input-time/timespan.txt", false));

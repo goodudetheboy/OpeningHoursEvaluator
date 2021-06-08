@@ -21,11 +21,7 @@ import ch.poole.openinghoursparser.ParseException;
 public class DataCheck {
     @Test
     public void inputTimeFolderLegalTest() {
-        File[] files = new File("test-data\\input-time").listFiles();
-        for(File file : files) {
-            assertTrue(inputTimeFileLegalTest(file.getPath(), false));
-        }
-        // fail("Very bad");
+        assertTrue(inputTimeFileLegalTest("test-data/input-time/timespan.txt", false));
     }   
 
     public boolean inputTimeFileLegalTest(String inputFileDir, boolean isStrict) {

@@ -18,24 +18,26 @@ public class InputTest {
      */
     @Test
     public void timespanTest() {
-        evaluateBatchCheck("test-data/oh.txt", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer");
+        evaluateBatchCheckForTimepoint("test-data/oh.txt", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer", "2021-06-09");
     }
 
     @Test
     public void timespanUnitTest() {
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "15:00", false));
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "18:00", false));
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T15:00", false));
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T18:00", true));
     }
 
     /**
      * Batch evaluation for an opening hours file, with input time values and its corresponding correct answers.
      * This is successful if the evaluator return all correct answer
      * 
+     * This is still under construction since I'm moving to LocalDateTime instead
+     * 
      * @param openingHoursFile opening hours file
      * @param inputTimeFile input time value file
      * @param answerFile correct answer corresponding to each input time value
      */
-    public void evaluateBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile) {
+    public void evaluateBatchCheckForTimepoint(String openingHoursFile, String inputTimeFile, String answerFile, String fixedDate) {
         BufferedReader openingHoursReader = null;
         BufferedReader inputTimeReader = null;
         BufferedReader answerReader = null;
@@ -53,7 +55,7 @@ public class InputTest {
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
 
                 for(String answerString : answers) {
-                    String inputTime = inputTimeReader.readLine();
+                    String inputTime = fixedDate + "T" + inputTimeReader.readLine();
                     boolean answer = answerString.equals("1");
                     boolean givenAnswer = evaluate(openingHours, inputTime);
                     if(givenAnswer != answer) {
@@ -94,7 +96,7 @@ public class InputTest {
      * This is used for unit test
      * 
      * @param openingHours opening hours string
-     * @param inputTime input time string
+     * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @param answer correct answer corresponding to input time string
      */
     public boolean evaluateCheck(String openingHours, String inputTime, boolean answer) {
@@ -105,11 +107,11 @@ public class InputTest {
      * Evaluation for an opening hours string, with input time value
      * 
      * @param openingHours opening hours string
-     * @param inputTime input time string
+     * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      */
     public boolean evaluate(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         // non-strict for now
-        return evaluator.checkStatus(inputTime, false);
+        return evaluator.checkStatus(inputTime);
     }
 }

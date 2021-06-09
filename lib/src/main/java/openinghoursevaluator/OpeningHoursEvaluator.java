@@ -1,6 +1,8 @@
 package openinghoursevaluator;
 
 import java.io.ByteArrayInputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import ch.poole.openinghoursparser.OpeningHoursParser;
@@ -30,27 +32,18 @@ public class OpeningHoursEvaluator {
         }
     }
 
-    public boolean checkStatus(String inputTime, boolean isStrict) {
-        OpeningHoursParser inputParser = new OpeningHoursParser(new ByteArrayInputStream(inputTime.getBytes()));
-        List<Rule> inputRules;
-        try {
-            inputRules = inputParser.rules(isStrict);
-        } catch (ParseException e) {
-            e.printStackTrace();
+    /**
+     * Check if avenue is closed or not according to an input time string in accordance with
+     * LocalDateTime parser
+     * 
+     * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
+     * @param isStrict
+     */
+    public boolean checkStatus(String inputTime) {
+        LocalDateTime time = LocalDateTime.parse(inputTime);
+        // to be expanded later for checking weekday, day, month, year
+        if(!checkStatusWithTimePoint(timeInMinute(time))) {
             return false;
-        }
-        
-        for(Rule inputRule : inputRules) {
-            if(inputRule.getTimes() != null) {
-                List<TimeSpan> times = inputRule.getTimes();
-                for(TimeSpan time : times) {
-                    if(time.getEnd() == Integer.MIN_VALUE) {
-                        if(!checkStatusWithTimePoint(time.getStart())) {
-                            return false;
-                        }
-                    }
-                }
-            }
         }
         return true;
     }
@@ -72,5 +65,9 @@ public class OpeningHoursEvaluator {
         }
         // Return false if no TimeSpan rules contains timepoint
         return false;
+    }
+
+    public int timeInMinute(LocalDateTime time) {
+        return time.getHour()*60 + time.getMinute();
     }
 }

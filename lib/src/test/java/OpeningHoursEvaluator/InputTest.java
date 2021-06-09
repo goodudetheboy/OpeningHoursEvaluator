@@ -18,7 +18,7 @@ public class InputTest {
      */
     @Test
     public void timespanTest() {
-        evaluateBatchCheckForTimepoint("test-data/oh.txt", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer", "2021-06-09");
+        evaluateBatchCheckForTimepoint("test-data/oh/timepoint.txt-oh", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer", "2021-06-09");
     }
 
     @Test

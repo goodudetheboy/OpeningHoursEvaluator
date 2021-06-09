@@ -18,7 +18,7 @@ public class InputTest {
      */
     @Test
     public void timespanTest() {
-        evaluateBatchCheckForTimepoint("test-data/oh/timepoint.txt-oh", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer", "2021-06-09");
+        evaluateBatchCheck("test-data/oh/timepoint.txt-oh", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer", "2021-06-09T");
     }
 
     @Test
@@ -36,8 +36,9 @@ public class InputTest {
      * @param openingHoursFile opening hours file
      * @param inputTimeFile input time value file
      * @param answerFile correct answer corresponding to each input time value
+     * @param extra to add during parsing, will be removed later
      */
-    public void evaluateBatchCheckForTimepoint(String openingHoursFile, String inputTimeFile, String answerFile, String fixedDate) {
+    public void evaluateBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile, String extra) {
         BufferedReader openingHoursReader = null;
         BufferedReader inputTimeReader = null;
         BufferedReader answerReader = null;
@@ -55,7 +56,7 @@ public class InputTest {
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
 
                 for(String answerString : answers) {
-                    String inputTime = fixedDate + "T" + inputTimeReader.readLine();
+                    String inputTime = extra + inputTimeReader.readLine();
                     boolean answer = answerString.equals("1");
                     boolean givenAnswer = evaluate(openingHours, inputTime);
                     if(givenAnswer != answer) {

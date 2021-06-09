@@ -11,6 +11,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import org.junit.Test;
@@ -26,10 +28,11 @@ public class DataCheck {
      */
     @Test
     public void inputTimeFolderLegalTest() {
-        assertTrue(inputTimeFileLegalTest("test-data/input-time/timepoint.txt", false));
+        inputTimeFileLegalTest("test-data/input-time/timepoint.txt");
+        // inputTimeFileLegalTest("test-data/input-time/weekday.txt");
     }   
 
-    public boolean inputTimeFileLegalTest(String inputFileDir, boolean isStrict) {
+    public void inputTimeFileLegalTest(String inputFileDir) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFileDir), StandardCharsets.UTF_8));
@@ -37,28 +40,24 @@ public class DataCheck {
             int lineNum = 1;
             while ((data = reader.readLine()) != null) {
                 try {
-                    OpeningHoursParser parser = new OpeningHoursParser(new  ByteArrayInputStream(data.getBytes()));
-                    List<ch.poole.openinghoursparser.Rule> rules = parser.rules(isStrict);
-                } catch (ParseException pex) {
+                    LocalDateTime.parse(data);
+                } catch (DateTimeParseException e) {
                     fail("Input value \"" + data + "\" is illegal in line " + lineNum + " of file " + inputFileDir);
-                    return false;
                 }
                 lineNum++;
             } 
         } catch (FileNotFoundException e) {
+            fail("File not found exception occured");
             e.printStackTrace();
-            return false;
         } catch (IOException ioe) {
+            fail("IO exception occured");
             ioe.printStackTrace();
-            return false;
         } finally {
             try { 
                 reader.close();
             } catch (IOException ioe) {
                 fail("Error closing BufferedReader");
-                return false;
             }
         }
-        return true;
     }
 }

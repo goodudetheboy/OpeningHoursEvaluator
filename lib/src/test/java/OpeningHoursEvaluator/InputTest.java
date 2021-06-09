@@ -1,5 +1,6 @@
 package openinghoursevaluator;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
@@ -17,7 +18,12 @@ public class InputTest {
      */
     @Test
     public void timespanTest() {
-        evaluateBatch("test-data/oh.txt", "test-data/input-time/timespan.txt", "test-data/answer/timespan.txt-answer");
+        evaluateBatchCheck("test-data/oh.txt", "test-data/input-time/timespan.txt", "test-data/answer/timespan.txt-answer");
+    }
+
+    @Test
+    public void timespanUnitTest() {
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "15:00", false));
     }
 
     /**
@@ -28,35 +34,38 @@ public class InputTest {
      * @param inputTimeFile input time value file
      * @param answerFile correct answer corresponding to each input time value
      */
-    public void evaluateBatch(String openingHoursFile, String inputTimeFile, String answerFile) {
+    public void evaluateBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile) {
         BufferedReader openingHoursReader = null;
         BufferedReader inputTimeReader = null;
         BufferedReader answerReader = null;
         boolean hasWrong = false;
         try {
             openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
-            String openingHours;
-            while((openingHours = openingHoursReader.readLine()) != null) {
-                inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
-                answerReader = new BufferedReader(new InputStreamReader(new FileInputStream(answerFile), StandardCharsets.UTF_8));   
-                String inputTime;
-                String[] answers = answerReader.readLine().split("\\s+");
-                int lineNum = 1;
-                while((inputTime = inputTimeReader.readLine()) != null) {
-                    OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours);
-                    boolean answer = answers[lineNum-1].equals("1");
-                    boolean givenAnswer = evaluator.checkStatusWithTime(inputTime);
 
+            answerReader = new BufferedReader(new InputStreamReader(new FileInputStream(answerFile), StandardCharsets.UTF_8));
+            String openingHours;
+            String[] answers;
+            int lineNumOH = 1;
+            while((openingHours = openingHoursReader.readLine())    != null &&
+                  (answers = answerReader.readLine().split("\\s+")) != null) {
+                int lineNumInput = 1;
+                inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
+
+                for(String answerString : answers) {
+                    String inputTime = inputTimeReader.readLine();
+                    boolean answer = answerString.equals("1");
+                    boolean givenAnswer = evaluate(openingHours, inputTime);
                     if(givenAnswer != answer) {
                         hasWrong = true;
-                        System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile);
-                        System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNum);
+                        System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
+                        System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
                         System.out.println("Correct answer: " + answer);
                         System.out.println("Given answer: " + givenAnswer);
                         System.out.println();
                     }
-                    lineNum++;
+                    lineNumInput++;
                 }
+                lineNumOH++;
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -76,14 +85,25 @@ public class InputTest {
 
     /**
      * Evaluation for an opening hours string, with input time value and its corresponding correct answer.
-     * This is successful if the evaluator return all correct answer
+     * This is used for unit test
      * 
      * @param openingHours opening hours string
      * @param inputTime input time string
      * @param answer correct answer corresponding to input time string
      */
-    public boolean evaluate(String openingHours, String inputTime, boolean answer) {
-        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours);
-        return evaluator.checkStatusWithTime(inputTime);
+    public boolean evaluateCheck(String openingHours, String inputTime, boolean answer) {
+        return evaluate(openingHours, inputTime) == answer;
+    }
+
+    /**
+     * Evaluation for an opening hours string, with input time value
+     * 
+     * @param openingHours opening hours string
+     * @param inputTime input time string
+     */
+    public boolean evaluate(String openingHours, String inputTime) {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+        // non-strict for now
+        return evaluator.checkStatus(inputTime, false);
     }
 }

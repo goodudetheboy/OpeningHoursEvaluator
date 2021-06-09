@@ -26,7 +26,7 @@ public class DataCheck {
      */
     @Test
     public void inputTimeFolderLegalTest() {
-        assertTrue(inputTimeFileLegalTest("test-data/input-time/timespan.txt", false));
+        assertTrue(inputTimeFileLegalTest("test-data/input-time/timepoint.txt", false));
     }   
 
     public boolean inputTimeFileLegalTest(String inputFileDir, boolean isStrict) {

@@ -18,12 +18,13 @@ public class InputTest {
      */
     @Test
     public void timespanTest() {
-        evaluateBatchCheck("test-data/oh.txt", "test-data/input-time/timespan.txt", "test-data/answer/timespan.txt-answer");
+        evaluateBatchCheck("test-data/oh.txt", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer");
     }
 
     @Test
     public void timespanUnitTest() {
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "15:00", false));
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "18:00", false));
     }
 
     /**
@@ -67,10 +68,15 @@ public class InputTest {
                 }
                 lineNumOH++;
             }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            fail("Null pointer exception occured, maybe some test cases doesn't have answer yet?");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+            fail("File not found exception occured");
         } catch (IOException ioe) {
             ioe.printStackTrace();
+            fail("IOexception occured");
         } finally {
             try { 
                 openingHoursReader.close();

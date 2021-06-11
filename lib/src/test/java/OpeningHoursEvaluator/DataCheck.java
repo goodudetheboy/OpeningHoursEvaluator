@@ -1,11 +1,8 @@
 package openinghoursevaluator;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,12 +10,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 
 import org.junit.Test;
-
-import ch.poole.openinghoursparser.OpeningHoursParser;
-import ch.poole.openinghoursparser.ParseException;
 
 public class DataCheck {
     /**
@@ -30,7 +23,7 @@ public class DataCheck {
     public void inputTimeFolderLegalTest() {
         inputTimeFileLegalTest("test-data/input-time/timepoint.txt");
         inputTimeFileLegalTest("test-data/input-time/weekday.txt");
-    }   
+    }
 
     public void inputTimeFileLegalTest(String inputFileDir) {
         BufferedReader reader = null;
@@ -59,5 +52,5 @@ public class DataCheck {
                 fail("Error closing BufferedReader");
             }
         }
-    }
+    }  
 }

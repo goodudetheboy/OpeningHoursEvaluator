@@ -25,8 +25,8 @@ public class InputTest {
 
     @Test
     public void timespanUnitTest() {
-        assertFalse(evaluate("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T15:00"));
-        assertTrue(evaluate("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T18:00"));
+        assertFalse(evaluate("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00"));
+        assertTrue(evaluate("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00"));
     }
 
     @Test

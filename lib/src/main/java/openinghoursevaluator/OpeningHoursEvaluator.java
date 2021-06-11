@@ -2,7 +2,6 @@ package openinghoursevaluator;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 import ch.poole.openinghoursparser.OpeningHoursParser;
@@ -19,16 +18,11 @@ import ch.poole.openinghoursparser.TimeSpan;
 public class OpeningHoursEvaluator {    
     /** List to store rules from the parser */
     List<Rule> rules;
+    String openingHours;
 
     /** Constructor with input time string according to opening hours specification */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict) {
-        OpeningHoursParser parser = new OpeningHoursParser(new ByteArrayInputStream(openingHours.getBytes()));
-        try {
-            rules = parser.rules(isStrict);
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return;
-        }
+        this.openingHours = openingHours;
     }
 
     /**
@@ -40,13 +34,9 @@ public class OpeningHoursEvaluator {
      */
     public boolean checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
-        Rule ruleGood = null;
-        // to be expanded later for checking weekday, day, month, year
-        for(Rule rule : rules) {
-            if(ruleGood != null && checkSameDay(ruleGood, rule, time)) ruleGood = null;
-            if(ruleGood == null && checkStatusWithTimePoint(timeInMinute(time), rule)) ruleGood = rule;
-        }
-        return ruleGood != null;
+        Week weekRule = new Week(openingHours, time);
+        System.out.println(weekRule);
+        return weekRule.checkStatus(time);
     }
 
     /**
@@ -76,6 +66,7 @@ public class OpeningHoursEvaluator {
      * 
      * @param rule1 rule 1
      * @param rule2 rule 2
+     * @param time the time and date that needs to be checked
      */
     public boolean checkSameDay(Rule rule1, Rule rule2, LocalDateTime time) {
         return rule1.getDays() == null && rule2.getDays() == null;

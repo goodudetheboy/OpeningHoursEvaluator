@@ -1,5 +1,6 @@
 package openinghoursevaluator;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -24,8 +25,14 @@ public class InputTest {
 
     @Test
     public void timespanUnitTest() {
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T15:00", false));
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T18:00", true));
+        assertFalse(evaluate("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T15:00"));
+        assertTrue(evaluate("00:00-02:00,12:00-14:00,17:00-00:00", "2021-06-09T18:00"));
+    }
+
+    @Test
+    public void extraTest() {
+        assertTrue(evaluate("24/7", "2021-06-09T18:00"));
+        assertFalse(evaluate("24/7; 15:00-17:00", "2021-06-09T18:00"));
     }
 
     /**

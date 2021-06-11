@@ -57,6 +57,7 @@ public class OpeningHoursEvaluator {
      * @param rule input rule
      */
     public boolean checkStatusWithTimePoint(int timepoint, Rule rule) {
+        if(rule.isTwentyfourseven()) return true;
         if(rule.getTimes() != null) {
             List<TimeSpan> times = rule.getTimes();
             for(TimeSpan time : times) {

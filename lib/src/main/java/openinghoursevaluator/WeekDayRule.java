@@ -13,7 +13,7 @@ public class WeekDayRule {
     Rule currentRule;
     List<Rule> fallbackRule; // to be supported later
     WeekDay weekday;
-    List<TimeSpan> openingTimes;
+    List<TimeRange> openingTimes;
 
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
@@ -76,14 +76,16 @@ public class WeekDayRule {
         currentRule = rule;
         clearOpeningHours();
         if(rule.isTwentyfourseven()) {
-            TimeSpan timespan = new TimeSpan();
-            timespan.setStart(0);
-            timespan.setEnd(1440);
-            openingTimes.add(timespan);
+            TimeRange timerange = new TimeRange();
+            timerange.setStart(0);
+            timerange.setEnd(1440);
+            openingTimes.add(timerange);
             return;
         }
-        for(TimeSpan timespan : rule.getTimes()) openingTimes.add(timespan);
+        for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan));
     }
+
+
 
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {
         int start = weekdayInNum(weekDayRange.getStartDay());
@@ -123,7 +125,7 @@ public class WeekDayRule {
      */
     public boolean checkStatus(LocalDateTime inputTime) {
         int timepoint = timeInMinute(inputTime); 
-        for(TimeSpan openingTime : openingTimes) {
+        for(TimeRange openingTime : openingTimes) {
             if(openingTime.getEnd() == Integer.MIN_VALUE && timepoint == openingTime.getStart()) return true;
             else if(timepoint >= openingTime.getStart() && timepoint <= openingTime.getEnd()) return true;
         }
@@ -160,7 +162,7 @@ public class WeekDayRule {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        for(TimeSpan openingTime : openingTimes) {
+        for(TimeRange openingTime : openingTimes) {
             b.append(openingTime.toString());
             b.append(" ");
         }

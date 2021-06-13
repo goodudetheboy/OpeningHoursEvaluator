@@ -68,6 +68,8 @@ public class InputTest {
                     boolean givenAnswer = evaluate(openingHours, inputTime);
                     if(givenAnswer != answer) {
                         hasWrong = true;
+                        print(openingHours, inputTime);
+                        System.out.println();
                         System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
                         System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
                         System.out.println("Correct answer: " + answer);
@@ -119,7 +121,11 @@ public class InputTest {
      */
     public boolean evaluate(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
-        // non-strict for now
         return evaluator.checkStatus(inputTime);
+    }
+
+    public void print(String openingHours, String inputTime) {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+        evaluator.printWithInputTime(inputTime);
     }
 }

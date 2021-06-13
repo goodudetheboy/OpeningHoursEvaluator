@@ -35,7 +35,13 @@ public class OpeningHoursEvaluator {
     public boolean checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         Week weekRule = new Week(openingHours, time);
-        System.out.println(weekRule);
         return weekRule.checkStatus(time);
+    }
+
+    /** Print the Week created by inputTime, to be used for debugging wrong test case */
+    public void printWithInputTime(String inputTime) {
+        LocalDateTime time = LocalDateTime.parse(inputTime);
+        Week weekRule = new Week(openingHours, time);
+        System.out.println(weekRule);
     }
 }

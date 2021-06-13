@@ -5,15 +5,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ch.poole.openinghoursparser.Rule;
+import ch.poole.openinghoursparser.RuleModifier;
 import ch.poole.openinghoursparser.TimeSpan;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
+import ch.poole.openinghoursparser.RuleModifier.Modifier;
 
 public class WeekDayRule {
-    Rule currentRule;
-    List<Rule> fallbackRule; // to be supported later
-    WeekDay weekday;
-    List<TimeRange> openingTimes;
+    Rule        currentRule     = null;
+    List<Rule>  offRule         = null; // TODO: to be supported later
+    List<Rule>  fallbackRule    = null; // TODO: to be supported later
+    WeekDay     weekday         = null;
+    List<TimeRange> openingTimes = null;
 
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
@@ -56,6 +59,7 @@ public class WeekDayRule {
     public WeekDayRule(Rule rule, WeekDay weekday) {
         this.currentRule = rule;
         this.weekday = weekday;
+        this.offRule = new ArrayList<>();
         this.openingTimes = new ArrayList<>();
         build();
     }
@@ -67,14 +71,45 @@ public class WeekDayRule {
 
     /**
      * Build the opening times of this weekday with a rule. This also resets whatever the current affecting rule is to the new rule
-     * and also clears the opening times (if not fallback), if exists
+     * and also clears the opening times (if not fallback), if exists.
      * 
      * @param rule rule to be used in building
      */
-
     public void build(Rule rule) {
-        currentRule = rule;
+        if(rule.getModifier() == null) {
+            buildOpen(rule);
+            return;
+        }
+        switch(rule.getModifier().getModifier()) {
+            case CLOSED:
+            case OFF:
+                offRule.add(rule);
+                for(TimeSpan timespan : rule.getTimes()) {
+                    List<TimeRange> newOpeningTimes = new ArrayList<>();
+                    for(TimeRange openingTime: openingTimes) {
+                        for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan))) {
+                            newOpeningTimes.add(newTime);
+                        }
+                    }
+                    openingTimes = newOpeningTimes;
+                }
+                break;
+            case UNKNOWN:
+                System.out.println("Not supported yet!");
+                return;
+            case OPEN:
+                buildOpen(rule);
+                break;
+            default:
+                
+        }
+    }
+
+    /** Helper function for build() */
+    void buildOpen(Rule rule) {
+        clearAllRules();
         clearOpeningHours();
+        currentRule = rule;
         if(rule.isTwentyfourseven()) {
             TimeRange timerange = new TimeRange();
             timerange.setStart(0);
@@ -84,8 +119,6 @@ public class WeekDayRule {
         }
         for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan));
     }
-
-
 
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {
         int start = weekdayInNum(weekDayRange.getStartDay());
@@ -115,6 +148,11 @@ public class WeekDayRule {
     /** Clear the current opening times in this WeekdayRule */
     public void clearOpeningHours() {
         openingTimes = new ArrayList<>();
+    }
+
+    public void clearAllRules() {
+        currentRule = null;       
+        offRule = new ArrayList<>();
     }
 
     /**
@@ -158,6 +196,7 @@ public class WeekDayRule {
         }
         return ++result;
     }
+
 
     @Override
     public String toString() {

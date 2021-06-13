@@ -1,6 +1,6 @@
 package openinghoursevaluator;
 
-import java.rmi.UnexpectedException;
+import java.util.ArrayList;
 import java.util.List;
 
 import ch.poole.openinghoursparser.TimeSpan;
@@ -10,7 +10,7 @@ import ch.poole.openinghoursparser.TimeSpan;
  * specific uses in WeekDayRule. The difference is TimeSpan can support 48 hours, but
  * TimeRange can only support 24 hours, among other things.
  * 
- * If only the start value is defined, then this TimeRange is considered a TimePoint
+ * If start value is equal to end value, then this TimeRange is considered a TimePoint
  * 
  */
 public class TimeRange {
@@ -34,8 +34,8 @@ public class TimeRange {
      * 
      * @param start timepoint
      */
-    public TimeRange(int start) {
-        setStart(start);
+    public TimeRange(int timepoint) {
+        this(timepoint, timepoint);
     }
 
     // Constructor with TimeSpan, TODO: fix later so it will fit into the stuff
@@ -45,13 +45,14 @@ public class TimeRange {
 
     /**
      * Constructor for creating a TimeRange. If start is less than end, the two will be switched.
+     * If start = end, this will create a TimePoint instead (only start is defined, isTimepoint() will be true)
      * 
      * @param start start time
      * @param end end time
      */
     public TimeRange(int start, int end) {
-        setStart((start < end) ? start : end);
-        setEnd((end > start) ? end : start);
+            setStart((start < end) ? start : end);
+            setEnd((end > start) ? end : start);
     }
 
     public int getStart() {
@@ -64,14 +65,14 @@ public class TimeRange {
 
     public void setStart(int start) {
         if(start > MAX_TIME || start < MIN_TIME) {
-            throw new IllegalArgumentException("Invalid time, please keep time in 24 hours");
+            throw new IllegalArgumentException("Invalid time " + start + ", please keep time in 24 hours");
         }
         this.start = start;
     }
 
     public void setEnd(int end) {
         if(end > MAX_TIME || end < MIN_TIME) {
-            throw new IllegalArgumentException("Invalid time, please keep time in 24 hours");
+            throw new IllegalArgumentException("Invalid time" + end + ", please keep time in 24 hours");
         }
         this.end = end;
     }
@@ -150,22 +151,61 @@ public class TimeRange {
                 break; 
             default: // hopefully this never gets here
         }
-
         TimeRange overlap = new TimeRange();
-        if(startOverlap == endOverlap) {
-            overlap.setStart(startOverlap);
-        } else {
-            overlap.setStart((startOverlap < endOverlap) ? startOverlap : endOverlap);
-            overlap.setEnd((startOverlap > endOverlap) ? startOverlap : endOverlap);
-        }
+        overlap.setStart((startOverlap < endOverlap) ? startOverlap : endOverlap);
+        overlap.setEnd((startOverlap > endOverlap) ? startOverlap : endOverlap);
         return overlap;
     }
 
     /**
-     * @return true if this TimeRange only has start value, or just a point in time, false otherwise
+     * Cut the TimeRange t with the TimeRange other
+     * 
+     * @param t the TimeRange to be cut
+     * @param other the TimeRange that will cut t
+     * @return a List containing TimeRange(s) resulting from the cut
+     */
+    public static List<TimeRange> cut(TimeRange t, TimeRange other) {
+        List<TimeRange> result = new ArrayList<TimeRange>();
+        TimeRange overlap = t.overlapWith(other);
+        if(overlap != null) {
+            TimeRange time1 = null;
+            TimeRange time2 = null;
+            int start = t.getStart();
+            int end = t.getEnd();
+            // TODO: add support for t.isTimePoint too
+            if(overlap.isTimePoint()) {
+                int timepoint = overlap.getTimePoint();
+                if(timepoint == start || timepoint == end) time1 = new TimeRange(timepoint);
+                else {
+                    time1 = new TimeRange(start, timepoint--);
+                    time2 = new TimeRange(timepoint++, end);
+                }
+            } else {
+                int overlapS = overlap.getStart();
+                int overlapE = overlap.getEnd();
+                if(overlapS > start && overlapE < end) {
+                    time1 = new TimeRange(start, overlapS-1);
+                    time2 = new TimeRange(overlapE+1, end);
+                } else if(overlapS == start && overlapE < end) {
+                    time1 = new TimeRange(overlapE+1, end);
+                } else if(overlapE == end && overlapS > start) {
+                    time1 = new TimeRange(start, overlapS-1);
+                }
+            }
+            if(time1 != null) result.add(time1);
+            if(time2 != null) result.add(time2);
+        } else {
+            result.add(t);
+        }
+        return result;
+    }
+
+
+    /**
+     * @return true if this TimeRange only has start value, or just a TimePoint, false otherwise
      */
     public boolean isTimePoint() {
-        return end == UNDEFINED_TIME;
+        return start == end;
     }
 
     public int getTimePoint() {

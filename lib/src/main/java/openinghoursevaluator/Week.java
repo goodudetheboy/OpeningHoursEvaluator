@@ -39,7 +39,9 @@ public class Week {
     public void update(Rule rule) {
         if(rule.isTwentyfourseven() || rule.getDays() == null) {
             for(WeekDay weekday : WeekDay.values()) {
-                weekRule.put(weekday, new WeekDayRule(rule, weekday));
+                WeekDayRule oldRule = weekRule.get(weekday);
+                if(oldRule != null) oldRule.build(rule);
+                else                weekRule.put(weekday, new WeekDayRule(rule, weekday));
             }
         } else {
             for(WeekDayRange weekdays : rule.getDays()) {

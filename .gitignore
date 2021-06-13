@@ -6,4 +6,4 @@ build
 bin
 .vscode
 .classpath
-./lib/src/main/java/openinghoursevaluator/Main.java
+lib/src/main/java/openinghoursevaluator/Main.java

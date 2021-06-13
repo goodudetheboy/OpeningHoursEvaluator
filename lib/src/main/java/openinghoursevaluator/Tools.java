@@ -9,7 +9,7 @@ public class Tools {
      * @param end end value
      * @return whether start <= value <= end
      */
-    public static boolean isBetween(Comparable value, Comparable start, Comparable end) {
+    public static boolean isBetween(Integer value, Integer start, Integer end) {
         return value.compareTo(start) >= 0 && value.compareTo(end) <= 0;
     }
 }

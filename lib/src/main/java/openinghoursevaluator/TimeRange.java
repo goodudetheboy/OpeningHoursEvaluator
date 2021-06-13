@@ -176,7 +176,7 @@ public class TimeRange {
     public String toString() {
         TimeSpan timespan = new TimeSpan();
         timespan.setStart(start);
-        if(isTimePoint()) timespan.setEnd(end);
+        if(!isTimePoint()) timespan.setEnd(end);
         return timespan.toString();
     }
 }

@@ -39,25 +39,28 @@ public class Week {
     public void update(Rule rule) {
         if(rule.isTwentyfourseven() || rule.getDays() == null) {
             for(WeekDay weekday : WeekDay.values()) {
-                WeekDayRule oldRule = weekRule.get(weekday);
-                if(oldRule != null) oldRule.build(rule);
-                else                weekRule.put(weekday, new WeekDayRule(rule, weekday));
+                updateHelper(rule, weekday);
             }
-        } else {
-            for(WeekDayRange weekdays : rule.getDays()) {
-                boolean isGood = false;
-                for(WeekDay weekday : WeekDay.values()) {
-                    if(weekday.equals(weekdays.getStartDay())) {
-                        isGood = true;
-                    }
-                    if(isGood) {
-                        weekRule.put(weekday, new WeekDayRule(rule, weekday));
-                        if(weekday.equals(weekdays.getEndDay())) break;
-                    }
+            return;
+        }
+        for(WeekDayRange weekdays : rule.getDays()) {
+            boolean isGood = false;
+            for(WeekDay weekday : WeekDay.values()) {
+                if(weekday.equals(weekdays.getStartDay())) {
+                    isGood = true;
+                }
+                if(isGood) {
+                    updateHelper(rule, weekday);
+                    if(weekday.equals(weekdays.getEndDay())) break;
                 }
             }
         }
-
+    }
+    /** Helper for update(), check if a rule has been built, if not create new*/
+    void updateHelper(Rule rule, WeekDay weekday) {
+        WeekDayRule oldRule = weekRule.get(weekday);
+        if(oldRule != null) oldRule.build(rule);
+        else                weekRule.put(weekday, new WeekDayRule(rule, weekday));
     }
 
     public boolean checkStatus(LocalDateTime time) {

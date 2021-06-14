@@ -76,6 +76,10 @@ public class WeekDayRule {
      * @param rule rule to be used in building
      */
     public void build(Rule rule) {
+        if(rule.isEmpty()) {
+            // TODO: produce a warning here
+            return;
+        }
         if(rule.getModifier() == null) {
             buildOpen(rule);
             return;
@@ -105,12 +109,13 @@ public class WeekDayRule {
         }
     }
 
-    /** Helper function for build() */
+    /** Helper function for build(), to build opening times only */
     void buildOpen(Rule rule) {
         clearAllRules();
         clearOpeningHours();
         currentRule = rule;
-        if(rule.isTwentyfourseven()) {
+        if( rule.isTwentyfourseven() ||
+            rule.getTimes() == null) {
             TimeRange timerange = new TimeRange();
             timerange.setStart(0);
             timerange.setEnd(1440);
@@ -175,7 +180,7 @@ public class WeekDayRule {
      *  
      * @param time a LocalDateTime instance
     */
-    public int timeInMinute(LocalDateTime time) {
+    int timeInMinute(LocalDateTime time) {
         return time.getHour()*60 + time.getMinute();
     }
 
@@ -186,7 +191,7 @@ public class WeekDayRule {
      * @return 
      */
 
-    public int weekdayInNum(WeekDay weekday) {
+    int weekdayInNum(WeekDay weekday) {
         int result = 0;
         for(WeekDay weekdayEnum : WeekDay.values()) {
             if(weekday.equals(weekdayEnum))
@@ -196,7 +201,6 @@ public class WeekDayRule {
         }
         return ++result;
     }
-
 
     @Override
     public String toString() {

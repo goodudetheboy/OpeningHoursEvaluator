@@ -18,21 +18,21 @@ public class InputTest {
      * Test only for the timespan test (hours and minutes ONLY)
      */
     @Test
-    public void timespanTest() {
+    public void evaluatorTest() {
         evaluateBatchCheck("test-data/oh/timepoint.txt-oh", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer");
         evaluateBatchCheck("test-data/oh/weekday.txt-oh", "test-data/input-time/weekday.txt", "test-data/answer/weekday.txt-answer");
     }
 
     @Test
-    public void timespanUnitTest() {
+    public void unitTest() {
         assertFalse(evaluate("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00"));
         assertTrue(evaluate("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00"));
     }
 
+    /** Used for checking on the spot, convenient during debugging */
     @Test
-    public void extraTest() {
-        assertTrue(evaluate("24/7", "2021-06-09T18:00"));
-        assertFalse(evaluate("24/7; 15:00-17:00", "2021-06-09T18:00"));
+    public void spotCheck() {
+        assertTrue(evaluate("24/7; Sa-Su 00:00-12:00 off; Mo-Fr 08:00-13:00 off", "2021-06-09T18:00"));
     }
 
     /**
@@ -61,7 +61,6 @@ public class InputTest {
                   (answers = answerReader.readLine().split("\\s+")) != null) {
                 int lineNumInput = 1;
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
-
                 for(String answerString : answers) {
                     String inputTime = inputTimeReader.readLine();
                     boolean answer = answerString.equals("1");
@@ -69,7 +68,6 @@ public class InputTest {
                     if(givenAnswer != answer) {
                         hasWrong = true;
                         print(openingHours, inputTime);
-                        System.out.println();
                         System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
                         System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
                         System.out.println("Correct answer: " + answer);

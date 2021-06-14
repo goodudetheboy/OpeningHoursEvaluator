@@ -15,7 +15,7 @@ import ch.poole.openinghoursparser.TimeSpan;
  * 
  *
  */
-public class OpeningHoursEvaluator {    
+public class OpeningHoursEvaluator {
     /** List to store rules from the parser */
     List<Rule> rules;
     String openingHours;
@@ -32,7 +32,7 @@ public class OpeningHoursEvaluator {
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @param isStrict
      */
-    public boolean checkStatus(String inputTime) {
+    public Status checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         Week weekRule = new Week(openingHours, time);
         return weekRule.checkStatus(time);

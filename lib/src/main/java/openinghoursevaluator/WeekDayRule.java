@@ -14,6 +14,7 @@ import ch.poole.openinghoursparser.RuleModifier.Modifier;
 public class WeekDayRule {
     Rule        currentRule     = null;
     List<Rule>  offRule         = null; // TODO: to be supported later
+    List<Rule>  unknownRule     = null;
     List<Rule>  fallbackRule    = null; // TODO: to be supported later
     WeekDay     weekday         = null;
     List<TimeRange> openingTimes = null;
@@ -60,6 +61,7 @@ public class WeekDayRule {
         this.currentRule = rule;
         this.weekday = weekday;
         this.offRule = new ArrayList<>();
+        this.unknownRule = new ArrayList<>();
         this.openingTimes = new ArrayList<>();
         build();
     }
@@ -91,21 +93,30 @@ public class WeekDayRule {
                 for(TimeSpan timespan : rule.getTimes()) {
                     List<TimeRange> newOpeningTimes = new ArrayList<>();
                     for(TimeRange openingTime: openingTimes) {
-                        for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan))) {
+                        for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
                             newOpeningTimes.add(newTime);
                         }
                     }
                     openingTimes = newOpeningTimes;
                 }
-                break;
+                return;
             case UNKNOWN:
-                System.out.println("Not supported yet!");
+                unknownRule.add(rule);
+                for(TimeSpan timespan : rule.getTimes()) {
+                    List<TimeRange> newOpeningTimes = new ArrayList<>();
+                    for(TimeRange openingTime: openingTimes) {
+                        for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
+                            newOpeningTimes.add(newTime);
+                        }
+                    }
+                    newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
+                    openingTimes = newOpeningTimes;
+                }               
                 return;
             case OPEN:
                 buildOpen(rule);
-                break;
+                return;
             default:
-                
         }
     }
 
@@ -116,13 +127,11 @@ public class WeekDayRule {
         currentRule = rule;
         if( rule.isTwentyfourseven() ||
             rule.getTimes() == null) {
-            TimeRange timerange = new TimeRange();
-            timerange.setStart(0);
-            timerange.setEnd(1440);
+            TimeRange timerange = new TimeRange(0, 1440, Status.OPEN);
             openingTimes.add(timerange);
             return;
         }
-        for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan));
+        for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan, Status.OPEN));
     }
 
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {
@@ -166,17 +175,21 @@ public class WeekDayRule {
      * @param inputTime input date and time to be checked
      * @return true if opening; false if closed
      */
-    public boolean checkStatus(LocalDateTime inputTime) {
+    public Status checkStatus(LocalDateTime inputTime) {
         int timepoint = timeInMinute(inputTime); 
         for(TimeRange openingTime : openingTimes) {
-            if(openingTime.getEnd() == Integer.MIN_VALUE && timepoint == openingTime.getStart()) return true;
-            else if(timepoint >= openingTime.getStart() && timepoint <= openingTime.getEnd()) return true;
+            if(openingTime.getEnd() == Integer.MIN_VALUE && timepoint == openingTime.getStart() ||
+               timepoint >= openingTime.getStart() && timepoint <= openingTime.getEnd()) {
+                   return openingTime.getStatus();
+               }
         }
-        // return false if no fitting opening times is detected
-        return false;
+        // return CLOSED if no fitting opening times is detected
+        return Status.CLOSED;
     }
 
-    /** Convert hour and minute of a LocalDateTime instance to minutes 
+    /**
+     * Helper function
+     * Convert hour and minute of a LocalDateTime instance to minutes
      *  
      * @param time a LocalDateTime instance
     */
@@ -185,6 +198,7 @@ public class WeekDayRule {
     }
 
     /**
+     * Helper function
      * Conver OpeningHourParser.WeekDay to int
      * 
      * @param weekday

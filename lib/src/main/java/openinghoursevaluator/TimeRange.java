@@ -19,8 +19,9 @@ public class TimeRange {
     public static final int  MIN_TIME          = 0;
     public static final int  MAX_TIME          = HOURS_24;
 
-    int start   = UNDEFINED_TIME;
-    int end     = UNDEFINED_TIME;
+    int     start   = UNDEFINED_TIME;
+    int     end     = UNDEFINED_TIME;
+    Status  status  = null;
 
     /**
      * Default constructor
@@ -30,29 +31,32 @@ public class TimeRange {
     }
 
     /**
-     * Constructor for creating a TimePoint
+     * Constructor for creating a TimePoint with a Status
      * 
      * @param start timepoint
+     * @param status Status to be set
      */
-    public TimeRange(int timepoint) {
-        this(timepoint, timepoint);
+    public TimeRange(int timepoint, Status status) {
+        this(timepoint, timepoint, status);
     }
 
     // Constructor with TimeSpan, TODO: fix later so it will fit into the stuff
-    public TimeRange(TimeSpan timespan) {
-        this(timespan.getStart(), timespan.getEnd());
+    public TimeRange(TimeSpan timespan, Status status) {
+        this(timespan.getStart(), timespan.getEnd(), status);
     }
 
     /**
-     * Constructor for creating a TimeRange. If start is less than end, the two will be switched.
+     * Constructor for creating a TimeRange with a Status. If start is less than end, the two will be switched.
      * If start = end, this will create a TimePoint instead (only start is defined, isTimepoint() will be true)
      * 
      * @param start start time
      * @param end end time
+     * @param status Status to be set
      */
-    public TimeRange(int start, int end) {
-            setStart((start < end) ? start : end);
-            setEnd((end > start) ? end : start);
+    public TimeRange(int start, int end, Status status) {
+        setStart((start < end) ? start : end);
+        setEnd((end > start) ? end : start);
+        this.status = status;
     }
 
     public int getStart() {
@@ -61,6 +65,10 @@ public class TimeRange {
 
     public int getEnd() {
         return end;
+    }
+
+    public Status getStatus() {
+        return status;
     }
 
     public void setStart(int start) {
@@ -77,6 +85,9 @@ public class TimeRange {
         this.end = end;
     }
 
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     /**
      * Returns a code indicating how the other TimeRange is overlapped with this TimeRange,
@@ -167,6 +178,7 @@ public class TimeRange {
     public static List<TimeRange> cut(TimeRange t, TimeRange other) {
         List<TimeRange> result = new ArrayList<TimeRange>();
         TimeRange overlap = t.overlapWith(other);
+        Status oldStatus = t.getStatus();
         if(overlap != null) {
             TimeRange time1 = null;
             TimeRange time2 = null;
@@ -175,21 +187,21 @@ public class TimeRange {
             // TODO: add support for t.isTimePoint too
             if(overlap.isTimePoint()) {
                 int timepoint = overlap.getTimePoint();
-                if(timepoint == start || timepoint == end) time1 = new TimeRange(timepoint);
+                if(timepoint == start || timepoint == end) time1 = new TimeRange(timepoint, oldStatus);
                 else {
-                    time1 = new TimeRange(start, timepoint--);
-                    time2 = new TimeRange(timepoint++, end);
+                    time1 = new TimeRange(start, timepoint--, oldStatus);
+                    time2 = new TimeRange(timepoint++, end, oldStatus);
                 }
             } else {
                 int overlapS = overlap.getStart();
                 int overlapE = overlap.getEnd();
                 if(overlapS > start && overlapE < end) {
-                    time1 = new TimeRange(start, overlapS-1);
-                    time2 = new TimeRange(overlapE+1, end);
+                    time1 = new TimeRange(start, overlapS-1, oldStatus);
+                    time2 = new TimeRange(overlapE+1, end, oldStatus);
                 } else if(overlapS == start && overlapE < end) {
-                    time1 = new TimeRange(overlapE+1, end);
+                    time1 = new TimeRange(overlapE+1, end, oldStatus);
                 } else if(overlapE == end && overlapS > start) {
-                    time1 = new TimeRange(start, overlapS-1);
+                    time1 = new TimeRange(start, overlapS-1, oldStatus);
                 }
             }
             if(time1 != null) result.add(time1);
@@ -217,6 +229,6 @@ public class TimeRange {
         TimeSpan timespan = new TimeSpan();
         timespan.setStart(start);
         if(!isTimePoint()) timespan.setEnd(end);
-        return timespan.toString();
+        return timespan.toString() + "(" + status + ")";
     }
 }

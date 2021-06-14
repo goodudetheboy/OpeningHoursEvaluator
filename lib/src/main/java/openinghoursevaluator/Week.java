@@ -63,10 +63,9 @@ public class Week {
         else                weekRule.put(weekday, new WeekDayRule(rule, weekday));
     }
 
-    public boolean checkStatus(LocalDateTime time) {
+    public Status checkStatus(LocalDateTime time) {
         WeekDay weekdayToCheck = toWeekDay(time.getDayOfWeek());
-        if(weekRule.get(weekdayToCheck).checkStatus(time)) return true;
-        return false;
+        return weekRule.get(weekdayToCheck).checkStatus(time);
     }
 
     /**

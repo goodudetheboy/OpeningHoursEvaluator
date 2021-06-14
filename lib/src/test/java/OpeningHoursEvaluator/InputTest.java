@@ -25,14 +25,14 @@ public class InputTest {
 
     @Test
     public void unitTest() {
-        assertFalse(evaluate("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00"));
-        assertTrue(evaluate("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00"));
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED, "xxxxx", 0, 0));
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN, "xxxxx", 0, 0));
     }
 
     /** Used for checking on the spot, convenient during debugging */
     @Test
     public void spotCheck() {
-        assertTrue(evaluate("24/7; Sa-Su 00:00-12:00 off; Mo-Fr 08:00-13:00 off", "2021-06-09T18:00"));
+        assertTrue(evaluateCheck("24/7; Sa-Su 00:00-12:00 off; Mo-Fr 08:00-13:00 off", "2021-06-09T18:00", Status.OPEN, "xxxxx", 0, 0));
     }
 
     /**
@@ -63,16 +63,9 @@ public class InputTest {
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
                 for(String answerString : answers) {
                     String inputTime = inputTimeReader.readLine();
-                    boolean answer = answerString.equals("1");
-                    boolean givenAnswer = evaluate(openingHours, inputTime);
-                    if(givenAnswer != answer) {
+                    Status answer = Status.convert(answerString);
+                    if(!evaluateCheck(openingHours, inputTime, answer, openingHoursFile, lineNumOH, lineNumInput)) {
                         hasWrong = true;
-                        print(openingHours, inputTime);
-                        System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
-                        System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
-                        System.out.println("Correct answer: " + answer);
-                        System.out.println("Given answer: " + givenAnswer);
-                        System.out.println();
                     }
                     lineNumInput++;
                 }
@@ -107,8 +100,18 @@ public class InputTest {
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @param answer correct answer corresponding to input time string
      */
-    public boolean evaluateCheck(String openingHours, String inputTime, boolean answer) {
-        return evaluate(openingHours, inputTime) == answer;
+    public boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
+        Status givenAnswer = evaluate(openingHours, inputTime);
+        if(givenAnswer != answer) {
+            print(openingHours, inputTime);
+            System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
+            System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
+            System.out.println("Correct answer: " + answer);
+            System.out.println("Given answer: " + givenAnswer);
+            System.out.println();
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -117,7 +120,7 @@ public class InputTest {
      * @param openingHours opening hours string
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      */
-    public boolean evaluate(String openingHours, String inputTime) {
+    public Status evaluate(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
     }

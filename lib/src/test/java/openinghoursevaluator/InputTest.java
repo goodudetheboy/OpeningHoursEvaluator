@@ -31,7 +31,7 @@ public class InputTest {
     /** Used for checking on the spot, convenient during debugging */
     @Test
     public void spotCheck() {
-        assertTrue(evaluateCheck("12:00-14:00,17:00-02:00", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
+        assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.OPEN, "xxxxx", 0, 0));
     }
 
     /**
@@ -65,7 +65,7 @@ public class InputTest {
                 for(String answerString : answers) {
                     String inputTime = inputTimeReader.readLine();
                     Status answer = Status.convert(answerString);
-                    if(!evaluateCheck(openingHours, inputTime, answer, openingHoursFile, lineNumOH, lineNumInput)) {
+                    if (!evaluateCheck(openingHours, inputTime, answer, openingHoursFile, lineNumOH, lineNumInput)) {
                         hasWrong = true;
                     }
                     lineNumInput++;
@@ -91,7 +91,7 @@ public class InputTest {
                 fail("Error closing BufferedReader");
             }
         }
-        if(hasWrong) fail("There's a wrong answer, check output for more info");
+        if (hasWrong) fail("There's a wrong answer, check output for more info");
     }
 
     /**
@@ -105,7 +105,7 @@ public class InputTest {
     public boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
         try {
             Status givenAnswer = evaluate(openingHours, inputTime);
-            if(givenAnswer != answer) {
+            if (givenAnswer != answer) {
                 print(openingHours, inputTime);
                 System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
                 System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);

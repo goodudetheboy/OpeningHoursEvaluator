@@ -77,7 +77,7 @@ public class WeekDayRule {
      * @param rule rule to be used in building
      */
     public void build(Rule rule) {
-        if(rule.isEmpty()) {
+        if (rule.isEmpty()) {
             // TODO: produce a warning here
             return;
         }
@@ -106,7 +106,7 @@ public class WeekDayRule {
                     newOpeningTimes.add(newTime);
                 }
             }
-            if(!isClosed) newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
+            if (!isClosed) newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
             openingTimes = newOpeningTimes;
         } 
     }
@@ -117,31 +117,32 @@ public class WeekDayRule {
      * @param rule Rule to be added
      */
     public void add(Rule rule) {
-        if(rule.isTwentyfourseven() || rule.getTimes() == null) {
+        if (rule.isTwentyfourseven() || rule.getTimes() == null) {
             TimeRange timerange = new TimeRange(0, 1440, Status.OPEN);
             openingTimes.add(timerange);
             return;
         }
         switch(Status.convert(rule.getModifier())) {
-            case CLOSED:
-                buildClosedOrUnknown(rule, true);
-                return;
-            case UNKNOWN:
-                buildClosedOrUnknown(rule, false);
-                return;
-            case OPEN:
-                for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan, Status.OPEN));
-                return;
-            default:
+        case CLOSED:
+            buildClosedOrUnknown(rule, true);
+            return;
+        case UNKNOWN:
+            buildClosedOrUnknown(rule, false);
+            return;
+        case OPEN:
+            for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan, Status.OPEN));
+            return;
+        default:
         }
     }
 
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {
-        int start = weekdayInNum(weekDayRange.getStartDay());
+        int start = weekDayRange.getStartDay().ordinal();
         WeekDay endDay = weekDayRange.getEndDay();
-        int current = weekdayInNum(weekday);
+        int current = weekday.ordinal();
         return (endDay != null) ?
-                    (current >= start && current <= weekdayInNum(endDay) || current <= start + 7 && current >= weekdayInNum(endDay)) :
+                    (current >= start && current <= endDay.ordinal()
+                    || current <= start + 7 && current >= endDay.ordinal()) :
                     (current == start);
 
     }
@@ -180,10 +181,11 @@ public class WeekDayRule {
     public Status checkStatus(LocalDateTime inputTime) {
         int timepoint = timeInMinute(inputTime); 
         for(TimeRange openingTime : openingTimes) {
-            if(openingTime.isTimePoint() && timepoint == openingTime.getStart() ||
-               timepoint >= openingTime.getStart() && timepoint < openingTime.getEnd()) {
-                   return openingTime.getStatus();
-               }
+            if (openingTime.isTimePoint() && timepoint == openingTime.getStart()
+                    || timepoint >= openingTime.getStart()
+                    && timepoint < openingTime.getEnd()) {
+                return openingTime.getStatus();
+            }
         }
         // return CLOSED if no fitting opening times is detected
         return Status.CLOSED;
@@ -197,25 +199,6 @@ public class WeekDayRule {
     */
     int timeInMinute(LocalDateTime time) {
         return time.getHour()*60 + time.getMinute();
-    }
-
-    /**
-     * Helper function
-     * Conver OpeningHourParser.WeekDay to int
-     * 
-     * @param weekday
-     * @return 
-     */
-
-    int weekdayInNum(WeekDay weekday) {
-        int result = 0;
-        for(WeekDay weekdayEnum : WeekDay.values()) {
-            if(weekday.equals(weekdayEnum))
-                break;
-            else
-                result++;
-        }
-        return ++result;
     }
 
     /** 

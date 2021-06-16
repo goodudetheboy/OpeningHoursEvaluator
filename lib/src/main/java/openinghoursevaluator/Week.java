@@ -44,7 +44,7 @@ public class Week {
      * @param rule a Rule
      */
     public void update(Rule rule) {
-        if(isUniversal(rule)){
+        if (isUniversal(rule)){
             for(WeekDay weekday : WeekDay.values()) {
                 updateHelper(rule, weekday, null);
             }
@@ -52,7 +52,7 @@ public class Week {
         }
         Rule spilledRule = getSpilledRule(rule);
         List<WeekDayRange> weekdayRange;
-        if(rule.getDays() != null) {
+        if (rule.getDays() != null) {
             weekdayRange = rule.getDays();
         } else {
             WeekDayRange allWeekDays = new WeekDayRange();
@@ -64,7 +64,7 @@ public class Week {
         for(WeekDayRange weekdays : weekdayRange) {
             WeekDay start = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null) ? weekdays.getEndDay() : weekdays.getStartDay();
-            if(end.ordinal() < start.ordinal()) {
+            if (end.ordinal() < start.ordinal()) {
                 end = WeekDay.SU;
             }
             // TimeSpan spilling to the next day current handling method (subject to changes):
@@ -82,12 +82,15 @@ public class Week {
     /** Helper for update(), check if a rule has been built, if not create new*/
     void updateHelper(Rule rule, WeekDay weekday, Rule spilledRule) {
         WeekDayRule oldRule = weekRule.get(weekday);
-        if(oldRule != null)
+        if (oldRule != null) {
             oldRule.build(rule);
-        else
+        }
+        else {
             weekRule.put(weekday, new WeekDayRule(rule, weekday));
-        if(spilledRule != null)
+        }
+        if (spilledRule != null) {
             weekRule.get(weekday).add(spilledRule);
+        }
     }
 
     Rule getSpilledRule(Rule rule) {
@@ -95,7 +98,7 @@ public class Week {
         spilledRule.setModifier(rule.getModifier());
         List<TimeSpan> spilledTimeList = new ArrayList<>();
         for(TimeSpan timespan : rule.getTimes()) {
-            if(timespan.getEnd() > TimeRange.MAX_TIME) {
+            if (timespan.getEnd() > TimeRange.MAX_TIME) {
                 TimeSpan spilledTime = new TimeSpan();
                 spilledTime.setStart(0);
                 spilledTime.setEnd(timespan.getEnd() - TimeRange.MAX_TIME); 
@@ -110,7 +113,8 @@ public class Week {
      * @return true if input Rule can be applied to any day in the week
      */
     boolean isUniversal(Rule rule) {
-        return rule.isTwentyfourseven() || (rule.getDays() == null && rule.getTimes() == null);
+        return rule.isTwentyfourseven()
+                || (rule.getDays() == null && rule.getTimes() == null);
     }
 
     /**
@@ -139,7 +143,9 @@ public class Week {
     public WeekDay toWeekDay(DayOfWeek dayOfWeek) {
         int dayOfWeekNth = dayOfWeek.ordinal();
         for(WeekDay weekday : WeekDay.values()) {
-            if(weekday.ordinal() == dayOfWeekNth) return weekday;
+            if (weekday.ordinal() == dayOfWeekNth) {
+                return weekday;
+            }
         }
         return null;
     }

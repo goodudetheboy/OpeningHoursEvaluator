@@ -38,7 +38,7 @@ public enum Status {
      * @return a corresponding Status
      */
     public static Status convert(RuleModifier input) {
-        if(input == null) {
+        if (input == null) {
             return OPEN;
         }
         return convert(input.getModifier());

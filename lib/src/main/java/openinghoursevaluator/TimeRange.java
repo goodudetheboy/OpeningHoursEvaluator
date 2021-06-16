@@ -72,14 +72,14 @@ public class TimeRange implements Comparable<TimeRange>{
     }
 
     public void setStart(int start) {
-        if(start > MAX_TIME || start < MIN_TIME) {
+        if (start > MAX_TIME || start < MIN_TIME) {
             throw new IllegalArgumentException("Invalid time " + start + ", please keep time in 24 hours");
         }
         this.start = start;
     }
 
     public void setEnd(int end) {
-        if(end > MAX_TIME || end < MIN_TIME) {
+        if (end > MAX_TIME || end < MIN_TIME) {
             throw new IllegalArgumentException("Invalid time" + end + ", please keep time in 24 hours");
         }
         this.end = end;
@@ -106,11 +106,23 @@ public class TimeRange implements Comparable<TimeRange>{
         int otherStart = other.getStart();
         int otherEnd = other.getEnd();
 
-        if(Tools.isBetween(start, otherStart, otherEnd) && Tools.isBetween(end, otherStart, otherEnd))  return 1;
-        else if(Tools.isBetween(start, otherStart, otherEnd) && end >= otherEnd)                        return 2;
-        else if(Tools.isBetween(end, otherStart, otherEnd) && start <= otherStart)                      return 3;
-        else if(Tools.isBetween(otherStart, start, end) && Tools.isBetween(otherEnd, start, end))       return 4;
-        else                                                                                            return 0;
+        if (Tools.isBetween(start, otherStart, otherEnd)
+                && Tools.isBetween(end, otherStart, otherEnd)) {
+            return 1;
+        }
+        if (Tools.isBetween(start, otherStart, otherEnd)
+                && end >= otherEnd) {
+            return 2;
+        }
+        if (Tools.isBetween(end, otherStart, otherEnd)
+                && start <= otherStart) {
+           return 3;
+        }
+        if (Tools.isBetween(otherStart, start, end)
+                && Tools.isBetween(otherEnd, start, end)) {
+            return 4;
+        }
+        return 0;
     }
 
     /**
@@ -132,7 +144,9 @@ public class TimeRange implements Comparable<TimeRange>{
     public TimeRange overlapWith(TimeRange other) {
         // TODO: add support for both timepoint
         int overlapsCode = this.overlapsCode(other);
-        if(overlapsCode == 0) return null;
+        if (overlapsCode == 0) {
+            return null;
+        }
 
         int otherStart = other.getStart();
         int otherEnd = other.getEnd();
@@ -140,23 +154,23 @@ public class TimeRange implements Comparable<TimeRange>{
         int endOverlap = -1;
 
         switch(overlapsCode) {
-            case 1:
-                startOverlap = start;
-                endOverlap = end;
-                break;
-            case 2:
-                startOverlap = start;
-                endOverlap = otherEnd;            
-                break;
-            case 3:
-                startOverlap = end;
-                endOverlap = otherStart;
-                break;
-            case 4:
-                startOverlap = otherStart;
-                endOverlap = otherEnd;
-                break; 
-            default: // hopefully this never gets here
+        case 1:
+            startOverlap = start;
+            endOverlap = end;
+            break;
+        case 2:
+            startOverlap = start;
+            endOverlap = otherEnd;            
+            break;
+        case 3:
+            startOverlap = end;
+            endOverlap = otherStart;
+            break;
+        case 4:
+            startOverlap = otherStart;
+            endOverlap = otherEnd;
+            break; 
+        default: // hopefully this never gets here
         }
         TimeRange overlap = new TimeRange();
         overlap.setStart((startOverlap < endOverlap) ? startOverlap : endOverlap);
@@ -175,33 +189,38 @@ public class TimeRange implements Comparable<TimeRange>{
         List<TimeRange> result = new ArrayList<>();
         TimeRange overlap = t.overlapWith(other);
         Status oldStatus = t.getStatus();
-        if(overlap != null) {
+        if (overlap != null) {
             TimeRange time1 = null;
             TimeRange time2 = null;
             int start = t.getStart();
             int end = t.getEnd();
             // TODO: add support for t.isTimePoint too
-            if(overlap.isTimePoint()) {
+            if (overlap.isTimePoint()) {
                 int timepoint = overlap.getTimePoint();
-                if(timepoint == start || timepoint == end) time1 = new TimeRange(timepoint, oldStatus);
-                else {
+                if (timepoint == start || timepoint == end) {
+                    time1 = new TimeRange(timepoint, oldStatus);
+                } else {
                     time1 = new TimeRange(start, timepoint, oldStatus);
                     time2 = new TimeRange(timepoint, end, oldStatus);
                 }
             } else {
                 int overlapS = overlap.getStart();
                 int overlapE = overlap.getEnd();
-                if(overlapS > start && overlapE < end) {
+                if (overlapS > start && overlapE < end) {
                     time1 = new TimeRange(start, overlapS, oldStatus);
                     time2 = new TimeRange(overlapE, end, oldStatus);
-                } else if(overlapS == start && overlapE < end) {
+                } else if (overlapS == start && overlapE < end) {
                     time1 = new TimeRange(overlapE, end, oldStatus);
-                } else if(overlapE == end && overlapS > start) {
+                } else if (overlapE == end && overlapS > start) {
                     time1 = new TimeRange(start, overlapS, oldStatus);
                 }
             }
-            if(time1 != null) result.add(time1);
-            if(time2 != null) result.add(time2);
+            if (time1 != null) {
+                result.add(time1);
+            }
+            if (time2 != null) {
+                result.add(time2);
+            }
         } else {
             result.add(t);
         }
@@ -224,13 +243,13 @@ public class TimeRange implements Comparable<TimeRange>{
     public String toString() {
         TimeSpan timespan = new TimeSpan();
         timespan.setStart(start);
-        if(!isTimePoint()) timespan.setEnd(end);
+        if (!isTimePoint()) timespan.setEnd(end);
         return timespan.toString() + "(" + status + ")";
     }
 
     @Override
     public int compareTo(TimeRange o) {
-        if(start != o.getStart()) {
+        if (start != o.getStart()) {
             return start - o.getStart();
         }
         return end - o.getEnd();
@@ -238,10 +257,10 @@ public class TimeRange implements Comparable<TimeRange>{
 
     @Override
     public boolean equals(Object other) {
-        if(this == other) {
+        if (this == other) {
             return true;
         }
-        if(other instanceof TimeRange) {
+        if (other instanceof TimeRange) {
             TimeRange o = (TimeRange) other;
             return start == o.getStart() && end == o.getEnd() && status.equals(o.getStatus());
         }

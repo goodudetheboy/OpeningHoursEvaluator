@@ -50,7 +50,7 @@ public class Week {
             }
             return;
         }
-        Rule spilledRule = getSpilledRule(rule);
+        Rule spilledRule = null;
         List<WeekDayRange> weekdayRange;
         if (rule.getDays() != null) {
             weekdayRange = rule.getDays();
@@ -67,16 +67,25 @@ public class Week {
             if (end.ordinal() < start.ordinal()) {
                 end = WeekDay.SU;
             }
-            // TimeSpan spilling to the next day current handling method (subject to changes):
-            // Enforce TimeRange created from spilling TimeSpan to create only in 24 hours
-            // which means that if an input TimeSpan is 23:00-2:00, for example, the resulting
-            // TimeRange created is only 23:00-24:00, and all spilled rule are saved and added
-            // afterwards
-            for(int i=start.ordinal(); i <= end.ordinal(); i++) {
-                updateHelper(rule, start, spilledRule);
+            WeekDay current = start;
+            /**
+             * TimeSpan spilling to the next day current handling method (subject to changes):
+             * Enforce TimeRange created from spilling TimeSpan to create only in 24 hours
+             * which means that if an input TimeSpan is 23:00-2:00, for example, the resulting
+             * TimeRange created is only 23:00-24:00, and all spilled rule are saved and added
+             * afterwards
+             */
+            
+            for(int i=current.ordinal(); i <= end.ordinal(); i++) {
+                updateHelper(rule, current, spilledRule);
                 spilledRule = getSpilledRule(rule);
-                start = (start != WeekDay.SU) ? getNextWeekDay(start) : WeekDay.SU;
+                current = getNextWeekDay(current);
+                if(current == WeekDay.MO) {
+                    break;
+                }
             }
+            fillEmpty();
+            weekRule.get(current).add(spilledRule);
         }
     }
     /** Helper for update(), check if a rule has been built, if not create new*/
@@ -84,8 +93,7 @@ public class Week {
         WeekDayRule oldRule = weekRule.get(weekday);
         if (oldRule != null) {
             oldRule.build(rule);
-        }
-        else {
+        } else {
             weekRule.put(weekday, new WeekDayRule(rule, weekday));
         }
         if (spilledRule != null) {
@@ -153,7 +161,19 @@ public class Week {
     /** Sort all WeekDayRule in this Week */
     public void sort() {
         for(WeekDay weekday : WeekDay.values()) {
-            weekRule.get(weekday).sort();
+            if(weekRule.get(weekday) != null) {
+                weekRule.get(weekday).sort();
+            }
+        }
+    }
+
+    /** Fill all empty WeekDay in weekDayRule with empty List */
+    public void fillEmpty() {
+        for(WeekDay weekday : WeekDay.values()) {
+            if(weekRule.get(weekday) == null) {
+                Rule empty = new Rule();
+                weekRule.put(weekday, new WeekDayRule(empty, weekday));
+            }
         }
     }
 
@@ -163,7 +183,9 @@ public class Week {
         for(WeekDay weekday : WeekDay.values()) {
             b.append(weekday);
             b.append(" : ");
-            b.append(weekRule.get(weekday).toString());
+            if (weekRule.get(weekday) != null) {
+                b.append(weekRule.get(weekday).toString());
+            }
             b.append(System.getProperty("line.separator"));
         }
         return b.toString();

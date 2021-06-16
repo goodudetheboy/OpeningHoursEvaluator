@@ -10,12 +10,20 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
     id "org.sonarqube" version "3.3"
+    id 'jacoco'
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
 }
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+test.finalizedBy jacocoTestReport
 
 sonarqube {
   properties {

@@ -13,7 +13,7 @@ import ch.poole.openinghoursparser.TimeSpan;
  * If start value is equal to end value, then this TimeRange is considered a TimePoint
  * 
  */
-public class TimeRange {
+public class TimeRange implements Comparable<TimeRange>{
     private static final int HOURS_24           = 1440;
     public static final int  UNDEFINED_TIME     = Integer.MIN_VALUE;
     public static final int  MIN_TIME          = 0;
@@ -226,5 +226,25 @@ public class TimeRange {
         timespan.setStart(start);
         if(!isTimePoint()) timespan.setEnd(end);
         return timespan.toString() + "(" + status + ")";
+    }
+
+    @Override
+    public int compareTo(TimeRange o) {
+        if(start != o.getStart()) {
+            return start - o.getStart();
+        }
+        return end - o.getEnd();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if(this == other) {
+            return true;
+        }
+        if(other instanceof TimeRange) {
+            TimeRange o = (TimeRange) other;
+            return start == o.getStart() && end == o.getEnd() && status.equals(o.getStatus());
+        }
+        return false;
     }
 }

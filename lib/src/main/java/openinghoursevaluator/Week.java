@@ -35,6 +35,7 @@ public class Week {
         for(Rule rule : rules) {
             update(rule);
         }
+        sort();
     }
 
     /**
@@ -141,6 +142,13 @@ public class Week {
             if(weekday.ordinal() == dayOfWeekNth) return weekday;
         }
         return null;
+    }
+
+    /** Sort all WeekDayRule in this Week */
+    public void sort() {
+        for(WeekDay weekday : WeekDay.values()) {
+            weekRule.get(weekday).sort();
+        }
     }
 
     @Override

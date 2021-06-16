@@ -2,6 +2,7 @@ package openinghoursevaluator;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ch.poole.openinghoursparser.Rule;
@@ -216,6 +217,14 @@ public class WeekDayRule {
         }
         return ++result;
     }
+
+    /** 
+     * Sort the TimeRange of this WeekDayRule by order of start time
+     */
+    public void sort() {
+        Collections.sort(openingTimes);
+    }
+
 
     @Override
     public String toString() {

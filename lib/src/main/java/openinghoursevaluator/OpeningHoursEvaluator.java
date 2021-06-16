@@ -1,13 +1,9 @@
 package openinghoursevaluator;
 
-import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import ch.poole.openinghoursparser.OpeningHoursParser;
-import ch.poole.openinghoursparser.ParseException;
 import ch.poole.openinghoursparser.Rule;
-import ch.poole.openinghoursparser.TimeSpan;
 
 /**
  * Implementation of the OpeningHoursEvaluator, currently act as a placeholder for creating testing
@@ -42,10 +38,10 @@ public class OpeningHoursEvaluator {
     }
 
     /** Print the Week created by inputTime, to be used for debugging wrong test case */
-    public void printWithInputTime(String inputTime) {
+    public String toString(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         Week weekRule = new Week(openingHours, time);
         weekRule.build(false);
-        System.out.println(weekRule);
+        return weekRule.toString();
     }
 }

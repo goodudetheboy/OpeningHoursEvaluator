@@ -54,8 +54,8 @@ public class TimeRange {
      * @param status Status to be set
      */
     public TimeRange(int start, int end, Status status) {
-        setStart((start < end) ? start : end);
-        setEnd((end > start) ? end : start);
+        setStart(start);
+        setEnd((end <= MAX_TIME) ? end : MAX_TIME);
         this.status = status;
     }
 
@@ -130,11 +130,7 @@ public class TimeRange {
      * @return a TimeRange that overlaps both this and other TimeRange, null if it can't be merged
      */
     public TimeRange overlapWith(TimeRange other) {
-        // if((isTimePoint() && !other.isTimePoint()) || (!isTimePoint() && other.isTimePoint()))
-        //     return null;
-        // else
-        //     return new TimeRange(getTimePoint());
-
+        // TODO: add support for both timepoint
         int overlapsCode = this.overlapsCode(other);
         if(overlapsCode == 0) return null;
 

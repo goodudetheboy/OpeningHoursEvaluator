@@ -5,11 +5,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ch.poole.openinghoursparser.Rule;
-import ch.poole.openinghoursparser.RuleModifier;
 import ch.poole.openinghoursparser.TimeSpan;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
-import ch.poole.openinghoursparser.RuleModifier.Modifier;
 
 public class WeekDayRule {
     Rule        currentRule     = null;
@@ -73,7 +71,7 @@ public class WeekDayRule {
 
     /**
      * Build the opening times of this weekday with a rule. This also resets whatever the current affecting rule is to the new rule
-     * and also clears the opening times (if not fallback), if exists.
+     * and also clears the opening times (if not fallback), if exists. Closed and Unknown time does not clear days
      * 
      * @param rule rule to be used in building
      */
@@ -82,56 +80,59 @@ public class WeekDayRule {
             // TODO: produce a warning here
             return;
         }
-        if(rule.getModifier() == null) {
-            buildOpen(rule);
-            return;
-        }
-        switch(rule.getModifier().getModifier()) {
+        switch(Status.convert(rule.getModifier())) {
             case CLOSED:
-            case OFF:
                 offRule.add(rule);
-                for(TimeSpan timespan : rule.getTimes()) {
-                    List<TimeRange> newOpeningTimes = new ArrayList<>();
-                    for(TimeRange openingTime: openingTimes) {
-                        for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
-                            newOpeningTimes.add(newTime);
-                        }
-                    }
-                    openingTimes = newOpeningTimes;
-                }
-                return;
+                break;
             case UNKNOWN:
                 unknownRule.add(rule);
-                for(TimeSpan timespan : rule.getTimes()) {
-                    List<TimeRange> newOpeningTimes = new ArrayList<>();
-                    for(TimeRange openingTime: openingTimes) {
-                        for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
-                            newOpeningTimes.add(newTime);
-                        }
-                    }
-                    newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
-                    openingTimes = newOpeningTimes;
-                }               
-                return;
+                break;
             case OPEN:
-                buildOpen(rule);
-                return;
+                clearAllRules();
+                clearOpeningHours();
+                currentRule = rule;
+                break;
             default:
         }
+        add(rule);
     }
 
-    /** Helper function for build(), to build opening times only */
-    void buildOpen(Rule rule) {
-        clearAllRules();
-        clearOpeningHours();
-        currentRule = rule;
-        if( rule.isTwentyfourseven() ||
-            rule.getTimes() == null) {
+    void buildClosedOrUnknown(Rule rule, boolean isClosed) {
+        for(TimeSpan timespan : rule.getTimes()) {
+            List<TimeRange> newOpeningTimes = new ArrayList<>();
+            for(TimeRange openingTime: openingTimes) {
+                for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
+                    newOpeningTimes.add(newTime);
+                }
+            }
+            if(!isClosed) newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
+            openingTimes = newOpeningTimes;
+        } 
+    }
+
+    /**
+     * A soft version of build(), where opening rule does not overwrite current day
+     * 
+     * @param rule Rule to be added
+     */
+    public void add(Rule rule) {
+        if(rule.isTwentyfourseven() || rule.getTimes() == null) {
             TimeRange timerange = new TimeRange(0, 1440, Status.OPEN);
             openingTimes.add(timerange);
             return;
         }
-        for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan, Status.OPEN));
+        switch(Status.convert(rule.getModifier())) {
+            case CLOSED:
+                buildClosedOrUnknown(rule, true);
+                return;
+            case UNKNOWN:
+                buildClosedOrUnknown(rule, false);
+                return;
+            case OPEN:
+                for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan, Status.OPEN));
+                return;
+            default:
+        }
     }
 
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {

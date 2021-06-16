@@ -1,6 +1,5 @@
 package openinghoursevaluator;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -32,7 +31,7 @@ public class InputTest {
     /** Used for checking on the spot, convenient during debugging */
     @Test
     public void spotCheck() {
-        evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T02:00", Status.OPEN, "xxxxx", 0, 0);
+        assertTrue(evaluateCheck("12:00-14:00,17:00-02:00", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
     }
 
     /**
@@ -50,16 +49,18 @@ public class InputTest {
         BufferedReader inputTimeReader = null;
         BufferedReader answerReader = null;
         boolean hasWrong = false;
+        int lineNumOH = 0;
+        int lineNumInput = 0;
         try {
             openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
 
             answerReader = new BufferedReader(new InputStreamReader(new FileInputStream(answerFile), StandardCharsets.UTF_8));
             String openingHours;
             String[] answers;
-            int lineNumOH = 1;
+            lineNumOH = 1;
             while((openingHours = openingHoursReader.readLine())    != null &&
                   (answers = answerReader.readLine().split("\\s+")) != null) {
-                int lineNumInput = 1;
+                lineNumInput = 1;
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
                 for(String answerString : answers) {
                     String inputTime = inputTimeReader.readLine();
@@ -72,6 +73,7 @@ public class InputTest {
                 lineNumOH++;
             }
         } catch (NullPointerException e) {
+
             e.printStackTrace();
             fail("Null pointer exception occured, maybe some test cases doesn't have answer yet?");
         } catch (FileNotFoundException e) {
@@ -101,16 +103,24 @@ public class InputTest {
      * @param answer correct answer corresponding to input time string
      */
     public boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
-        Status givenAnswer = evaluate(openingHours, inputTime);
-        if(givenAnswer != answer) {
-            print(openingHours, inputTime);
-            System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
-            System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
-            System.out.println("Correct answer: " + answer);
-            System.out.println("Given answer: " + givenAnswer);
-            System.out.println();
-            return false;
+        try {
+            Status givenAnswer = evaluate(openingHours, inputTime);
+            if(givenAnswer != answer) {
+                print(openingHours, inputTime);
+                System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
+                System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
+                System.out.println("Correct answer: " + answer);
+                System.out.println("Given answer: " + givenAnswer);
+                System.out.println();
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error occured in " + openingHoursFile + ", line " + lineNumOH);
+            System.out.println("Input time line " + lineNumInput);
+            fail("Some exception occured during evaluating");
         }
+        
         return true;
     }
 
@@ -127,6 +137,6 @@ public class InputTest {
 
     public void print(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
-        evaluator.printWithInputTime(inputTime);
+        System.out.println(evaluator.toString(inputTime));
     }
 }

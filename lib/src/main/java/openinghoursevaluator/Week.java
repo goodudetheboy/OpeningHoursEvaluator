@@ -1,16 +1,12 @@
 package openinghoursevaluator;
 
-import java.io.ByteArrayInputStream;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 
-import ch.poole.openinghoursparser.ParseException;
-import ch.poole.openinghoursparser.OpeningHoursParser;
 import ch.poole.openinghoursparser.Rule;
-import ch.poole.openinghoursparser.RuleModifier;
 import ch.poole.openinghoursparser.TimeSpan;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
@@ -19,15 +15,14 @@ public class Week {
     int     year;
     int     month;
     int     weekNum; // TODO: to be supported later
-    String openingHours;  
     EnumMap<WeekDay, WeekDayRule>   weekRule;
     List<Rule>                      rules;
 
-    public Week(String openingHours, LocalDateTime time) {
+    public Week(List<Rule> rules, LocalDateTime time) {
         year = time.getYear();
         month = time.getMonthValue();
         weekNum = time.getDayOfYear() / 7 + 1; // this is temporary
-        this.openingHours = openingHours;
+        this.rules = rules;
         weekRule = new EnumMap<>(WeekDay.class);
     }
 
@@ -37,12 +32,8 @@ public class Week {
      * @param isStrict strict or not
      */
     public void build(boolean isStrict) {
-        OpeningHoursParser parser = new OpeningHoursParser(new ByteArrayInputStream(openingHours.getBytes()));
-        try {
-            rules = parser.rules(isStrict);
-            for(Rule rule : rules) update(rule);
-        } catch (ParseException e) {
-            e.printStackTrace();
+        for(Rule rule : rules) {
+            update(rule);
         }
     }
 

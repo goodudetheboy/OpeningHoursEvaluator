@@ -172,7 +172,7 @@ public class TimeRange {
      * @return a List containing TimeRange(s) resulting from the cut
      */
     public static List<TimeRange> cut(TimeRange t, TimeRange other) {
-        List<TimeRange> result = new ArrayList<TimeRange>();
+        List<TimeRange> result = new ArrayList<>();
         TimeRange overlap = t.overlapWith(other);
         Status oldStatus = t.getStatus();
         if(overlap != null) {

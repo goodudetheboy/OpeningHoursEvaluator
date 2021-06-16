@@ -1,8 +1,11 @@
 package openinghoursevaluator;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import ch.poole.openinghoursparser.OpeningHoursParser;
+import ch.poole.openinghoursparser.ParseException;
 import ch.poole.openinghoursparser.Rule;
 
 /**
@@ -21,6 +24,12 @@ public class OpeningHoursEvaluator {
     public OpeningHoursEvaluator(String openingHours, boolean isStrict) {
         this.openingHours = openingHours;
         this.isStrict = isStrict;
+        OpeningHoursParser parser = new OpeningHoursParser(new ByteArrayInputStream(openingHours.getBytes()));
+        try {
+            rules = parser.rules(isStrict);
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Illegal opening hours input");
+        }
     }
 
     /**
@@ -32,7 +41,7 @@ public class OpeningHoursEvaluator {
      */
     public Status checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
-        Week weekRule = new Week(openingHours, time);
+        Week weekRule = new Week(rules, time);
         weekRule.build(isStrict);
         return weekRule.checkStatus(time);
     }
@@ -40,7 +49,7 @@ public class OpeningHoursEvaluator {
     /** Print the Week created by inputTime, to be used for debugging wrong test case */
     public String toString(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
-        Week weekRule = new Week(openingHours, time);
+        Week weekRule = new Week(rules, time);
         weekRule.build(false);
         return weekRule.toString();
     }

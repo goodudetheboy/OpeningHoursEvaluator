@@ -13,7 +13,7 @@ import java.time.format.DateTimeParseException;
 
 import org.junit.Test;
 
-public class DataCheck {
+public class DataTest {
     /**
      * Test if the input time value strings are legal according to the opening hours specification 
      * (because I'll be using it for developing the evaluator)

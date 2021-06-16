@@ -9,11 +9,20 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
+    id "org.sonarqube" version "3.3"
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+sonarqube {
+  properties {
+    property "sonar.projectKey", "goodudetheboy_OpeningHoursEvaluator"
+    property "sonar.organization", "goodudetheboy"
+    property "sonar.host.url", "https://sonarcloud.io"
+  }
 }
 
 repositories {
@@ -37,5 +46,10 @@ dependencies {
 
 task testCI(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
-    main = "openinghoursevaluator.Library"
+    main = "openinghoursevaluator.Main"
+}
+
+task run(type: JavaExec) {
+    classpath sourceSets.main.runtimeClasspath
+    main = "openinghoursevaluator.Main"
 }

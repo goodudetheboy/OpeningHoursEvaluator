@@ -19,10 +19,12 @@ public class OpeningHoursEvaluator {
     /** List to store rules from the parser */
     List<Rule> rules;
     String openingHours;
+    boolean isStrict = false;
 
     /** Constructor with input time string according to opening hours specification */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict) {
         this.openingHours = openingHours;
+        this.isStrict = isStrict;
     }
 
     /**
@@ -35,6 +37,7 @@ public class OpeningHoursEvaluator {
     public Status checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         Week weekRule = new Week(openingHours, time);
+        weekRule.build(isStrict);
         return weekRule.checkStatus(time);
     }
 
@@ -42,6 +45,7 @@ public class OpeningHoursEvaluator {
     public void printWithInputTime(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         Week weekRule = new Week(openingHours, time);
+        weekRule.build(false);
         System.out.println(weekRule);
     }
 }

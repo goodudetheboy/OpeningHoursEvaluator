@@ -1,6 +1,11 @@
 package openinghoursevaluator;
 
 public class Tools {
+    /** Default constructor */
+    private Tools() {
+        // empty on purpose
+    }
+
     /**
      * Check if input value is in between the two start and end value i.e. start <= value <= end
      * 

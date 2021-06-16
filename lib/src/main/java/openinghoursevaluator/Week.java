@@ -13,29 +13,42 @@ import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 
 public class Week {
-    int year;
-    int month;
+    int     year;
+    int     month;
     // to be supported later, default weekNum = 0;
-    int weekNum;
-
-    HashMap<WeekDay, WeekDayRule> weekRule;
-    List<Rule> rules;
+    int     weekNum;
+    String openingHours;  
+    HashMap<WeekDay, WeekDayRule>   weekRule;
+    List<Rule>                      rules;
 
     public Week(String openingHours, LocalDateTime time) {
         year = time.getYear();
         month = time.getMonthValue();
         weekNum = (int) (time.getDayOfYear() / 7 + 1); // this is temporary
+        this.openingHours = openingHours;
         weekRule = new HashMap<>();
+    }
 
+    /**
+     * Build Week with the current openingHours string
+     * 
+     * @param isStrict strict or not
+     */
+    public void build(boolean isStrict) {
         OpeningHoursParser parser = new OpeningHoursParser(new ByteArrayInputStream(openingHours.getBytes()));
         try {
-            rules = parser.rules(true);
+            rules = parser.rules(isStrict);
             for(Rule rule : rules) update(rule);
         } catch (ParseException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * Update Week with a rule
+     * 
+     * @param rule a Rule
+     */
     public void update(Rule rule) {
         if(rule.isTwentyfourseven() || rule.getDays() == null) {
             for(WeekDay weekday : WeekDay.values()) {
@@ -57,7 +70,7 @@ public class Week {
         }
     }
     /** Helper for update(), check if a rule has been built, if not create new*/
-    void updateHelper(Rule rule, WeekDay weekday) {
+    private void updateHelper(Rule rule, WeekDay weekday) {
         WeekDayRule oldRule = weekRule.get(weekday);
         if(oldRule != null) oldRule.build(rule);
         else                weekRule.put(weekday, new WeekDayRule(rule, weekday));

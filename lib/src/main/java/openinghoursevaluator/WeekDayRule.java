@@ -178,8 +178,8 @@ public class WeekDayRule {
     public Status checkStatus(LocalDateTime inputTime) {
         int timepoint = timeInMinute(inputTime); 
         for(TimeRange openingTime : openingTimes) {
-            if(openingTime.getEnd() == Integer.MIN_VALUE && timepoint == openingTime.getStart() ||
-               timepoint >= openingTime.getStart() && timepoint <= openingTime.getEnd()) {
+            if(openingTime.isTimePoint() && timepoint == openingTime.getStart() ||
+               timepoint >= openingTime.getStart() && timepoint < openingTime.getEnd()) {
                    return openingTime.getStatus();
                }
         }

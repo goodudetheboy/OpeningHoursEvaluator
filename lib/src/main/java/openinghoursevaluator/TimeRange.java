@@ -189,19 +189,19 @@ public class TimeRange {
                 int timepoint = overlap.getTimePoint();
                 if(timepoint == start || timepoint == end) time1 = new TimeRange(timepoint, oldStatus);
                 else {
-                    time1 = new TimeRange(start, timepoint--, oldStatus);
-                    time2 = new TimeRange(timepoint++, end, oldStatus);
+                    time1 = new TimeRange(start, timepoint, oldStatus);
+                    time2 = new TimeRange(timepoint, end, oldStatus);
                 }
             } else {
                 int overlapS = overlap.getStart();
                 int overlapE = overlap.getEnd();
                 if(overlapS > start && overlapE < end) {
-                    time1 = new TimeRange(start, overlapS-1, oldStatus);
-                    time2 = new TimeRange(overlapE+1, end, oldStatus);
+                    time1 = new TimeRange(start, overlapS, oldStatus);
+                    time2 = new TimeRange(overlapE, end, oldStatus);
                 } else if(overlapS == start && overlapE < end) {
-                    time1 = new TimeRange(overlapE+1, end, oldStatus);
+                    time1 = new TimeRange(overlapE, end, oldStatus);
                 } else if(overlapE == end && overlapS > start) {
-                    time1 = new TimeRange(start, overlapS-1, oldStatus);
+                    time1 = new TimeRange(start, overlapS, oldStatus);
                 }
             }
             if(time1 != null) result.add(time1);

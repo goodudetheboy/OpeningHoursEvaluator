@@ -31,7 +31,8 @@ public class InputTest {
     /** Used for checking on the spot, convenient during debugging */
     @Test
     public void spotCheck() {
-        assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.OPEN, "xxxxx", 0, 0));
+        // assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
+        // print("10:00-2:00", "2021-06-09T03:00");
     }
 
     /**

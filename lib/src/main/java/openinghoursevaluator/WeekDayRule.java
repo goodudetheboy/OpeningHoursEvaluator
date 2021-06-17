@@ -132,7 +132,9 @@ public class WeekDayRule {
             buildClosedOrUnknown(rule, false);
             return;
         case OPEN:
-            for(TimeSpan timespan : rule.getTimes()) openingTimes.add(new TimeRange(timespan, Status.OPEN));
+            for(TimeSpan timespan : rule.getTimes()) {
+                openingTimes.add(new TimeRange(timespan, Status.OPEN));
+            }
             return;
         default:
         }
@@ -183,8 +185,7 @@ public class WeekDayRule {
     public Status checkStatus(LocalDateTime inputTime) {
         int timepoint = timeInMinute(inputTime); 
         for(TimeRange openingTime : openingTimes) {
-            if (openingTime.isTimePoint() && timepoint == openingTime.getStart()
-                    || timepoint >= openingTime.getStart()
+            if (timepoint >= openingTime.getStart()
                     && timepoint < openingTime.getEnd()) {
                 return openingTime.getStatus();
             }

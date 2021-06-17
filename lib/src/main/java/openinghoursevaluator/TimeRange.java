@@ -31,18 +31,20 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Constructor for creating a TimePoint with a Status
+     * Constructor for creating a TimePoint with a Status, the result
+     * will be a TimeRange with timepoint-timepoint+1.
+     * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
      * 
      * @param start timepoint
      * @param status Status to be set
      */
     public TimeRange(int timepoint, Status status) {
-        this(timepoint, timepoint, status);
+        this(timepoint, ++timepoint, status);
     }
 
     // Constructor with TimeSpan, TODO: fix later so it will fit into the stuff
     public TimeRange(TimeSpan timespan, Status status) {
-        this(timespan.getStart(), timespan.getEnd(), status);
+        this(timespan.getStart(), (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) ? timespan.getEnd() : timespan.getStart(), status);
     }
 
     /**
@@ -55,8 +57,11 @@ public class TimeRange implements Comparable<TimeRange> {
      */
     public TimeRange(int start, int end, Status status) {
         // TODO: sort out logic in this constructor
+        if(start == end && start == MAX_TIME) {
+            throw new IllegalArgumentException("Start and end cannot be both at " + MAX_TIME);
+        }
         setStart(start);
-        setEnd((end <= MAX_TIME) ? end : MAX_TIME);
+        setEnd((start == end) ? ++end : end);
         this.status = status;
     }
 
@@ -80,10 +85,10 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     public void setEnd(int end) {
-        if (end > MAX_TIME || end < MIN_TIME) {
+        if (end < MIN_TIME) {
             throw new IllegalArgumentException("Invalid time" + end + ", please keep time in 24 hours");
         }
-        this.end = end;
+        this.end = (end <= MAX_TIME) ? end : MAX_TIME;
     }
 
     public void setStatus(Status status) {
@@ -196,32 +201,18 @@ public class TimeRange implements Comparable<TimeRange> {
             int start = t.getStart();
             int end = t.getEnd();
             // TODO: add support for t.isTimePoint too
-            if (overlap.isTimePoint()) {
-                int timepoint = overlap.getTimePoint();
-                if (timepoint == start || timepoint == end) {
-                    time1 = new TimeRange(timepoint, oldStatus);
-                } else {
-                    time1 = new TimeRange(start, timepoint, oldStatus);
-                    time2 = new TimeRange(timepoint, end, oldStatus);
-                }
-            } else {
-                int overlapS = overlap.getStart();
-                int overlapE = overlap.getEnd();
-                if (overlapS > start && overlapE < end) {
-                    time1 = new TimeRange(start, overlapS, oldStatus);
-                    time2 = new TimeRange(overlapE, end, oldStatus);
-                } else if (overlapS == start && overlapE < end) {
-                    time1 = new TimeRange(overlapE, end, oldStatus);
-                } else if (overlapE == end && overlapS > start) {
-                    time1 = new TimeRange(start, overlapS, oldStatus);
-                }
+            int overlapS = overlap.getStart();
+            int overlapE = overlap.getEnd();
+            if (overlapS > start && overlapE < end) {
+                time1 = new TimeRange(start, overlapS, oldStatus);
+                time2 = new TimeRange(overlapE, end, oldStatus);
+            } else if (overlapS == start && overlapE < end) {
+                time1 = new TimeRange(overlapE, end, oldStatus);
+            } else if (overlapE == end && overlapS > start) {
+                time1 = new TimeRange(start, overlapS, oldStatus);
             }
-            if (time1 != null) {
-                result.add(time1);
-            }
-            if (time2 != null) {
-                result.add(time2);
-            }
+            if (time1 != null) result.add(time1);
+            if (time2 != null) result.add(time2);
         } else {
             result.add(t);
         }
@@ -260,23 +251,12 @@ public class TimeRange implements Comparable<TimeRange> {
             return null;
         }
     }
-    
-    /**
-     * @return true if this TimeRange only has start value, or just a TimePoint, false otherwise
-     */
-    public boolean isTimePoint() {
-        return start == end;
-    }
-
-    public int getTimePoint() {
-        return getStart();
-    }
 
     @Override
     public String toString() {
         TimeSpan timespan = new TimeSpan();
         timespan.setStart(start);
-        if (!isTimePoint()) timespan.setEnd(end);
+        timespan.setEnd(end);
         return timespan.toString() + "(" + status + ")";
     }
 

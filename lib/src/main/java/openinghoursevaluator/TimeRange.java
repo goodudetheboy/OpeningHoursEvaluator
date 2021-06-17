@@ -13,7 +13,7 @@ import ch.poole.openinghoursparser.TimeSpan;
  * If start value is equal to end value, then this TimeRange is considered a TimePoint
  * 
  */
-public class TimeRange implements Comparable<TimeRange>{
+public class TimeRange implements Comparable<TimeRange> {
     private static final int HOURS_24           = 1440;
     public static final int  UNDEFINED_TIME     = Integer.MIN_VALUE;
     public static final int  MIN_TIME          = 0;
@@ -46,14 +46,15 @@ public class TimeRange implements Comparable<TimeRange>{
     }
 
     /**
-     * Constructor for creating a TimeRange with a Status. If start is less than end, the two will be switched.
+     * Constructor for creating a TimeRange with a Status.
      * If start = end, this will create a TimePoint instead (only start is defined, isTimepoint() will be true)
      * 
-     * @param start start time
+     * @param start start time, must be less than end time
      * @param end end time
      * @param status Status to be set
      */
     public TimeRange(int start, int end, Status status) {
+        // TODO: sort out logic in this constructor
         setStart(start);
         setEnd((end <= MAX_TIME) ? end : MAX_TIME);
         this.status = status;
@@ -227,7 +228,39 @@ public class TimeRange implements Comparable<TimeRange>{
         return result;
     }
 
-
+    /**
+     * Merge two TimeRanges into one TimeRange if there is an overlap and with similar Status,
+     * if not this will return null
+     * 
+     * @param t1 first TimeRange
+     * @param t2 second TimeRange
+     * @return a TimeRange that is a merge of this two t1 and t2, null otherwise
+     */
+    public static TimeRange merge(TimeRange t1, TimeRange t2) {
+        int overlapCode = t1.overlapsCode(t2);
+        if(!t1.getStatus().equals(t2.getStatus()) || overlapCode == 0) {
+            return null;
+        }
+        TimeRange result = new TimeRange();
+        result.setStatus(t1.getStatus());
+        switch(overlapCode) {
+        case 1:
+            return t2;
+        case 2:
+            result.setStart(t2.getStart());
+            result.setEnd(t1.getEnd());
+            return result;
+        case 3:
+            result.setStart(t1.getStart());
+            result.setEnd(t2.getEnd());
+            return result;
+        case 4:
+            return t1;            
+        default:
+            return null;
+        }
+    }
+    
     /**
      * @return true if this TimeRange only has start value, or just a TimePoint, false otherwise
      */

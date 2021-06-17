@@ -210,6 +210,20 @@ public class WeekDayRule {
         Collections.sort(openingTimes);
     }
 
+    /** Clean by sorting and removing duplicates of this WeekDay in this WeekDayRule. */
+    public void clean() {
+        sort();
+        int i = 0;
+        while(i < openingTimes.size()-1) {
+            TimeRange merge = TimeRange.merge(openingTimes.get(i), openingTimes.get(i+1));
+            if(merge != null) {
+                openingTimes.set(i, merge);
+                openingTimes.remove(i+1);
+                i--;
+            }
+            i++;
+        }
+    }
 
     @Override
     public String toString() {

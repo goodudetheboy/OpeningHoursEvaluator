@@ -35,7 +35,7 @@ public class Week {
         for(Rule rule : rules) {
             update(rule);
         }
-        sort();
+        clean();
     }
 
     /**
@@ -163,10 +163,10 @@ public class Week {
     }
 
     /** Sort all WeekDayRule in this Week */
-    public void sort() {
+    public void clean() {
         for(WeekDay weekday : WeekDay.values()) {
             if(weekRule.get(weekday) != null) {
-                weekRule.get(weekday).sort();
+                weekRule.get(weekday).clean();
             }
         }
     }
@@ -175,8 +175,7 @@ public class Week {
     public void fillEmpty() {
         for(WeekDay weekday : WeekDay.values()) {
             if(weekRule.get(weekday) == null) {
-                Rule empty = new Rule();
-                weekRule.put(weekday, new WeekDayRule(empty, weekday));
+                weekRule.put(weekday, new WeekDayRule(new Rule(), weekday));
             }
         }
     }

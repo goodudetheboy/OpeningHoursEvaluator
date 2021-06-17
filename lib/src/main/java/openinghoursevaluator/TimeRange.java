@@ -266,4 +266,12 @@ public class TimeRange implements Comparable<TimeRange>{
         }
         return false;
     }
+
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = 37 * result + start;
+        result = 37 * result + end;
+        return result;
+    }
 }

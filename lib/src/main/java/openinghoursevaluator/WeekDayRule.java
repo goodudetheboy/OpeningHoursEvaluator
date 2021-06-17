@@ -14,7 +14,7 @@ public class WeekDayRule {
     Rule        currentRule     = null;
     List<Rule>  offRule         = null; // TODO: to be supported later
     List<Rule>  unknownRule     = null;
-    List<Rule>  fallbackRule    = null; // TODO: to be supported later
+    List<Rule>  additiveRule    = null; // TODO: to be supported later
     WeekDay     weekday         = null;
     List<TimeRange> openingTimes = null;
 
@@ -61,6 +61,7 @@ public class WeekDayRule {
         this.weekday = weekday;
         this.offRule = new ArrayList<>();
         this.unknownRule = new ArrayList<>();
+        this.additiveRule = new ArrayList<>();
         this.openingTimes = new ArrayList<>();
         build();
     }
@@ -117,6 +118,7 @@ public class WeekDayRule {
      * @param rule Rule to be added
      */
     public void add(Rule rule) {
+        additiveRule.add(rule);
         if (rule.isTwentyfourseven() || rule.getTimes() == null) {
             TimeRange timerange = new TimeRange(0, 1440, Status.OPEN);
             openingTimes.add(timerange);

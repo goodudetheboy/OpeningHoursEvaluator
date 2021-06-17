@@ -92,7 +92,11 @@ public class Week {
     void updateHelper(Rule rule, WeekDay weekday, Rule spilledRule) {
         WeekDayRule oldRule = weekRule.get(weekday);
         if (oldRule != null) {
-            oldRule.build(rule);
+            if (rule.isAdditive()) {
+                oldRule.add(rule);
+            } else {
+                oldRule.build(rule);
+            }
         } else {
             weekRule.put(weekday, new WeekDayRule(rule, weekday));
         }

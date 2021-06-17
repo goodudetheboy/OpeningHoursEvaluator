@@ -85,7 +85,9 @@ public class Week {
                 }
             }
             fillEmpty();
-            weekRule.get(current).add(spilledRule);
+            if(spilledRule != null) {
+                weekRule.get(current).add(spilledRule);
+            }
         }
     }
     /** Helper for update(), check if a rule has been built, if not create new*/
@@ -106,6 +108,9 @@ public class Week {
     }
 
     Rule getSpilledRule(Rule rule) {
+        if(rule.getTimes() == null) {
+            return null;
+        }
         Rule spilledRule = new Rule();
         spilledRule.setModifier(rule.getModifier());
         List<TimeSpan> spilledTimeList = new ArrayList<>();

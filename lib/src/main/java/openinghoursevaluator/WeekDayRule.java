@@ -112,22 +112,41 @@ public class WeekDayRule {
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            List<TimeRange> newOpeningTimes = new ArrayList<>();
-            for (TimeRange openingTime: openingTimes) {
-                for (TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
-                    newOpeningTimes.add(newTime);
-                }
+            int interval = timespan.getInterval();
+            if (interval != 0) {
+                int start = timespan.getStart();
+                int end = timespan.getEnd();
+                do {
+                    TimeSpan timepoint = new TimeSpan();
+                    timepoint.setStart(start);
+                    addTime(timepoint, Status.convert(rule.getModifier()));
+                } while ((start = start + interval) <= end && start < 1440);
+            } else {
+                addTime(timespan, Status.convert(rule.getModifier()));
             }
-            switch(Status.convert(rule.getModifier())) {
-                case UNKNOWN:
-                    newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
-                    break;
-                case OPEN:
-                    newOpeningTimes.add(new TimeRange(timespan, Status.OPEN));
-                    break;
-                default:
-            }
-            openingTimes = newOpeningTimes;
+        }
+    }
+
+    public void addTime(TimeSpan timespan, Status status) {
+        List<TimeRange> newOpeningTimes = new ArrayList<>();
+        for (TimeRange openingTime : openingTimes) {
+            newOpeningTimes.addAll(TimeRange.cut(openingTime, new TimeRange(timespan, null)));
+        }
+        switch(status) {
+            case UNKNOWN:
+                newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
+                break;
+            case OPEN:
+                newOpeningTimes.add(new TimeRange(timespan, Status.OPEN));
+                break;
+            default:
+        }
+        openingTimes = newOpeningTimes;
+    }
+
+    public void addInterval(Rule rule) {
+        for (TimeSpan timespan : rule.getTimes()) {
+
         }
     }
 

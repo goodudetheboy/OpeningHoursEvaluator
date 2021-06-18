@@ -119,6 +119,7 @@ public class Week {
                 TimeSpan spilledTime = new TimeSpan();
                 spilledTime.setStart(0);
                 spilledTime.setEnd(timespan.getEnd() - TimeRange.MAX_TIME); 
+                spilledTime.setInterval(timespan.getInterval());
                 spilledTimeList.add(spilledTime);
             }
         }

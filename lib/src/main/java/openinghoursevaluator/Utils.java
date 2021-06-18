@@ -1,8 +1,8 @@
 package openinghoursevaluator;
 
-public class Tools {
+public class Utils {
     /** Default constructor */
-    private Tools() {
+    private Utils() {
         // empty on purpose
     }
 

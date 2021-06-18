@@ -48,7 +48,7 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Constructor for creating a TimeRange with a Status.
+     * Constructor for creating a TimeRange with a Status. Sta
      * If start = end, this will create a TimePoint instead (only start is defined, isTimepoint() will be true)
      * 
      * @param start start time, must be less than end time
@@ -57,8 +57,13 @@ public class TimeRange implements Comparable<TimeRange> {
      */
     public TimeRange(int start, int end, Status status) {
         // TODO: sort out logic in this constructor
-        if(start == end && start == MAX_TIME) {
+        if (start == end && start == MAX_TIME) {
             throw new IllegalArgumentException("Start and end cannot be both at " + MAX_TIME);
+        }
+        if (start > end) {
+            int t = start;
+            start = end;
+            end = t;
         }
         setStart(start);
         setEnd((start == end) ? ++end : end);
@@ -111,24 +116,14 @@ public class TimeRange implements Comparable<TimeRange> {
     public int overlapsCode(TimeRange other) {
         int otherStart = other.getStart();
         int otherEnd = other.getEnd();
-
-        if (Tools.isBetween(start, otherStart, otherEnd)
-                && Tools.isBetween(end, otherStart, otherEnd)) {
-            return 1;
+        if(start >= otherEnd || end <= otherStart) {
+            return 0;
         }
-        if (Tools.isBetween(start, otherStart, otherEnd)
-                && end >= otherEnd) {
-            return 2;
+        if (Utils.isBetween(start, otherStart, otherEnd)) {
+            return (Utils.isBetween(end, otherStart, otherEnd)) ? 1 : 2;
+        } else {
+            return (Utils.isBetween(end, otherStart, otherEnd)) ? 3 : 4;
         }
-        if (Tools.isBetween(end, otherStart, otherEnd)
-                && start <= otherStart) {
-           return 3;
-        }
-        if (Tools.isBetween(otherStart, start, end)
-                && Tools.isBetween(otherEnd, start, end)) {
-            return 4;
-        }
-        return 0;
     }
 
     /**
@@ -148,7 +143,6 @@ public class TimeRange implements Comparable<TimeRange> {
      * @return a TimeRange that overlaps both this and other TimeRange, null if it can't be merged
      */
     public TimeRange overlapWith(TimeRange other) {
-        // TODO: add support for both timepoint
         int overlapsCode = this.overlapsCode(other);
         if (overlapsCode == 0) {
             return null;
@@ -178,10 +172,7 @@ public class TimeRange implements Comparable<TimeRange> {
             break; 
         default: // hopefully this never gets here
         }
-        TimeRange overlap = new TimeRange();
-        overlap.setStart((startOverlap < endOverlap) ? startOverlap : endOverlap);
-        overlap.setEnd((startOverlap > endOverlap) ? startOverlap : endOverlap);
-        return overlap;
+        return new TimeRange(startOverlap, endOverlap, null);
     }
 
     /**
@@ -196,23 +187,12 @@ public class TimeRange implements Comparable<TimeRange> {
         TimeRange overlap = t.overlapWith(other);
         Status oldStatus = t.getStatus();
         if (overlap != null) {
-            TimeRange time1 = null;
-            TimeRange time2 = null;
-            int start = t.getStart();
-            int end = t.getEnd();
-            // TODO: add support for t.isTimePoint too
-            int overlapS = overlap.getStart();
-            int overlapE = overlap.getEnd();
-            if (overlapS > start && overlapE < end) {
-                time1 = new TimeRange(start, overlapS, oldStatus);
-                time2 = new TimeRange(overlapE, end, oldStatus);
-            } else if (overlapS == start && overlapE < end) {
-                time1 = new TimeRange(overlapE, end, oldStatus);
-            } else if (overlapE == end && overlapS > start) {
-                time1 = new TimeRange(start, overlapS, oldStatus);
+            if (overlap.getStart() > t.getStart()) {
+                result.add(new TimeRange(t.getStart(), overlap.getStart(), oldStatus));
+            } 
+            if (overlap.getEnd() < t.getEnd()) {
+                result.add(new TimeRange(overlap.getEnd(), t.getEnd(), oldStatus));
             }
-            if (time1 != null) result.add(time1);
-            if (time2 != null) result.add(time2);
         } else {
             result.add(t);
         }

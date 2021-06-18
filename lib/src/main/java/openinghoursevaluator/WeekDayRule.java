@@ -99,19 +99,6 @@ public class WeekDayRule {
         add(rule);
     }
 
-    void buildClosedOrUnknown(Rule rule, boolean isClosed) {
-        for(TimeSpan timespan : rule.getTimes()) {
-            List<TimeRange> newOpeningTimes = new ArrayList<>();
-            for(TimeRange openingTime: openingTimes) {
-                for(TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
-                    newOpeningTimes.add(newTime);
-                }
-            }
-            if (!isClosed) newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
-            openingTimes = newOpeningTimes;
-        } 
-    }
-
     /**
      * A soft version of build(), where opening rule does not overwrite current day
      * 
@@ -124,19 +111,23 @@ public class WeekDayRule {
             openingTimes.add(timerange);
             return;
         }
-        switch(Status.convert(rule.getModifier())) {
-        case CLOSED:
-            buildClosedOrUnknown(rule, true);
-            return;
-        case UNKNOWN:
-            buildClosedOrUnknown(rule, false);
-            return;
-        case OPEN:
-            for(TimeSpan timespan : rule.getTimes()) {
-                openingTimes.add(new TimeRange(timespan, Status.OPEN));
+        for (TimeSpan timespan : rule.getTimes()) {
+            List<TimeRange> newOpeningTimes = new ArrayList<>();
+            for (TimeRange openingTime: openingTimes) {
+                for (TimeRange newTime : TimeRange.cut(openingTime, new TimeRange(timespan, null))) {
+                    newOpeningTimes.add(newTime);
+                }
             }
-            return;
-        default:
+            switch(Status.convert(rule.getModifier())) {
+                case UNKNOWN:
+                    newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
+                    break;
+                case OPEN:
+                    newOpeningTimes.add(new TimeRange(timespan, Status.OPEN));
+                    break;
+                default:
+            }
+            openingTimes = newOpeningTimes;
         }
     }
 
@@ -184,7 +175,7 @@ public class WeekDayRule {
      */
     public Status checkStatus(LocalDateTime inputTime) {
         int timepoint = timeInMinute(inputTime); 
-        for(TimeRange openingTime : openingTimes) {
+        for (TimeRange openingTime : openingTimes) {
             if (timepoint >= openingTime.getStart()
                     && timepoint < openingTime.getEnd()) {
                 return openingTime.getStatus();
@@ -229,7 +220,7 @@ public class WeekDayRule {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        for(TimeRange openingTime : openingTimes) {
+        for (TimeRange openingTime : openingTimes) {
             b.append(openingTime.toString());
             b.append(" ");
         }

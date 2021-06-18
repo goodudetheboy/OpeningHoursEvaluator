@@ -32,7 +32,7 @@ public class Week {
      * @param isStrict strict or not
      */
     public void build(boolean isStrict) {
-        for(Rule rule : rules) {
+        for (Rule rule : rules) {
             update(rule);
         }
         clean();
@@ -45,7 +45,7 @@ public class Week {
      */
     public void update(Rule rule) {
         if (isUniversal(rule)){
-            for(WeekDay weekday : WeekDay.values()) {
+            for (WeekDay weekday : WeekDay.values()) {
                 updateHelper(rule, weekday, null);
             }
             return;
@@ -61,7 +61,7 @@ public class Week {
             weekdayRange = new ArrayList<>();
             weekdayRange.add(allWeekDays);
         }
-        for(WeekDayRange weekdays : weekdayRange) {
+        for (WeekDayRange weekdays : weekdayRange) {
             WeekDay start = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null) ? weekdays.getEndDay() : weekdays.getStartDay();
             if (end.ordinal() < start.ordinal()) {
@@ -76,7 +76,7 @@ public class Week {
              * afterwards
              */
             
-            for(int i=current.ordinal(); i <= end.ordinal(); i++) {
+            for (int i=current.ordinal(); i <= end.ordinal(); i++) {
                 updateHelper(rule, current, spilledRule);
                 spilledRule = getSpilledRule(rule);
                 current = getNextWeekDay(current);
@@ -114,7 +114,7 @@ public class Week {
         Rule spilledRule = new Rule();
         spilledRule.setModifier(rule.getModifier());
         List<TimeSpan> spilledTimeList = new ArrayList<>();
-        for(TimeSpan timespan : rule.getTimes()) {
+        for (TimeSpan timespan : rule.getTimes()) {
             if (timespan.getEnd() > TimeRange.MAX_TIME) {
                 TimeSpan spilledTime = new TimeSpan();
                 spilledTime.setStart(0);
@@ -159,7 +159,7 @@ public class Week {
      */
     public WeekDay toWeekDay(DayOfWeek dayOfWeek) {
         int dayOfWeekNth = dayOfWeek.ordinal();
-        for(WeekDay weekday : WeekDay.values()) {
+        for (WeekDay weekday : WeekDay.values()) {
             if (weekday.ordinal() == dayOfWeekNth) {
                 return weekday;
             }
@@ -169,7 +169,7 @@ public class Week {
 
     /** Sort all WeekDayRule in this Week */
     public void clean() {
-        for(WeekDay weekday : WeekDay.values()) {
+        for (WeekDay weekday : WeekDay.values()) {
             if(weekRule.get(weekday) != null) {
                 weekRule.get(weekday).clean();
             }
@@ -178,7 +178,7 @@ public class Week {
 
     /** Fill all empty WeekDay in weekDayRule with empty List */
     public void fillEmpty() {
-        for(WeekDay weekday : WeekDay.values()) {
+        for (WeekDay weekday : WeekDay.values()) {
             if(weekRule.get(weekday) == null) {
                 weekRule.put(weekday, new WeekDayRule(new Rule(), weekday));
             }
@@ -188,7 +188,7 @@ public class Week {
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
-        for(WeekDay weekday : WeekDay.values()) {
+        for (WeekDay weekday : WeekDay.values()) {
             b.append(weekday);
             b.append(" : ");
             if (weekRule.get(weekday) != null) {

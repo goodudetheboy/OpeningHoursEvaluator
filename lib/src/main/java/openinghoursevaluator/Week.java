@@ -64,14 +64,14 @@ public class Week {
         }
         for (WeekDayRange weekdays : weekdayRange) {
             WeekDay current = weekdays.getStartDay();
-            WeekDay end = (weekdays.getEndDay() != null) ? weekdays.getEndDay() : weekdays.getStartDay();
-            end = (end.ordinal() < current.ordinal()) ? WeekDay.SU : end;
+            WeekDay end = (weekdays.getEndDay() != null)
+                            ? weekdays.getEndDay()
+                            : weekdays.getStartDay();
             do {
                 updateHelper(rule, current, spilledRule);
                 spilledRule = getSpilledRule(rule);
                 current = getNextWeekDay(current);
-            }
-            while(current.ordinal() <= end.ordinal() && current != WeekDay.MO); 
+            } while(current != getNextWeekDay(end)); 
             if(spilledRule != null) {
                 weekRule.get(current).add(spilledRule);
             }

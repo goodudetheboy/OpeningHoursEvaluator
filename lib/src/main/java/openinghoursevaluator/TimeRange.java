@@ -116,7 +116,7 @@ public class TimeRange implements Comparable<TimeRange> {
     public int overlapsCode(TimeRange other) {
         int otherStart = other.getStart();
         int otherEnd = other.getEnd();
-        if(start > otherEnd || end < otherStart) {
+        if (start > otherEnd || end < otherStart) {
             return 0;
         }
         if (Utils.isBetween(start, otherStart, otherEnd)) {
@@ -153,7 +153,7 @@ public class TimeRange implements Comparable<TimeRange> {
         int startOverlap = -1;
         int endOverlap = -1;
 
-        switch(overlapsCode) {
+        switch (overlapsCode) {
         case 1:
             startOverlap = start;
             endOverlap = end;
@@ -172,7 +172,10 @@ public class TimeRange implements Comparable<TimeRange> {
             break; 
         default: // hopefully this never gets here
         }
-        return new TimeRange(startOverlap, endOverlap, null);
+        TimeRange result = new TimeRange();
+        result.setStart((startOverlap > endOverlap) ? endOverlap : startOverlap);
+        result.setEnd((endOverlap < startOverlap) ? startOverlap : endOverlap);
+        return result;
     }
 
     /**
@@ -209,12 +212,12 @@ public class TimeRange implements Comparable<TimeRange> {
      */
     public static TimeRange merge(TimeRange t1, TimeRange t2) {
         int overlapCode = t1.overlapsCode(t2);
-        if(!t1.getStatus().equals(t2.getStatus()) || overlapCode == 0) {
+        if (!t1.getStatus().equals(t2.getStatus()) || overlapCode == 0) {
             return null;
         }
         TimeRange result = new TimeRange();
         result.setStatus(t1.getStatus());
-        switch(overlapCode) {
+        switch (overlapCode) {
         case 1:
             return t2;
         case 2:

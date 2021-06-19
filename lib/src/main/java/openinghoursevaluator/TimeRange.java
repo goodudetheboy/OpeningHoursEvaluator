@@ -16,8 +16,8 @@ import ch.poole.openinghoursparser.TimeSpan;
 public class TimeRange implements Comparable<TimeRange> {
     private static final int HOURS_24           = 1440;
     public static final int  UNDEFINED_TIME     = Integer.MIN_VALUE;
-    public static final int  MIN_TIME          = 0;
-    public static final int  MAX_TIME          = HOURS_24;
+    public static final int  MIN_TIME           = 0;
+    public static final int  MAX_TIME           = HOURS_24;
 
     int     start   = UNDEFINED_TIME;
     int     end     = UNDEFINED_TIME;
@@ -42,7 +42,7 @@ public class TimeRange implements Comparable<TimeRange> {
         this(timepoint, ++timepoint, status);
     }
 
-    // Constructor with TimeSpan, TODO: fix later so it will fit into the stuff
+    // Constructor with TimeSpan
     public TimeRange(TimeSpan timespan, Status status) {
         this(timespan.getStart(), (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) ? timespan.getEnd() : timespan.getStart(), status);
     }
@@ -116,7 +116,7 @@ public class TimeRange implements Comparable<TimeRange> {
     public int overlapsCode(TimeRange other) {
         int otherStart = other.getStart();
         int otherEnd = other.getEnd();
-        if(start >= otherEnd || end <= otherStart) {
+        if(start > otherEnd || end < otherStart) {
             return 0;
         }
         if (Utils.isBetween(start, otherStart, otherEnd)) {

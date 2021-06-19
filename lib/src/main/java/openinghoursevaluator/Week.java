@@ -32,6 +32,7 @@ public class Week {
      * @param isStrict strict or not
      */
     public void build(boolean isStrict) {
+        fillEmpty();
         for (Rule rule : rules) {
             update(rule);
         }
@@ -62,29 +63,15 @@ public class Week {
             weekdayRange.add(allWeekDays);
         }
         for (WeekDayRange weekdays : weekdayRange) {
-            WeekDay start = weekdays.getStartDay();
+            WeekDay current = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null) ? weekdays.getEndDay() : weekdays.getStartDay();
-            if (end.ordinal() < start.ordinal()) {
-                end = WeekDay.SU;
-            }
-            WeekDay current = start;
-            /**
-             * TimeSpan spilling to the next day current handling method (subject to changes):
-             * Enforce TimeRange created from spilling TimeSpan to create only in 24 hours
-             * which means that if an input TimeSpan is 23:00-2:00, for example, the resulting
-             * TimeRange created is only 23:00-24:00, and all spilled rule are saved and added
-             * afterwards
-             */
-            
-            for (int i=current.ordinal(); i <= end.ordinal(); i++) {
+            end = (end.ordinal() < current.ordinal()) ? WeekDay.SU : end;
+            do {
                 updateHelper(rule, current, spilledRule);
                 spilledRule = getSpilledRule(rule);
                 current = getNextWeekDay(current);
-                if(current == WeekDay.MO) {
-                    break;
-                }
             }
-            fillEmpty();
+            while(current.ordinal() <= end.ordinal() && current != WeekDay.MO); 
             if(spilledRule != null) {
                 weekRule.get(current).add(spilledRule);
             }
@@ -124,7 +111,7 @@ public class Week {
             }
         }
         spilledRule.setTimes(spilledTimeList);
-        return spilledRule;
+        return (!spilledRule.getTimes().isEmpty()) ? spilledRule : null;
     }
 
     /**

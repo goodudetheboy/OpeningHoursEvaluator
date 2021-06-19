@@ -107,8 +107,10 @@ public class WeekDayRule {
     public void add(Rule rule) {
         additiveRule.add(rule);
         if (rule.isTwentyfourseven() || rule.getTimes() == null) {
-            TimeRange timerange = new TimeRange(0, 1440, Status.OPEN);
-            openingTimes.add(timerange);
+            TimeSpan allDay = new TimeSpan();
+            allDay.setStart(0);
+            allDay.setEnd(1440);
+            addTime(allDay, Status.convert(rule.getModifier()));
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
@@ -142,12 +144,6 @@ public class WeekDayRule {
             default:
         }
         openingTimes = newOpeningTimes;
-    }
-
-    public void addInterval(Rule rule) {
-        for (TimeSpan timespan : rule.getTimes()) {
-
-        }
     }
 
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {

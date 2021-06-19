@@ -50,7 +50,7 @@ dependencies {
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:29.0-jre'
 
-    compile "ch.poole:OpeningHoursParser:0.23.3"
+    compile "ch.poole:OpeningHoursParser:0.23.4"
 }
 
 task testCI(type: JavaExec) {

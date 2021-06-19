@@ -28,6 +28,12 @@ public class InputTest {
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN, "xxxxx", 0, 0));
     }
 
+    @Test
+    public void printCheck() {
+        printBatch("test-data/oh/timepoint.txt-oh", "2021-06-09T15:00");
+        printBatch("test-data/oh/weekday.txt-oh", "2021-06-09T15:00");
+    }
+
     /** Used for checking on the spot, convenient during debugging */
     @Test
     public void spotCheck() {
@@ -54,16 +60,15 @@ public class InputTest {
         int lineNumInput = 0;
         try {
             openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
-
             answerReader = new BufferedReader(new InputStreamReader(new FileInputStream(answerFile), StandardCharsets.UTF_8));
             String openingHours;
             String[] answers;
             lineNumOH = 1;
-            while((openingHours = openingHoursReader.readLine())    != null &&
+            while ((openingHours = openingHoursReader.readLine())    != null &&
                   (answers = answerReader.readLine().split("\\s+")) != null) {
                 lineNumInput = 1;
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
-                for(String answerString : answers) {
+                for (String answerString : answers) {
                     String inputTime = inputTimeReader.readLine();
                     Status answer = Status.convert(answerString);
                     if (!evaluateCheck(openingHours, inputTime, answer, openingHoursFile, lineNumOH, lineNumInput)) {
@@ -74,7 +79,6 @@ public class InputTest {
                 lineNumOH++;
             }
         } catch (NullPointerException e) {
-
             e.printStackTrace();
             fail("Null pointer exception occured, maybe some test cases doesn't have answer yet?");
         } catch (FileNotFoundException e) {
@@ -136,8 +140,41 @@ public class InputTest {
         return evaluator.checkStatus(inputTime);
     }
 
+    /**
+     * Print the weekly schedule created by all opening hours in an input opening hours file,
+     * the week data is taken from a LocalDateTime inputTime string
+     * 
+     * @param openingHoursFile OH files
+     * @param inputTime for use to get week data
+     */
+    public void printBatch(String openingHoursFile, String inputTime) {
+        System.out.println("Printing week schedule created from opening hours in " + openingHoursFile);
+        BufferedReader openingHoursReader = null;
+        try {
+            openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
+            String openingHours;
+            while ((openingHours = openingHoursReader.readLine()) != null) {
+                System.out.println(openingHours);
+                print(openingHours, inputTime);
+                System.out.println("___________________________________\n");
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            fail("File not found exception occured");
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            fail("IOexception occured");
+        } finally {
+            try { 
+                openingHoursReader.close();
+            } catch (IOException ioe) {
+                fail("Error closing BufferedReader");
+            }
+        }
+    }
+
     public void print(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
-        System.out.println(evaluator.toString(inputTime));
+        System.out.print(evaluator.toString(inputTime));
     }
 }

@@ -22,6 +22,7 @@ public class TimeRange implements Comparable<TimeRange> {
     int     start   = UNDEFINED_TIME;
     int     end     = UNDEFINED_TIME;
     Status  status  = null;
+    String  comment = null;
 
     /**
      * Default constructor
@@ -30,12 +31,17 @@ public class TimeRange implements Comparable<TimeRange> {
         // empty on purpose
     }
 
+    /** Constructor for copying TimeRange */
+    public TimeRange(TimeRange another) {
+        this(another.getStart(), another.getEnd(), another.getStatus(), another.getComment());
+    }
+
     /**
      * Constructor for creating a TimePoint with a Status, the result
      * will be a TimeRange with timepoint-timepoint+1.
      * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
      * 
-     * @param start timepoint
+     * @param timepoint a point in time
      * @param status Status to be set
      */
     public TimeRange(int timepoint, Status status) {
@@ -44,12 +50,14 @@ public class TimeRange implements Comparable<TimeRange> {
 
     // Constructor with TimeSpan
     public TimeRange(TimeSpan timespan, Status status) {
-        this(timespan.getStart(), (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) ? timespan.getEnd() : timespan.getStart(), status);
+        this(timespan.getStart(),
+            (timespan.getEnd() != TimeSpan.UNDEFINED_TIME)  ? timespan.getEnd()
+                                                            : timespan.getStart(),
+            status);
     }
 
     /**
      * Constructor for creating a TimeRange with a Status. Sta
-     * If start = end, this will create a TimePoint instead (only start is defined, isTimepoint() will be true)
      * 
      * @param start start time, must be less than end time
      * @param end end time
@@ -70,6 +78,40 @@ public class TimeRange implements Comparable<TimeRange> {
         this.status = status;
     }
 
+    /**
+     * Constructor for creating a TimePoint with a Status and a comment, the result
+     * will be a TimeRange with timepoint-timepoint+1.
+     * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
+     * 
+     * @param timepoint timepoint
+     * @param status Status to be set
+     * @param comment
+     */
+    public TimeRange(int timepoint, Status status, String comment) {
+        this(timepoint, ++timepoint, status, comment);
+    }
+
+    /** Constructor with TimeSpan and a comment */
+    public TimeRange(TimeSpan timespan, Status status, String comment) {
+        this(timespan.getStart(),
+            (timespan.getEnd() != TimeSpan.UNDEFINED_TIME)  ? timespan.getEnd()
+                                                            : timespan.getStart(),
+            status, comment);
+    }
+
+    /**
+     * Constructor for creating a TimeRange with a Status and a comment
+     * 
+     * @param start start time, must be less than end time
+     * @param end end time
+     * @param status Status to be set
+     */
+    public TimeRange(int start, int end, Status status, String comment) {
+        this(start, end, status);
+        this.comment = comment;
+    }
+    
+
     public int getStart() {
         return start;
     }
@@ -80,6 +122,10 @@ public class TimeRange implements Comparable<TimeRange> {
 
     public Status getStatus() {
         return status;
+    }
+
+    public String getComment() {
+        return comment;
     }
 
     public void setStart(int start) {
@@ -98,6 +144,14 @@ public class TimeRange implements Comparable<TimeRange> {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public boolean hasComment() {
+        return comment != null;
     }
 
     /**
@@ -190,11 +244,12 @@ public class TimeRange implements Comparable<TimeRange> {
         TimeRange overlap = t.overlapWith(other);
         Status oldStatus = t.getStatus();
         if (overlap != null) {
+            String comment = (t.hasComment()) ? t.getComment() : null;
             if (overlap.getStart() > t.getStart()) {
-                result.add(new TimeRange(t.getStart(), overlap.getStart(), oldStatus));
+                result.add(new TimeRange(t.getStart(), overlap.getStart(), oldStatus, comment));
             } 
             if (overlap.getEnd() < t.getEnd()) {
-                result.add(new TimeRange(overlap.getEnd(), t.getEnd(), oldStatus));
+                result.add(new TimeRange(overlap.getEnd(), t.getEnd(), oldStatus, comment));
             }
         } else {
             result.add(t);
@@ -203,33 +258,48 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
+     * This TimeRange is mergeable with the other TimeRange when:
+     * both's Status is equal, and either they both have comments
+     * and the comments are equal or neither of them have comments
+     * 
+     * @param other the other TimeRange to be checked for merge
+     * @return true if mergeable, false otherwise
+     */
+    public boolean isMergeable(TimeRange other) {
+        // TODO: consider adding overlapCode instead of inside the merge
+        return status.equals(other.getStatus())
+                    && ((hasComment() && other.hasComment()
+                            && comment.equals(other.getComment()))
+                        || !hasComment() && !other.hasComment());
+    }                   
+
+    /**
      * Merge two TimeRanges into one TimeRange if there is an overlap and with similar Status,
      * if not this will return null
      * 
-     * @param t1 first TimeRange
-     * @param t2 second TimeRange
+     * @param other second TimeRange
      * @return a TimeRange that is a merge of this two t1 and t2, null otherwise
      */
-    public static TimeRange merge(TimeRange t1, TimeRange t2) {
-        int overlapCode = t1.overlapsCode(t2);
-        if (!t1.getStatus().equals(t2.getStatus()) || overlapCode == 0) {
+    public TimeRange merge(TimeRange other) {
+        int overlapCode = overlapsCode(other);
+        if (!this.isMergeable(other) || overlapCode == 0) {
             return null;
         }
         TimeRange result = new TimeRange();
-        result.setStatus(t1.getStatus());
+        result.setStatus(status);
         switch (overlapCode) {
         case 1:
-            return t2;
+            return other;
         case 2:
-            result.setStart(t2.getStart());
-            result.setEnd(t1.getEnd());
+            result.setStart(other.getStart());
+            result.setEnd(end);
             return result;
         case 3:
-            result.setStart(t1.getStart());
-            result.setEnd(t2.getEnd());
+            result.setStart(start);
+            result.setEnd(other.getEnd());
             return result;
         case 4:
-            return t1;            
+            return this;            
         default:
             return null;
         }
@@ -237,10 +307,16 @@ public class TimeRange implements Comparable<TimeRange> {
 
     @Override
     public String toString() {
+        StringBuilder b = new StringBuilder();
         TimeSpan timespan = new TimeSpan();
         timespan.setStart(start);
         timespan.setEnd(end);
-        return timespan.toString() + "(" + status + ")";
+        b.append(timespan.toString() + "(" + status);
+        if(hasComment()) {
+            b.append(" - \"" + comment +"\"");
+        }
+        b.append(")");
+        return b.toString();
     }
 
     @Override

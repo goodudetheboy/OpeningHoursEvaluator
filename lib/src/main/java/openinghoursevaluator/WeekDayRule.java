@@ -105,12 +105,15 @@ public class WeekDayRule {
      * @param rule Rule to be added
      */
     public void add(Rule rule) {
-        additiveRule.add(rule);
+        additiveRule.add(rule); // TODO: do something about storing Rule
+        String comment = (rule.getModifier() != null)
+                            ? rule.getModifier().getComment()
+                            : null;
         if (rule.isTwentyfourseven() || rule.getTimes() == null) {
             TimeSpan allDay = new TimeSpan();
             allDay.setStart(0);
             allDay.setEnd(1440);
-            addTime(allDay, Status.convert(rule.getModifier()));
+            addTime(allDay, Status.convert(rule.getModifier()), comment);
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
@@ -121,25 +124,25 @@ public class WeekDayRule {
                 do {
                     TimeSpan timepoint = new TimeSpan();
                     timepoint.setStart(start);
-                    addTime(timepoint, Status.convert(rule.getModifier()));
+                    addTime(timepoint, Status.convert(rule.getModifier()), comment);
                 } while ((start = start + interval) <= end && start < 1440);
             } else {
-                addTime(timespan, Status.convert(rule.getModifier()));
+                addTime(timespan, Status.convert(rule.getModifier()), comment);
             }
         }
     }
 
-    public void addTime(TimeSpan timespan, Status status) {
+    public void addTime(TimeSpan timespan, Status status, String comment) {
         List<TimeRange> newOpeningTimes = new ArrayList<>();
         for (TimeRange openingTime : openingTimes) {
             newOpeningTimes.addAll(TimeRange.cut(openingTime, new TimeRange(timespan, null)));
         }
         switch(status) {
             case UNKNOWN:
-                newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN));
+                newOpeningTimes.add(new TimeRange(timespan, Status.UNKNOWN, comment));
                 break;
             case OPEN:
-                newOpeningTimes.add(new TimeRange(timespan, Status.OPEN));
+                newOpeningTimes.add(new TimeRange(timespan, Status.OPEN, comment));
                 break;
             default:
         }
@@ -189,7 +192,7 @@ public class WeekDayRule {
      * @return true if opening; false if closed
      */
     public Status checkStatus(LocalDateTime inputTime) {
-        int timepoint = timeInMinute(inputTime); 
+        int timepoint = Utils.timeInMinute(inputTime); 
         for (TimeRange openingTime : openingTimes) {
             if (timepoint >= openingTime.getStart()
                     && timepoint < openingTime.getEnd()) {
@@ -200,15 +203,6 @@ public class WeekDayRule {
         return Status.CLOSED;
     }
 
-    /**
-     * Helper function
-     * Convert hour and minute of a LocalDateTime instance to minutes
-     *  
-     * @param time a LocalDateTime instance
-    */
-    int timeInMinute(LocalDateTime time) {
-        return time.getHour()*60 + time.getMinute();
-    }
 
     /** 
      * Sort the TimeRange of this WeekDayRule by order of start time
@@ -222,7 +216,7 @@ public class WeekDayRule {
         sort();
         int i = 0;
         while(i < openingTimes.size()-1) {
-            TimeRange merge = TimeRange.merge(openingTimes.get(i), openingTimes.get(i+1));
+            TimeRange merge = openingTimes.get(i).merge(openingTimes.get(i+1));
             if(merge != null) {
                 openingTimes.set(i, merge);
                 openingTimes.remove(i+1);

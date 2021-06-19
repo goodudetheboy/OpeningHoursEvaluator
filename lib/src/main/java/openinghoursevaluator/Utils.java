@@ -1,5 +1,7 @@
 package openinghoursevaluator;
 
+import java.time.LocalDateTime;
+
 public class Utils {
     /** Default constructor */
     private Utils() {
@@ -16,5 +18,15 @@ public class Utils {
      */
     public static boolean isBetween(Integer value, Integer start, Integer end) {
         return value.compareTo(start) >= 0 && value.compareTo(end) <= 0;
+    }
+
+    
+    /**
+     * Convert hour and minute of a LocalDateTime instance to minutes
+     *  
+     * @param time a LocalDateTime instance
+    */
+    public static int timeInMinute(LocalDateTime time) {
+        return time.getHour()*60 + time.getMinute();
     }
 }

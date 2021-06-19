@@ -51,7 +51,6 @@ public class Week {
             }
             return;
         }
-        Rule spilledRule = null;
         List<WeekDayRange> weekdayRange;
         if (rule.getDays() != null) {
             weekdayRange = rule.getDays();
@@ -63,6 +62,7 @@ public class Week {
             weekdayRange.add(allWeekDays);
         }
         for (WeekDayRange weekdays : weekdayRange) {
+            Rule spilledRule = null;
             WeekDay current = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null)
                             ? weekdays.getEndDay()
@@ -111,6 +111,7 @@ public class Week {
             }
         }
         spilledRule.setTimes(spilledTimeList);
+        spilledRule.setModifier(rule.getModifier());
         return (!spilledRule.getTimes().isEmpty()) ? spilledRule : null;
     }
 

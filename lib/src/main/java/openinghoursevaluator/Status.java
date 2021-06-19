@@ -41,6 +41,9 @@ public enum Status {
         if (input == null) {
             return OPEN;
         }
+        if(input.getModifier() == null && input.getComment() != null) {
+            return UNKNOWN;
+        }
         return convert(input.getModifier());
     }
 

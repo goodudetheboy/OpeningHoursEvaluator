@@ -39,7 +39,7 @@ public class OpeningHoursEvaluator {
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @param isStrict
      */
-    public Status checkStatus(String inputTime) {
+    public Result checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         Week weekRule = new Week(rules, time);
         weekRule.build(isStrict);

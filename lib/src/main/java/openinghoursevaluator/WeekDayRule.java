@@ -191,16 +191,16 @@ public class WeekDayRule {
      * @param inputTime input date and time to be checked
      * @return true if opening; false if closed
      */
-    public Status checkStatus(LocalDateTime inputTime) {
+    public Result checkStatus(LocalDateTime inputTime) {
         int timepoint = Utils.timeInMinute(inputTime); 
         for (TimeRange openingTime : openingTimes) {
             if (timepoint >= openingTime.getStart()
                     && timepoint < openingTime.getEnd()) {
-                return openingTime.getStatus();
+                return new Result(openingTime);
             }
         }
         // return CLOSED if no fitting opening times is detected
-        return Status.CLOSED;
+        return new Result(Status.CLOSED, null);
     }
 
 

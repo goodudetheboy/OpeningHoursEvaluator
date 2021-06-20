@@ -38,7 +38,7 @@ public class InputTest {
     @Test
     public void spotCheck() {
         // assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
-        print("Tue,Thu 12:00-35:00 open \"on special occasions only\", Tue, Thu 06:00-12:00 \"hours too hard to see\"", "2021-06-09T03:00");
+        // print("Tue,Thu 12:00-35:00 open \"on special occasions only\", Tue, Thu 06:00-12:00 \"hours too hard to see\"", "2021-06-09T03:00");
     }
 
     /**
@@ -109,7 +109,8 @@ public class InputTest {
      */
     public boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
         try {
-            Status givenAnswer = evaluate(openingHours, inputTime);
+            Result result = evaluate(openingHours, inputTime);
+            Status givenAnswer = result.getStatus();
             if (givenAnswer != answer) {
                 print(openingHours, inputTime);
                 System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
@@ -135,7 +136,7 @@ public class InputTest {
      * @param openingHours opening hours string
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      */
-    public Status evaluate(String openingHours, String inputTime) {
+    public Result evaluate(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
     }

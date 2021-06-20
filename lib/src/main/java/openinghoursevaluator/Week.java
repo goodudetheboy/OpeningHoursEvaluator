@@ -135,7 +135,7 @@ public class Week {
         return weekdays[next];
     }
 
-    public Status checkStatus(LocalDateTime time) {
+    public Result checkStatus(LocalDateTime time) {
         WeekDay weekdayToCheck = toWeekDay(time.getDayOfWeek());
         return weekRule.get(weekdayToCheck).checkStatus(time);
     }

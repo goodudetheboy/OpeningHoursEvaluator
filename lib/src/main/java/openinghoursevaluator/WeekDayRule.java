@@ -144,6 +144,11 @@ public class WeekDayRule {
             case OPEN:
                 newOpeningTimes.add(new TimeRange(timespan, Status.OPEN, comment));
                 break;
+            case CLOSED:
+                if(comment != null) {
+                    newOpeningTimes.add(new TimeRange(timespan, Status.CLOSED, comment));
+                }
+                break;
             default:
         }
         openingTimes = newOpeningTimes;

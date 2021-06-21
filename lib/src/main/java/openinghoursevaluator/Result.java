@@ -29,4 +29,8 @@ public class Result {
     public String getComment() {
         return comment;
     }
+
+    public boolean hasComment() {
+        return comment != null;
+    }
 }

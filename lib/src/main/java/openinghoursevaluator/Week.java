@@ -47,7 +47,7 @@ public class Week {
     public void update(Rule rule) {
         if (isUniversal(rule)){
             for (WeekDay weekday : WeekDay.values()) {
-                updateHelper(rule, weekday, null);
+                weekRule.get(weekday).build(rule);
             }
             return;
         }
@@ -62,57 +62,16 @@ public class Week {
             weekdayRange.add(allWeekDays);
         }
         for (WeekDayRange weekdays : weekdayRange) {
-            Rule spilledRule = null;
             WeekDay current = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null)
                             ? weekdays.getEndDay()
                             : weekdays.getStartDay();
             do {
-                updateHelper(rule, current, spilledRule);
-                spilledRule = getSpilledRule(rule);
+                weekRule.get(current).build(rule);
                 current = getNextWeekDay(current);
             } while(current != getNextWeekDay(end)); 
-            if(spilledRule != null) {
-                weekRule.get(current).add(spilledRule);
-            }
+            weekRule.get(current).flushSpill();
         }
-    }
-    /** Helper for update(), check if a rule has been built, if not create new*/
-    void updateHelper(Rule rule, WeekDay weekday, Rule spilledRule) {
-        WeekDayRule oldRule = weekRule.get(weekday);
-        if (oldRule != null) {
-            if (rule.isAdditive()) {
-                oldRule.add(rule);
-            } else {
-                oldRule.build(rule);
-            }
-        } else {
-            weekRule.put(weekday, new WeekDayRule(rule, weekday));
-        }
-        if (spilledRule != null) {
-            weekRule.get(weekday).add(spilledRule);
-        }
-    }
-
-    Rule getSpilledRule(Rule rule) {
-        if(rule.getTimes() == null) {
-            return null;
-        }
-        Rule spilledRule = new Rule();
-        spilledRule.setModifier(rule.getModifier());
-        List<TimeSpan> spilledTimeList = new ArrayList<>();
-        for (TimeSpan timespan : rule.getTimes()) {
-            if (timespan.getEnd() > TimeRange.MAX_TIME) {
-                TimeSpan spilledTime = new TimeSpan();
-                spilledTime.setStart(0);
-                spilledTime.setEnd(timespan.getEnd() - TimeRange.MAX_TIME); 
-                spilledTime.setInterval(timespan.getInterval());
-                spilledTimeList.add(spilledTime);
-            }
-        }
-        spilledRule.setTimes(spilledTimeList);
-        spilledRule.setModifier(rule.getModifier());
-        return (!spilledRule.getTimes().isEmpty()) ? spilledRule : null;
     }
 
     /**
@@ -165,13 +124,24 @@ public class Week {
         }
     }
 
+    /** Reset this Week by removing all current WeekDayRule and filling it with empty ones*/
+    public void reset() {
+        weekRule = new EnumMap<>(WeekDay.class);
+        fillEmpty();
+    }
+
     /** Fill all empty WeekDay in weekDayRule with empty List */
     public void fillEmpty() {
-        for (WeekDay weekday : WeekDay.values()) {
-            if(weekRule.get(weekday) == null) {
-                weekRule.put(weekday, new WeekDayRule(new Rule(), weekday));
-            }
+        fillEmptyHelper(WeekDay.MO);
+    }
+
+    void fillEmptyHelper(WeekDay weekday) {
+        weekRule.put(weekday, new WeekDayRule(weekday));
+        WeekDay nextDay = getNextWeekDay(weekday);
+        if(weekRule.get(nextDay) == null) {
+            fillEmptyHelper(nextDay);
         }
+        weekRule.get(weekday).setNextDayRule(weekRule.get(nextDay));
     }
 
     @Override

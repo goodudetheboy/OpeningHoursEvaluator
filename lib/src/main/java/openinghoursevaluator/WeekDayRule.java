@@ -147,7 +147,25 @@ public class WeekDayRule {
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            addTime(timespan, status, comment);
+            if(timespan.isOpenEnded()) {
+                int openEndStart = 0;
+                if(timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
+                    openEndStart = timespan.getEnd();
+                    addTime(timespan, status, comment);
+                } else {
+                    openEndStart = timespan.getStart();
+                }
+                addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, Status.UNKNOWN, "open ended time"));
+                int firstCutOff = 17*60;
+                int secondCutOff = 22*60;
+                if(openEndStart >= firstCutOff) {
+                    int timespill = openEndStart - TimeRange.MAX_TIME;
+                    timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
+                    nextDayRule.addSpill(new TimeRange(0, timespill, Status.UNKNOWN, "open ended time"));
+                }
+            } else {
+                addTime(timespan, status, comment);
+            }
         }
     }
 

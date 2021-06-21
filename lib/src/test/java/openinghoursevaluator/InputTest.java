@@ -120,6 +120,9 @@ public class InputTest {
                 System.out.println();
                 return false;
             }
+            if(result.hasComment()) {
+                System.out.println("Comment for \"" + openingHours + "\" with input time \"" + inputTime + "\": " + result.getComment());
+            }
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error occured in " + openingHoursFile + ", line " + lineNumOH);

@@ -87,6 +87,8 @@ public class WeekDayRule {
                 offRule.add(rule);
                 break;
             case UNKNOWN:
+                clearAllRules();
+                clearOpeningHours();
                 unknownRule.add(rule);
                 break;
             case OPEN:

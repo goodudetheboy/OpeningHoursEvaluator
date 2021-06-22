@@ -68,8 +68,7 @@ public class Week {
                             : weekdays.getStartDay();
             do {
                 weekRule.get(current).build(rule);
-                current = getNextWeekDay(current);
-            } while(current != getNextWeekDay(end)); 
+            } while((current = getNextWeekDay(current)) != getNextWeekDay(end)); 
             weekRule.get(current).flushSpill();
         }
     }
@@ -77,23 +76,17 @@ public class Week {
     /**
      * @return true if input Rule can be applied to any day in the week
      */
-    boolean isUniversal(Rule rule) {
+    private boolean isUniversal(Rule rule) {
         return rule.isTwentyfourseven()
                 || (rule.getDays() == null && rule.getTimes() == null);
     }
 
     /**
-     * Return the next WeekDay wrt a current WeekDay
+     * Evaluate the stored OH string with a time to see if it's opening or closed
      * 
-     * @param current the current WeekDay
-     * @return the following WeekDay
+     * @param time input LocalDateTime
+     * @return the result of the evaluation
      */
-    WeekDay getNextWeekDay(WeekDay current) {
-        WeekDay[] weekdays = WeekDay.values();
-        int next = (current.ordinal()+1) % weekdays.length;
-        return weekdays[next];
-    }
-
     public Result checkStatus(LocalDateTime time) {
         WeekDay weekdayToCheck = toWeekDay(time.getDayOfWeek());
         return weekRule.get(weekdayToCheck).checkStatus(time);
@@ -105,7 +98,7 @@ public class Week {
      * @param dayOfWeek an enum of DayOfWeek to be converted
      * @return an equivalent weekday in WeekDay enum
      */
-    public WeekDay toWeekDay(DayOfWeek dayOfWeek) {
+    public static WeekDay toWeekDay(DayOfWeek dayOfWeek) {
         int dayOfWeekNth = dayOfWeek.ordinal();
         for (WeekDay weekday : WeekDay.values()) {
             if (weekday.ordinal() == dayOfWeekNth) {
@@ -113,6 +106,19 @@ public class Week {
             }
         }
         return null;
+    }
+
+    
+    /**
+     * Return the next WeekDay wrt a current WeekDay
+     * 
+     * @param current the current WeekDay
+     * @return the following WeekDay
+     */
+    public static WeekDay getNextWeekDay(WeekDay current) {
+        WeekDay[] weekdays = WeekDay.values();
+        int next = (current.ordinal()+1) % weekdays.length;
+        return weekdays[next];
     }
 
     /** Sort all WeekDayRule in this Week */
@@ -135,7 +141,7 @@ public class Week {
         fillEmptyHelper(WeekDay.MO);
     }
 
-    void fillEmptyHelper(WeekDay weekday) {
+    private void fillEmptyHelper(WeekDay weekday) {
         weekRule.put(weekday, new WeekDayRule(weekday));
         WeekDay nextDay = getNextWeekDay(weekday);
         if(weekRule.get(nextDay) == null) {

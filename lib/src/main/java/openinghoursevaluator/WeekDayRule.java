@@ -24,6 +24,34 @@ public class WeekDayRule {
     public WeekDayRule() {
         // nothing here
     }
+    
+    /**
+     * @return the current rule affecting this weekday
+     */
+    public Rule getCurrentRule() {
+        return currentRule;
+    }
+
+    /**
+     * @return the current weekday of this weekday
+     */
+    public WeekDay getCurrentWeekDay() {
+        return weekday;
+    }
+
+    /**
+     * @return the next day rule
+     */
+    public WeekDayRule getNextDayRule() {
+        return nextDayRule;
+    }
+
+    /**
+     * @return the time spill from previous day
+     */
+    public List<TimeRange> getSpilledTime() {
+        return yesterdaySpill;
+    }
 
     /**
      * Set the current rule of this weekday
@@ -43,37 +71,25 @@ public class WeekDayRule {
         this.weekday = weekday;
     }
 
-    public void setNextDayRule(WeekDayRule nextWeekDay) {
-        this.nextDayRule = nextWeekDay;
+    /**
+     * Set the next WeekDayRule of this WeekDayRule
+     * 
+     * @param nextWeekDay WeekDayRule to be set next
+     */
+    public void setNextDayRule(WeekDayRule nextDayRule) {
+        this.nextDayRule = nextDayRule;
     }
 
+    /**
+     * Set this WeekDayRule's time spill with yesterdaySpill
+     * 
+     * @param yesterdaySpill time spill to be set
+     */
     public void setSpilledTime(List<TimeRange> yesterdaySpill) {
         this.yesterdaySpill = yesterdaySpill;
     }
 
-    /**
-     * @return the current rule affecting this weekday
-     */
-    public Rule getCurrentRule() {
-        return currentRule;
-    }
-
-    /**
-     * @return the current weekday of this weekday
-     */
-    public WeekDay getCurrentWeekDay() {
-        return weekday;
-    }
-
-    public WeekDayRule getNextDayRule() {
-        return nextDayRule;
-    }
-
-    public List<TimeRange> getSpilledTime() {
-        return yesterdaySpill;
-    }
-
-    /** Constructor with Rule and Weekday */    
+    /** Constructor with Weekday */    
     public WeekDayRule(WeekDay weekday) {
         this.weekday = weekday;
         this.offRule = new ArrayList<>();
@@ -83,6 +99,7 @@ public class WeekDayRule {
         this.yesterdaySpill = new ArrayList<>();
     }
 
+    /** Constructor with a WeekDay and a next WeekDayRule */
     public WeekDayRule(WeekDay weekday, WeekDayRule nextDayRule) {
         this(weekday);
         this.nextDayRule = nextDayRule;
@@ -108,20 +125,20 @@ public class WeekDayRule {
             additiveRule.add(rule);
         } else {
             switch(Status.convert(rule.getModifier())) {
-                case CLOSED:
-                    offRule.add(rule);
-                    break;
-                case UNKNOWN:
-                    clearAllRules();
-                    clearOpeningHours();
-                    unknownRule.add(rule);
-                    break;
-                case OPEN:
-                    clearAllRules();
-                    clearOpeningHours();
-                    currentRule = rule;
-                    break;
-                default:
+            case CLOSED:
+                offRule.add(rule);
+                break;
+            case UNKNOWN:
+                clearAllRules();
+                clearOpeningHours();
+                unknownRule.add(rule);
+                break;
+            case OPEN:
+                clearAllRules();
+                clearOpeningHours();
+                currentRule = rule;
+                break;
+            default:
             }
         }
         flushSpill();
@@ -195,7 +212,7 @@ public class WeekDayRule {
             }
         } else {
             addTime(new TimeRange(timespan, status, comment));
-            TimeSpan spilledTime = getSpilledTime(timespan);
+            TimeSpan spilledTime = TimeRange.checkTimeSpill(timespan);
             if(spilledTime != null) {
                 nextDayRule.addSpill(new TimeRange(spilledTime, status, comment));
             }
@@ -226,17 +243,10 @@ public class WeekDayRule {
         openingTimes = newOpeningTimes;
     }
 
-    TimeSpan getSpilledTime(TimeSpan timespan) {
-        TimeSpan spilledTime = null;
-        if (timespan.getEnd() > TimeRange.MAX_TIME) {
-            spilledTime = new TimeSpan();
-            spilledTime.setStart(0);
-            spilledTime.setEnd(timespan.getEnd() - TimeRange.MAX_TIME); 
-            spilledTime.setInterval(timespan.getInterval());
-        }
-        return spilledTime;
-    }
-
+    /**
+     * Apply all time spills added from previous day. This is used in build()
+     * 
+     */
     public void flushSpill() {
         while(!yesterdaySpill.isEmpty()) {
             addTime(yesterdaySpill.remove(0));
@@ -274,9 +284,12 @@ public class WeekDayRule {
         openingTimes = new ArrayList<>();
     }
 
+    /** Clear all current rules of this WeekDayRule */
     public void clearAllRules() {
         currentRule = null;       
         offRule = new ArrayList<>();
+        unknownRule = new ArrayList<>();
+        additiveRule = new ArrayList<>();
     }
 
     /**
@@ -297,6 +310,11 @@ public class WeekDayRule {
         return new Result(Status.CLOSED, null);
     }
 
+    /**
+     * Add time spills to be flushed when build is called for this WeekDayRule
+     * 
+     * @param timerange
+     */
     public void addSpill(TimeRange timerange) {
         yesterdaySpill.add(timerange);
     }

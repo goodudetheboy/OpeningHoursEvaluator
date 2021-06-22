@@ -14,14 +14,6 @@ public class Result {
         this.comment = (timerange.hasComment()) ? timerange.getComment() : null;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-
     public Status getStatus() {
         return status;
     }
@@ -32,5 +24,13 @@ public class Result {
 
     public boolean hasComment() {
         return comment != null;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

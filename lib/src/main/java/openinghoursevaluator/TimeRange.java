@@ -111,7 +111,9 @@ public class TimeRange implements Comparable<TimeRange> {
         this.comment = comment;
     }
     
-
+    /**
+     * @return the start of this TimeRange
+     */
     public int getStart() {
         return start;
     }
@@ -303,6 +305,17 @@ public class TimeRange implements Comparable<TimeRange> {
         default:
             return null;
         }
+    }
+
+    public static TimeSpan checkTimeSpill(TimeSpan timespan) {
+        TimeSpan spilledTime = null;
+        if (timespan.getEnd() > TimeRange.MAX_TIME) {
+            spilledTime = new TimeSpan();
+            spilledTime.setStart(0);
+            spilledTime.setEnd(timespan.getEnd() - TimeRange.MAX_TIME); 
+            spilledTime.setInterval(timespan.getInterval());
+        }
+        return spilledTime;
     }
 
     @Override

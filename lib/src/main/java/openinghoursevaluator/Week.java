@@ -7,7 +7,6 @@ import java.util.EnumMap;
 import java.util.List;
 
 import ch.poole.openinghoursparser.Rule;
-import ch.poole.openinghoursparser.TimeSpan;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 

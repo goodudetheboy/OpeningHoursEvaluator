@@ -14,10 +14,11 @@ import ch.poole.openinghoursparser.TimeSpan;
  * 
  */
 public class TimeRange implements Comparable<TimeRange> {
-    private static final int HOURS_24           = 1440;
-    public static final int  UNDEFINED_TIME     = Integer.MIN_VALUE;
-    public static final int  MIN_TIME           = 0;
-    public static final int  MAX_TIME           = HOURS_24;
+    private static final int    HOURS_24           = 1440;
+    public static final int     UNDEFINED_TIME     = Integer.MIN_VALUE;
+    public static final int     MIN_TIME           = 0;
+    public static final int     MAX_TIME           = HOURS_24;
+    public static final String  DEFAULT_OPEN_ENDED_COMMENT = "open ended time";
 
     int     start   = UNDEFINED_TIME;
     int     end     = UNDEFINED_TIME;
@@ -57,7 +58,7 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Constructor for creating a TimeRange with a Status. Sta
+     * Constructor for creating a TimeRange with a Status.
      * 
      * @param start start time, must be less than end time
      * @param end end time
@@ -69,9 +70,7 @@ public class TimeRange implements Comparable<TimeRange> {
             throw new IllegalArgumentException("Start and end cannot be both at " + MAX_TIME);
         }
         if (start > end) {
-            int t = start;
-            start = end;
-            end = t;
+            throw new IllegalArgumentException("Start cannot be less than end");
         }
         setStart(start);
         setEnd((start == end) ? ++end : end);
@@ -288,6 +287,7 @@ public class TimeRange implements Comparable<TimeRange> {
             return null;
         }
         TimeRange result = new TimeRange();
+        result.setComment(comment);
         result.setStatus(status);
         switch (overlapCode) {
         case 1:

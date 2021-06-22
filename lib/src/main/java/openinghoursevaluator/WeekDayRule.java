@@ -163,25 +163,7 @@ public class WeekDayRule {
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            if(timespan.isOpenEnded()) {
-                int openEndStart = 0;
-                if(timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
-                    openEndStart = timespan.getEnd();
-                    addTime(timespan, status, comment);
-                } else {
-                    openEndStart = timespan.getStart();
-                }
-                addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, Status.UNKNOWN, "open ended time"));
-                int firstCutOff = 17*60;
-                int secondCutOff = 22*60;
-                if(openEndStart >= firstCutOff) {
-                    int timespill = openEndStart - TimeRange.MAX_TIME;
-                    timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
-                    nextDayRule.addSpill(new TimeRange(0, timespill, Status.UNKNOWN, "open ended time"));
-                }
-            } else {
-                addTime(timespan, status, comment);
-            }
+            addTime(timespan, status, comment);
         }
     }
 
@@ -194,32 +176,87 @@ public class WeekDayRule {
      * @param comment optional comment
      */
     public void addTime(TimeSpan timespan, Status status, String comment) {
-        int interval = timespan.getInterval();
-        if (interval != 0) {
-            int current = timespan.getStart();
-            int end = timespan.getEnd();
-            TimeRange timepoint = null;
-            do {
-                timepoint = new TimeRange(current, status, comment);
-                addTime(timepoint);
-                current = current + interval;
-            } while (current <= end && current < TimeRange.MAX_TIME);
-            while(current <= end) {
-                timepoint = new TimeRange(current - TimeRange.MAX_TIME, status, comment);
-                nextDayRule.addSpill(timepoint);
-                current = current + interval;
-            }
+        if (timespan.getInterval() != 0) {
+            addInterval(timespan, status, comment);
+        } else if (timespan.isOpenEnded()) {
+            addOpenEnd(timespan, status, comment);
         } else {
-            addTime(new TimeRange(timespan, status, comment));
-            TimeSpan spilledTime = TimeRange.checkTimeSpill(timespan);
-            if(spilledTime != null) {
-                nextDayRule.addSpill(new TimeRange(spilledTime, status, comment));
+            addTime(timespan.getStart(), timespan.getEnd(), status, comment);
+        }
+    }
+
+    /** Helper function to add TimeSpan with interval to this WeekDayRule */
+    private void addInterval(TimeSpan timespan, Status status, String comment) {
+        int interval = timespan.getInterval();
+        int current = timespan.getStart();
+        int end = timespan.getEnd();
+        TimeRange timepoint = null;
+        do {
+            timepoint = new TimeRange(current, status, comment);
+            addTime(timepoint);
+            current = current + interval;
+        } while (current <= end && current < TimeRange.MAX_TIME);
+        while(current <= end) {
+            timepoint = new TimeRange(current - TimeRange.MAX_TIME, status, comment);
+            nextDayRule.addSpill(timepoint);
+            current = current + interval;
+        }
+    }
+
+    /** Helper function to add TimeSpan with open end to this WeekDayRule */
+    private void addOpenEnd(TimeSpan timespan, Status status, String comment) {
+        int openEndStart = 0;
+        if (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
+            openEndStart = timespan.getEnd();
+            addTime(timespan.getStart(), timespan.getEnd(), status, comment);
+        } else {
+            openEndStart = timespan.getStart();
+        }
+        String openEndedComment = (comment == null)
+                                    ? TimeRange.DEFAULT_OPEN_ENDED_COMMENT
+                                    : comment;
+        Status openEndedStatus = (status == Status.CLOSED)
+                                    ? status
+                                    : Status.UNKNOWN;
+        int nextDayStart = openEndStart - TimeRange.MAX_TIME; // this is for the start of open ended time in the next day
+        if (nextDayStart < 0) {
+            addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, openEndedStatus, openEndedComment));
+            int firstCutOff = 17*60;
+            int secondCutOff = 22*60;
+            if (openEndStart >= firstCutOff) {
+                int timespill = openEndStart - TimeRange.MAX_TIME;
+                timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
+                nextDayRule.addSpill(new TimeRange(0, timespill, openEndedStatus, openEndedComment));
             }
+        } else if (nextDayStart >= TimeRange.MAX_TIME + 17*60) {
+            throw new IllegalArgumentException("Time spanning more than two days not supported");
+        } else {
+            nextDayRule.addSpill(new TimeRange(nextDayStart, nextDayStart + 8*60, openEndedStatus, openEndedComment));
         }
     }
 
     /**
-     * Add a TimeRange to this WeekDayRule
+     * Add the time with the specified start and end into this WeekDayRule, along with
+     * a Status and an optional comment. This supports time spilling (end > 24:00)
+     * 
+     * @param start start time (must be < 24:00 AKA 1440 and also less than end time)
+     * @param end end time
+     * @param status desired Status
+     * @param comment optional comment
+     */
+    public void addTime(int start, int end, Status status, String comment) {
+        int timespill = end - TimeRange.MAX_TIME;
+        int endToday = end; // for the current day
+        if (timespill > 0) {
+            endToday = TimeRange.MAX_TIME;
+            nextDayRule.addSpill(new TimeRange(0, timespill, status, comment));
+        }
+        addTime(new TimeRange(start, endToday, status, comment));
+    }
+
+    /**
+     * Add a TimeRange to this WeekDayRule. As per the specifications of TimeRange,
+     * this does not support time spilling (end > 24:00)
      * 
      * @param timerange TimeRange to add
      */

@@ -16,6 +16,7 @@ public class WeekDayRule {
     List<Rule>      offRule         = null;
     List<Rule>      unknownRule     = null;
     List<Rule>      additiveRule    = null;
+    List<Rule>      fallbackRule    = null;
     WeekDay         weekday         = null;
     List<TimeRange> openingTimes    = null;
     WeekDayRule     nextDayRule     = null;
@@ -96,6 +97,7 @@ public class WeekDayRule {
         this.offRule = new ArrayList<>();
         this.unknownRule = new ArrayList<>();
         this.additiveRule = new ArrayList<>();
+        this.fallbackRule = new ArrayList<>();
         this.openingTimes = new ArrayList<>();
         this.yesterdaySpill = new ArrayList<>();
     }
@@ -112,8 +114,9 @@ public class WeekDayRule {
     }
 
     /**
-     * Build the opening times of this weekday with a rule. This also resets whatever the current affecting rule is to the new rule
-     * and also clears the opening times (if not fallback), if exists. Closed and Unknown time does not clear days
+     * Build the opening times of this weekday with a rule. This also resets whatever the
+     * current affecting rule is to the new rule and also clears the opening times (if not
+     * fallback), if exists. Closed time does not clear days.
      * 
      * @param rule rule to be used in building
      */
@@ -121,10 +124,12 @@ public class WeekDayRule {
         if (rule.isEmpty()) {
             throw new IllegalArgumentException("There's an empty rule, please remove it");
         }
-        if(rule.isAdditive()) {
+        if (rule.isAdditive()) {
             additiveRule.add(rule);
+        } else if (rule.isFallBack()) {
+            fallbackRule.add(rule);
         } else {
-            switch(Status.convert(rule.getModifier())) {
+            switch (Status.convert(rule.getModifier())) {
             case CLOSED:
                 offRule.add(rule);
                 break;
@@ -160,11 +165,11 @@ public class WeekDayRule {
             TimeSpan allDay = new TimeSpan();
             allDay.setStart(0);
             allDay.setEnd(1440);
-            addTime(allDay, status, comment);
+            addTime(allDay, status, comment, rule.isFallBack());
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            addTime(timespan, status, comment);
+            addTime(timespan, status, comment, rule.isFallBack());
         }
     }
 
@@ -176,25 +181,25 @@ public class WeekDayRule {
      * @param status desired Status
      * @param comment optional comment
      */
-    public void addTime(TimeSpan timespan, Status status, String comment) {
+    public void addTime(TimeSpan timespan, Status status, String comment, boolean isSoft) {
         if (timespan.getInterval() != 0) {
-            addInterval(timespan, status, comment);
+            addInterval(timespan, status, comment, isSoft);
         } else if (timespan.isOpenEnded()) {
-            addOpenEnd(timespan, status, comment);
+            addOpenEnd(timespan, status, comment, isSoft);
         } else {
-            addTime(timespan.getStart(), timespan.getEnd(), status, comment);
+            addTime(timespan.getStart(), timespan.getEnd(), status, comment, isSoft);
         }
     }
 
     /** Helper function to add TimeSpan with interval to this WeekDayRule */
-    private void addInterval(TimeSpan timespan, Status status, String comment) {
+    private void addInterval(TimeSpan timespan, Status status, String comment, boolean isSoft) {
         int interval = timespan.getInterval();
         int current = timespan.getStart();
         int end = timespan.getEnd();
         TimeRange timepoint = null;
         do {
             timepoint = new TimeRange(current, status, comment);
-            addTime(timepoint);
+            addTime(timepoint, isSoft);
             current = current + interval;
         } while (current <= end && current < TimeRange.MAX_TIME);
         while(current <= end) {
@@ -205,11 +210,11 @@ public class WeekDayRule {
     }
 
     /** Helper function to add TimeSpan with open end to this WeekDayRule */
-    private void addOpenEnd(TimeSpan timespan, Status status, String comment) {
+    private void addOpenEnd(TimeSpan timespan, Status status, String comment, boolean isSoft) {
         int openEndStart = 0;
         if (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
             openEndStart = timespan.getEnd();
-            addTime(timespan.getStart(), timespan.getEnd(), status, comment);
+            addTime(timespan.getStart(), timespan.getEnd(), status, comment, isSoft);
         } else {
             openEndStart = timespan.getStart();
         }
@@ -221,7 +226,7 @@ public class WeekDayRule {
                                     : Status.UNKNOWN;
         int nextDayStart = openEndStart - TimeRange.MAX_TIME; // this is for the start of open ended time in the next day
         if (nextDayStart < 0) {
-            addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, openEndedStatus, openEndedComment));
+            addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, openEndedStatus, openEndedComment), isSoft);
             int firstCutOff = 17*60;
             int secondCutOff = 22*60;
             if (openEndStart >= firstCutOff) {
@@ -245,26 +250,38 @@ public class WeekDayRule {
      * @param status desired Status
      * @param comment optional comment
      */
-    public void addTime(int start, int end, Status status, String comment) {
+    public void addTime(int start, int end, Status status, String comment, boolean isSoft) {
         int timespill = end - TimeRange.MAX_TIME;
         int endToday = end; // for the current day
         if (timespill > 0) {
             endToday = TimeRange.MAX_TIME;
             nextDayRule.addSpill(new TimeRange(0, timespill, status, comment));
         }
-        addTime(new TimeRange(start, endToday, status, comment));
+        addTime(new TimeRange(start, endToday, status, comment), isSoft);
     }
 
     /**
      * Add a TimeRange to this WeekDayRule. As per the specifications of TimeRange,
-     * this does not support time spilling (end > 24:00)
+     * this does not support time spilling (end > 24:00).
+     * An additional setting is whether to add soft or not. Adding hard means
+     * the input Time Range will cut any conflicting Time Range, soft means otherwise
      * 
      * @param timerange TimeRange to add
+     * @param isSoft soft or hard
      */
-    public void addTime(TimeRange timerange) {
+    public void addTime(TimeRange timerange, boolean isSoft) {
+        if (isSoft) {
+            addTimeSoft(timerange);
+        } else {
+            addTimeHard(timerange);
+        }
+    }
+
+    /** Helper for addTime() */
+    private void addTimeHard(TimeRange timerange) {
         List<TimeRange> newOpeningTimes = new ArrayList<>();
         for (TimeRange openingTime : openingTimes) {
-            newOpeningTimes.addAll(TimeRange.cut(openingTime, timerange));
+            newOpeningTimes.addAll(openingTime.cut(timerange));
         }
         switch(timerange.getStatus()) {
             case CLOSED:
@@ -280,13 +297,30 @@ public class WeekDayRule {
         openingTimes = newOpeningTimes;
     }
 
-    /**
-     * Apply all time spills added from previous day. This is used in build()
-     * 
-     */
+    /** Helper for addTime() */
+    private void addTimeSoft(TimeRange timerange) {
+        List<TimeRange> remains = new ArrayList<>();
+        for (TimeRange openingTime : openingTimes) {
+            remains.addAll(timerange.cut(openingTime));
+        }
+        clean(remains);
+        switch(timerange.getStatus()) {
+            case CLOSED:
+                if(!timerange.hasComment()) {
+                    break;
+                }
+            case UNKNOWN:
+            case OPEN:
+                openingTimes.addAll(remains);
+                break;
+            default:
+        }
+    }
+
+    /** Apply all time spills added from previous day. This is used in build()*/
     public void flushSpill() {
         while(!yesterdaySpill.isEmpty()) {
-            addTime(yesterdaySpill.remove(0));
+            addTime(yesterdaySpill.remove(0), false);
         }
     }
 
@@ -360,18 +394,30 @@ public class WeekDayRule {
      * Sort the TimeRange of this WeekDayRule by order of start time
      */
     public void sort() {
-        Collections.sort(openingTimes);
+        sort(openingTimes);
     }
 
     /** Clean by sorting and removing duplicates of this WeekDay in this WeekDayRule. */
     public void clean() {
-        sort();
+        clean(openingTimes);
+    }
+
+    /** 
+     * Sort the TimeRange of input List<TimeRange> by order of start time
+     */
+    public static void sort(List<TimeRange> timeranges) {
+        Collections.sort(timeranges);
+    }
+
+    /** Clean by sorting and removing duplicates of input List<TimeRange> */
+    public static void clean(List<TimeRange> timeranges) {
+        sort(timeranges);
         int i = 0;
-        while(i < openingTimes.size()-1) {
-            TimeRange merge = openingTimes.get(i).merge(openingTimes.get(i+1));
+        while(i < timeranges.size()-1) {
+            TimeRange merge = timeranges.get(i).merge(timeranges.get(i+1));
             if(merge != null) {
-                openingTimes.set(i, merge);
-                openingTimes.remove(i+1);
+                timeranges.set(i, merge);
+                timeranges.remove(i+1);
                 i--;
             }
             i++;

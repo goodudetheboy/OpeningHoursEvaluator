@@ -240,20 +240,19 @@ public class TimeRange implements Comparable<TimeRange> {
      * @param other the TimeRange that will cut t
      * @return a List containing TimeRange(s) resulting from the cut
      */
-    public static List<TimeRange> cut(TimeRange t, TimeRange other) {
+    public List<TimeRange> cut(TimeRange other) {
         List<TimeRange> result = new ArrayList<>();
-        TimeRange overlap = t.overlapWith(other);
-        Status oldStatus = t.getStatus();
+        TimeRange overlap = overlapWith(other);
+        Status oldStatus = status;
         if (overlap != null) {
-            String comment = (t.hasComment()) ? t.getComment() : null;
-            if (overlap.getStart() > t.getStart()) {
-                result.add(new TimeRange(t.getStart(), overlap.getStart(), oldStatus, comment));
+            if (overlap.getStart() > start) {
+                result.add(new TimeRange(start, overlap.getStart(), oldStatus, comment));
             } 
-            if (overlap.getEnd() < t.getEnd()) {
-                result.add(new TimeRange(overlap.getEnd(), t.getEnd(), oldStatus, comment));
+            if (overlap.getEnd() < end) {
+                result.add(new TimeRange(overlap.getEnd(), end, oldStatus, comment));
             }
         } else {
-            result.add(t);
+            result.add(this);
         }
         return result;
     }

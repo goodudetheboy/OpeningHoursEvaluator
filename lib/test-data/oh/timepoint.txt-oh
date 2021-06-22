@@ -21,3 +21,4 @@ open; 2:00-5:00, 7:00-8:00, 14:00-18:00 off
 10:00+
 10:00-18:00+
 13:00-16:00, 20:00-2:00+ open "something idk"; 16:00-21:00 off
+09:00-17:00 || "available by appointment"; 22:00+ off "unavailable"

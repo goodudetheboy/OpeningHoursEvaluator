@@ -118,8 +118,7 @@ public class WeekDayRule {
      */
     public void build(Rule rule) {
         if (rule.isEmpty()) {
-            // TODO: produce a warning here
-            return;
+            throw new IllegalArgumentException("There's an empty rule, please remove it");
         }
         if(rule.isAdditive()) {
             additiveRule.add(rule);

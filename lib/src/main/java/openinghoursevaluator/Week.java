@@ -44,12 +44,6 @@ public class Week {
      * @param rule a Rule
      */
     public void update(Rule rule) {
-        if (isUniversal(rule)){
-            for (WeekDay weekday : WeekDay.values()) {
-                weekRule.get(weekday).build(rule);
-            }
-            return;
-        }
         List<WeekDayRange> weekdayRange;
         if (rule.getDays() != null) {
             weekdayRange = rule.getDays();
@@ -64,10 +58,10 @@ public class Week {
             WeekDay current = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null)
                             ? weekdays.getEndDay()
-                            : weekdays.getStartDay();
+                            : current;
             do {
                 weekRule.get(current).build(rule);
-            } while((current = getNextWeekDay(current)) != getNextWeekDay(end)); 
+            } while((current = getNextWeekDay(current)) != getNextWeekDay(end));
             weekRule.get(current).flushSpill();
         }
     }
@@ -106,7 +100,6 @@ public class Week {
         }
         return null;
     }
-
     
     /**
      * Return the next WeekDay wrt a current WeekDay

@@ -11,14 +11,15 @@ import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 
 public class WeekDayRule {
+    // TODO: This rule storage is to be dealt later
     Rule            currentRule     = null;
-    List<Rule>      offRule         = null; // TODO: to be supported later
+    List<Rule>      offRule         = null;
     List<Rule>      unknownRule     = null;
-    List<Rule>      additiveRule    = null; // TODO: to be supported later
+    List<Rule>      additiveRule    = null;
     WeekDay         weekday         = null;
     List<TimeRange> openingTimes    = null;
     WeekDayRule     nextDayRule     = null;
-    List<TimeRange> yesterdaySpill = null;
+    List<TimeRange> yesterdaySpill  = null;
 
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {

@@ -27,6 +27,11 @@ public class InputTest {
     }
 
     @Test
+    public void evaluatorWeekTest() {
+        evaluateBatchCheck("test-data/oh/week.txt-oh", "test-data/input-time/week.txt", "test-data/answer/week.txt-answer");
+    }
+
+    @Test
     public void unitTest() {
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED, "xxxxx", 0, 0));
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN, "xxxxx", 0, 0));
@@ -42,7 +47,7 @@ public class InputTest {
     @Test
     public void spotCheck() {
         // assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
-        // print("Tue,Thu 12:00-35:00 open \"on special occasions only\", Tue, Thu 06:00-12:00 \"hours too hard to see\"", "2021-06-09T03:00");
+        print("Mo-Su; We off \"only after registration\"", "2021-06-09T03:00");
     }
 
     /**

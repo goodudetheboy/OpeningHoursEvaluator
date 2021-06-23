@@ -17,8 +17,12 @@ public class InputTest {
      * Test only for the timespan test (hours and minutes ONLY)
      */
     @Test
-    public void evaluatorTest() {
+    public void evaluatorTimepointTest() {
         evaluateBatchCheck("test-data/oh/timepoint.txt-oh", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer");
+    }
+
+    @Test
+    public void evaluatorWeekdayTest() {
         evaluateBatchCheck("test-data/oh/weekday.txt-oh", "test-data/input-time/weekday.txt", "test-data/answer/weekday.txt-answer");
     }
 
@@ -29,7 +33,7 @@ public class InputTest {
     }
 
     @Test
-    public void printCheck() {
+    public void printTest() {
         printBatch("test-data/oh/timepoint.txt-oh", "2021-06-09T15:00");
         printBatch("test-data/oh/weekday.txt-oh", "2021-06-09T15:00");
     }

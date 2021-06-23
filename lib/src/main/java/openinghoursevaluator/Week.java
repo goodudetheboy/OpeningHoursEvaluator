@@ -113,7 +113,7 @@ public class Week {
         return weekdays[next];
     }
 
-    /** Sort all WeekDayRule in this Week */
+    /** Clean all WeekDayRule in this Week */
     public void clean() {
         for (WeekDay weekday : WeekDay.values()) {
             if(weekRule.get(weekday) != null) {

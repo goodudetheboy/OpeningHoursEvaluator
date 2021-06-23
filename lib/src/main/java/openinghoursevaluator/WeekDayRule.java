@@ -390,6 +390,13 @@ public class WeekDayRule {
         yesterdaySpill.add(timerange);
     }
 
+    /** Apply all time spills added from previous day. This is used in build()*/
+    public void flushSpill() {
+        while(!yesterdaySpill.isEmpty()) {
+            addTime(yesterdaySpill.remove(0), false);
+        }
+    }
+
     /** 
      * Sort the TimeRange of this WeekDayRule by order of start time
      */
@@ -397,8 +404,13 @@ public class WeekDayRule {
         sort(openingTimes);
     }
 
-    /** Clean by sorting and removing duplicates of this WeekDay in this WeekDayRule. */
+    /**
+     * Clean by sorting and removing duplicates of this WeekDay in this WeekDayRule.
+     * This also applies all time spills, if any
+     * 
+     * */
     public void clean() {
+        flushSpill();
         clean(openingTimes);
     }
 

@@ -62,7 +62,6 @@ public class Week {
             do {
                 weekRule.get(current).build(rule);
             } while((current = getNextWeekDay(current)) != getNextWeekDay(end));
-            weekRule.get(current).flushSpill();
         }
     }
 

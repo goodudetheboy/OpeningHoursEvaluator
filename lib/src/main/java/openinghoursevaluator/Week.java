@@ -2,10 +2,13 @@ package openinghoursevaluator;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 
+import ch.poole.openinghoursparser.Nth;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
@@ -14,6 +17,7 @@ public class Week {
     int     year;
     int     month;
     int     weekNum; // TODO: to be supported later
+    int     weekOfMonth;
     EnumMap<WeekDay, WeekDayRule>   weekRule;
     List<Rule>                      rules;
 
@@ -21,6 +25,7 @@ public class Week {
         year = time.getYear();
         month = time.getMonthValue();
         weekNum = time.getDayOfYear() / 7 + 1; // this is temporary
+        weekOfMonth = getWeekOfMonth(time);
         this.rules = rules;
         weekRule = new EnumMap<>(WeekDay.class);
     }
@@ -55,14 +60,27 @@ public class Week {
             weekdayRange.add(allWeekDays);
         }
         for (WeekDayRange weekdays : weekdayRange) {
+            List<Nth> nths = weekdays.getNths();
             WeekDay current = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null)
                             ? weekdays.getEndDay()
                             : current;
-            do {
-                weekRule.get(current).build(rule);
-            } while((current = getNextWeekDay(current)) != getNextWeekDay(end));
+            if (nths != null) {
+                for (Nth nth : nths) {
+                    if (isApplicableNth(nth, weekOfMonth)) {
+                        updateHelper(rule, current, end);
+                    }
+                }
+            } else {
+                updateHelper(rule, current, end);
+            }
         }
+    }
+
+    private void updateHelper(Rule rule, WeekDay current, WeekDay end) {
+        do {
+            weekRule.get(current).build(rule);
+        } while((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
 
     /**
@@ -139,6 +157,23 @@ public class Week {
             fillEmptyHelper(nextDay);
         }
         weekRule.get(weekday).setNextDayRule(weekRule.get(nextDay));
+    }
+
+    public static int getWeekOfMonth(LocalDateTime date) {
+        return date.get(WeekFields.of(Locale.getDefault()).weekOfMonth());
+    }
+
+    /**
+     * Check if input weekOfMonth is within Nth range, or equals to startNth
+     * if there's no endNth
+     * 
+     * @param nth input Nth
+     * @param weekOfMonth week of month (max 5)
+     * @return if applicable or not
+     */
+    public static boolean isApplicableNth(Nth nth, int weekOfMonth) {
+        return (nth.getEndNth() == Nth.INVALID_NTH && weekOfMonth == nth.getStartNth())
+                || Utils.isBetween(weekOfMonth, nth.getStartNth(), nth.getEndNth());
     }
 
     @Override

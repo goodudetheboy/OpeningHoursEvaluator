@@ -20,7 +20,8 @@ public class Utils {
         return value.compareTo(start) >= 0 && value.compareTo(end) <= 0;
     }
 
-    
+
+
     /**
      * Convert hour and minute of a LocalDateTime instance to minutes
      *  

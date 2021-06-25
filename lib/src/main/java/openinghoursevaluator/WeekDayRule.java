@@ -24,9 +24,26 @@ public class WeekDayRule {
 
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
-        // nothing here
+        this(null);
     }
     
+    /** Constructor with Weekday */    
+    public WeekDayRule(WeekDay weekday) {
+        this.weekday = weekday;
+        this.offRule = new ArrayList<>();
+        this.unknownRule = new ArrayList<>();
+        this.additiveRule = new ArrayList<>();
+        this.fallbackRule = new ArrayList<>();
+        this.openingTimes = new ArrayList<>();
+        this.yesterdaySpill = new ArrayList<>();
+    }
+
+    /** Constructor with a WeekDay and a next WeekDayRule */
+    public WeekDayRule(WeekDay weekday, WeekDayRule nextDayRule) {
+        this(weekday);
+        this.nextDayRule = nextDayRule;
+    }
+
     /**
      * @return the current rule affecting this weekday
      */
@@ -91,23 +108,6 @@ public class WeekDayRule {
         this.yesterdaySpill = yesterdaySpill;
     }
 
-    /** Constructor with Weekday */    
-    public WeekDayRule(WeekDay weekday) {
-        this.weekday = weekday;
-        this.offRule = new ArrayList<>();
-        this.unknownRule = new ArrayList<>();
-        this.additiveRule = new ArrayList<>();
-        this.fallbackRule = new ArrayList<>();
-        this.openingTimes = new ArrayList<>();
-        this.yesterdaySpill = new ArrayList<>();
-    }
-
-    /** Constructor with a WeekDay and a next WeekDayRule */
-    public WeekDayRule(WeekDay weekday, WeekDayRule nextDayRule) {
-        this(weekday);
-        this.nextDayRule = nextDayRule;
-    }
-
     /** Build the opening times of this weekday with the current rule */
     public void build() {
         build(currentRule);
@@ -146,8 +146,8 @@ public class WeekDayRule {
             default:
             }
         }
-        addRule(rule);
         flushSpill();
+        addRule(rule);
     }
 
     /**

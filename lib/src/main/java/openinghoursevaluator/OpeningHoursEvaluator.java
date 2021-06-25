@@ -41,16 +41,16 @@ public class OpeningHoursEvaluator {
      */
     public Result checkStatus(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
-        Week weekRule = new Week(rules, time);
-        weekRule.build(isStrict);
-        return weekRule.checkStatus(time);
+        MonthRule monthRule = new MonthRule(rules);
+        monthRule.build(time);
+        return monthRule.checkStatus(time);
     }
 
     /** Print the Week created by inputTime, to be used for debugging wrong test case */
     public String toString(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
-        Week weekRule = new Week(rules, time);
-        weekRule.build(false);
-        return weekRule.toString();
+        MonthRule monthRule = new MonthRule(rules);
+        monthRule.build(time);
+        return monthRule.toWeekString();
     }
 }

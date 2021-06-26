@@ -52,8 +52,9 @@ public class TimeRange implements Comparable<TimeRange> {
     // Constructor with TimeSpan
     public TimeRange(TimeSpan timespan, Status status) {
         this(timespan.getStart(),
-            (timespan.getEnd() != TimeSpan.UNDEFINED_TIME)  ? timespan.getEnd()
-                                                            : timespan.getStart(),
+            (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) 
+                ? timespan.getEnd()
+                : timespan.getStart(),
             status);
     }
 
@@ -131,16 +132,16 @@ public class TimeRange implements Comparable<TimeRange> {
 
     public void setStart(int start) {
         if (start > MAX_TIME || start < MIN_TIME) {
-            throw new IllegalArgumentException("Invalid time " + start + ", please keep time in 24 hours");
+            throw new IllegalArgumentException("Start time " + start + " is outside current day");
         }
         this.start = start;
     }
 
     public void setEnd(int end) {
-        if (end < MIN_TIME) {
+        if (end > MAX_TIME || end < MIN_TIME) {
             throw new IllegalArgumentException("Invalid time" + end + ", please keep time in 24 hours");
         }
-        this.end = (end <= MAX_TIME) ? end : MAX_TIME;
+        this.end = end;
     }
 
     public void setStatus(Status status) {

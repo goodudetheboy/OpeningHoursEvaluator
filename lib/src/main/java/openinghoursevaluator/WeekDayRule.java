@@ -252,11 +252,15 @@ public class WeekDayRule {
      * @param comment optional comment
      */
     public void addTime(int start, int end, Status status, String comment, boolean isFallback) {
-        int timespill = end - TimeRange.MAX_TIME;
         int endToday = end; // for the current day
-        if (timespill > 0) {
-            endToday = TimeRange.MAX_TIME;
-            nextDayRule.addSpill(new TimeRange(0, timespill, status, comment));
+        if (end != TimeSpan.UNDEFINED_TIME) {
+            int timespill = end - TimeRange.MAX_TIME;
+            if (timespill > 0) {
+                endToday = TimeRange.MAX_TIME;
+                nextDayRule.addSpill(new TimeRange(0, timespill, status, comment));
+            }
+        } else {
+            endToday = start;
         }
         addTime(new TimeRange(start, endToday, status, comment), isFallback);
     }

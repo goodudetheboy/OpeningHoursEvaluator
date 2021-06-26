@@ -122,73 +122,19 @@ public class Week {
 
     /** update() helper */
     private void updateWithWeekDay(Rule rule, WeekDayRange weekdays) {
-        // WeekDayRange range = getApplicableWeekDay(weekdays);
-        WeekDayRange range = weekdays;
-        if(range != null) {
-            List<Nth> nths = range.getNths();
-            if(nths == null || isApplicableNth(nths, weekOfMonth)) {
-                WeekDay current = range.getStartDay();
-                WeekDay end = (range.getEndDay() != null)
-                                    ? range.getEndDay()
-                                    : current;
-                do {
-                    if (hasWeekDay(current)) {
-                        weekDayStorage.get(current).build(rule);
-                    }
-                } while ((current = getNextWeekDay(current)) 
-                            != getNextWeekDay(end));
-            }
-        }
-    }
-
-    private WeekDayRange getApplicableWeekDay(WeekDayRange weekdays) {
-        WeekDayRange result = new WeekDayRange();
-        WeekDay start = weekdays.getStartDay();
-        WeekDay end = weekdays.getEndDay();
-        if (end == null) {
-            return (hasWeekDay(start)) ? weekdays : null;
-        }
-        int startInt = start.ordinal();
-        int endInt = end.ordinal();
-        int startWeekInt = startWeekDay.ordinal();
-        int endWeekInt = endWeekDay.ordinal();
-        if (startInt > endInt) {
-            end = WeekDay.SU;
-            endInt = WeekDay.SU.ordinal();
-        }
-        if (endInt < startWeekInt
-                || startInt > endWeekInt) {
-            return null;
-        }
-        result.setStartDay((startInt >= startWeekInt)
-                                ? start
-                                : startWeekDay);
-        result.setEndDay((end.ordinal() <= endWeekDay.ordinal())
-                                ? end
-                                : endWeekDay);
-        result.setNths(weekdays.getNths());
-        return result;
-    }
-
-    private void updateLastWeekSunday(Rule rule) {
-        List<WeekDayRange> weekdayRange;
-        if (rule.getDays() != null) {
-            weekdayRange = rule.getDays();
-        } else {
-            WeekDayRange allWeekDays = new WeekDayRange();
-            allWeekDays.setStartDay(WeekDay.MO);
-            allWeekDays.setEndDay(WeekDay.SU);
-            weekdayRange = new ArrayList<>();
-            weekdayRange.add(allWeekDays);
-        }
-        for (WeekDayRange weekdays : weekdayRange) {
+        List<Nth> nths = weekdays.getNths();
+        if(nths == null || isApplicableNth(nths, weekOfMonth)) {
             WeekDay current = weekdays.getStartDay();
             WeekDay end = (weekdays.getEndDay() != null)
-                            ? weekdays.getEndDay()
-                            : current;
+                                ? weekdays.getEndDay()
+                                : current;
             do {
-                weekDayStorage.get(current).build(rule);
-            } while((current = getNextWeekDay(current)) != getNextWeekDay(end));
+                // TODO: optimize this part
+                if (hasWeekDay(current)) {
+                    weekDayStorage.get(current).build(rule);
+                }
+            } while ((current = getNextWeekDay(current)) 
+                        != getNextWeekDay(end));
         }
     }
 
@@ -214,6 +160,17 @@ public class Week {
         } else {
             return weekDayStorage.get(weekday).checkStatus(time);
         }
+    }
+
+    /**
+     * Check if this WeekDay is between this Week's start WeekDay and end WeekDay
+     * 
+     * @param weekday WeekDay to check
+     * @return true if this WeekDay is between this Week's start WeekDay and end WeekDay, false otherwise
+     */
+    public boolean hasWeekDay(WeekDay weekday) {
+        return Utils.isBetween(weekday.ordinal(), startWeekDay.ordinal(),
+                                endWeekDay.ordinal());
     }
 
     /**
@@ -244,6 +201,12 @@ public class Week {
         return weekdays[next];
     }
 
+    /**
+     * Return the previous WeekDay wrt a current WeekDay
+     * 
+     * @param current the current WeekDay
+     * @return the previous WeekDay
+     */
     public static WeekDay getPreviousWeekDay(WeekDay current) {
         WeekDay[] weekdays = WeekDay.values();
         int previous = (current.ordinal()-1 + weekdays.length) % weekdays.length;
@@ -278,6 +241,7 @@ public class Week {
         }
     }
 
+    /** Helper of populate() */
     private void populateHelper(WeekDay current) {
         weekDayStorage.put(current, new WeekDayRule(current));
         WeekDay nextDay = getNextWeekDay(current);
@@ -287,15 +251,29 @@ public class Week {
         }
     }
 
+    /**
+     * Connect a partial Week to another partial week by setting the nextDayRule of 
+     * the endWeekDay's WeekDayRule of this week to the startWeekDay's WeekDayRule of
+     * the other Week
+     * 
+     * @param other the other Week to be connected
+     */
     public void connect(Week other) {
         WeekDayRule nextStartDay = other.weekDayStorage.get(other.getStartWeekday());
         weekDayStorage.get(endWeekDay).setNextDayRule(nextStartDay);
     }
 
+    /**
+     * @return the spill of this Week
+     */
     public List<TimeRange> getWeekSpill() {
         return dayAfter.getSpilledTime();
     }
 
+    /**
+     * Set the spill of the startWeekDay's WeekDayRule of this Week with any previous
+     * spill, if any
+     */
     public void applyPreviousSpill() {
         if (previousSpill != null) {
             weekDayStorage.get(startWeekDay).setSpilledTime(previousSpill);
@@ -303,7 +281,15 @@ public class Week {
         }
     }
 
-    public static List<TimeRange> simulatePreviousSpill(Week week, Rule rule) {
+    /**
+     * Used during MonthRule build(). This is to get the time spills of previous
+     * week
+     * 
+     * @param week a Week to be simulated
+     * @param rule a Rule to be applied
+     * @return the simulated spill
+     */
+    public static List<TimeRange> simulateSpill(Week week, Rule rule) {
         WeekDay previousDay = Week.getPreviousWeekDay(week.getStartWeekday());
         int weekOfMonth = (previousDay == WeekDay.SU)
                             ? MonthRule.getPreviousWeekOfMonth(week.getWeekOfMonth())
@@ -331,9 +317,54 @@ public class Week {
         return false;
     }
 
-    public boolean hasWeekDay(WeekDay weekday) {
-        return Utils.isBetween(weekday.ordinal(), startWeekDay.ordinal(),
-                                endWeekDay.ordinal());
+    /**
+     * Create and return a List<Week> containing one full Week (from MO to SU)
+     * 
+     * @param weekOfMonth weekOfMonth
+     * @return a List<Week> containing a full Week
+     */
+    public static List<Week> createEmptyWeek(int weekOfMonth) {
+        return createEmptyWeek(weekOfMonth, null, 0);
+    }
+
+    /**
+     * Create and return a List<Week> containing two Week, cut by the specified cutoff.
+     * If cutoff is null, creates a full Week instead.
+     * 
+     * @param weekOfMonth week of month of first part
+     * @param cutoff a WeekDay cutoff (belongs to the first part of the Week)
+     * @param otherWeekOfMonth week of month of second part
+     * @return a List<Week> containing two Week, cut by the specified cutoff
+     */
+    public static List<Week> createEmptyWeek(int weekOfMonth, WeekDay cutoff, int otherWeekOfMonth) {
+        List<Week> result = new ArrayList<>();
+        if(cutoff == null) {
+            Week week = new Week(null, weekOfMonth);
+            result.add(week);
+        } else {
+            Week first = new Week(null, weekOfMonth, WeekDay.MO, cutoff);
+            Week second = new Week(null, otherWeekOfMonth, Week.getNextWeekDay(cutoff), WeekDay.SU);
+            first.connect(second);
+            result.add(first);
+            result.add(second);
+        }
+        return result;
+    }
+
+    /**
+     * @param time the LocalDateTime of desired week
+     * @return the first day of a week
+     */
+    public static LocalDateTime getFirstDayOfWeek(LocalDateTime time) {
+        return time.with(WeekFields.ISO.dayOfWeek(), 1);
+    }
+
+    /**
+     * @param time the LocalDateTime of desired week
+     * @return the last day of a week
+     */
+    public static LocalDateTime getLastDayOfWeek(LocalDateTime time) {
+        return time.with(WeekFields.ISO.dayOfWeek(), 7);
     }
 
     @Override

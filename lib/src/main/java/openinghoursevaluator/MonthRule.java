@@ -29,24 +29,30 @@ public class MonthRule {
         this.rules = rules;
     }
 
+    /**
+     * Build a Week of this MonthRule on an input of time, complete with week number.
+     * Also supports Week that is split between two months.
+     * 
+     * @param time input LocalDateTime
+     */
     public void build(LocalDateTime time) {
         populate(time);
         for (Rule rule : rules) {
-            List<TimeRange> previousSpill = Week.simulatePreviousSpill(weekStorage.get(0), rule);
+            List<TimeRange> previousSpill = Week.simulateSpill(weekStorage.get(0), rule);
             weekStorage.get(0).setPreviousSpill(previousSpill);
             weekStorage.get(0).update(rule);
             if (weekStorage.size() > 1) {
                 weekStorage.get(1).update(rule);
             }
-            // System.out.println(rule);
-            // System.out.println(toWeekString());
         }
     }
 
-    public void update() {
-        
-    }
-
+    /**
+     * Evaluate the stored OH string with a time to see if it's opening or closed
+     * 
+     * @param time input LocalDateTime
+     * @return the result of the evaluation
+     */
     public Result checkStatus(LocalDateTime time) {
         year = time.getYear();
         month = monthConvert(time);
@@ -57,59 +63,31 @@ public class MonthRule {
         }
     }
 
+    /**
+     * Populate a Week of this MonthRule on an input time.
+     * 
+     * @param time input LocalDateTime
+     */
     public void populate(LocalDateTime time) {
         int weekOfMonth = getWeekOfMonth(time);
-        switch (weekOfMonth) {  
-            case 1:
-                WeekDay cutoff = Week.toWeekDay(getFirstDayOfMonth(time).getDayOfWeek());
-                if (cutoff == WeekDay.MO) {
-                    weekStorage = buildWeek(weekOfMonth);
-                } else {
-                    int previousWeekOfMonth = getWeekOfMonth(getFirstDayOfWeek(time));
-                    weekStorage = buildWeek(previousWeekOfMonth, Week.getPreviousWeekDay(cutoff), weekOfMonth);
-                }
-                break;
-            case 5:
-                WeekDay cutoff1 = Week.toWeekDay(getLastDayOfMonth(time).getDayOfWeek());
-                if(cutoff1 == WeekDay.SU) {
-                    weekStorage = buildWeek(weekOfMonth);
-                } else {
-                    weekStorage = buildWeek(weekOfMonth, cutoff1, 1);                    
-                }
-                
-                break;
-            default:
-                weekStorage = buildWeek(weekOfMonth);
+        int lastWeekNum = getNumOfWeekOfMonth(time);
+        WeekDay cutoff = null;
+        if (weekOfMonth == 1) {
+            cutoff = Week.toWeekDay(getFirstDayOfMonth(time).getDayOfWeek());
+            if (cutoff != WeekDay.MO) {
+                int previousWeekOfMonth = getWeekOfMonth(Week.getFirstDayOfWeek(time));
+                weekStorage = Week.createEmptyWeek(previousWeekOfMonth, Week.getPreviousWeekDay(cutoff), weekOfMonth);
+                return;
+            }
+        } else if (weekOfMonth == lastWeekNum) {
+            cutoff = Week.toWeekDay(getLastDayOfMonth(time).getDayOfWeek());
+            if(cutoff != WeekDay.SU) {
+                weekStorage = Week.createEmptyWeek(weekOfMonth, cutoff, 1);                    
+                return;
+            }            
         }
-    }
-
-
-
-    public List<Week> buildWeek(int weekOfMonth) {
-        return buildWeek(weekOfMonth, null, 0);
-    }
-
-    public List<Week> buildWeek(int weekOfMonth, WeekDay cutoff, int otherWeekOfMonth) {
-        List<Week> result = new ArrayList<>();
-        if(cutoff == null) {
-            Week week = new Week(null, weekOfMonth);
-            result.add(week);
-        } else {
-            Week first = new Week(null, weekOfMonth, WeekDay.MO, cutoff);
-            Week second = new Week(null, otherWeekOfMonth, Week.getNextWeekDay(cutoff), WeekDay.SU);
-            first.connect(second);
-            result.add(first);
-            result.add(second);
-        }
-        return result;
-    }
-
-    public static LocalDateTime getFirstDayOfWeek(LocalDateTime time) {
-        return time.with(WeekFields.ISO.dayOfWeek(), 1);
-    }
-
-    public static LocalDateTime getLastDayOfWeek(LocalDateTime time) {
-        return time.with(WeekFields.ISO.dayOfWeek(), 7);
+        // case 2, 3, 4
+        weekStorage = Week.createEmptyWeek(weekOfMonth);
     }
 
     public static LocalDateTime getFirstDayOfMonth(LocalDateTime time) {
@@ -125,12 +103,16 @@ public class MonthRule {
         return Month.values()[time.getMonth().ordinal()];
     }
 
-    public static int getWeekOfMonth(LocalDateTime date) {
+    public static int getWeekOfMonth(LocalDateTime time) {
         Calendar c = Calendar.getInstance(Locale.FRANCE);
-        c.set(date.getYear(), date.getMonthValue()-1, date.getDayOfMonth());
+        c.set(time.getYear(), time.getMonthValue()-1, time.getDayOfMonth());
         c.setMinimalDaysInFirstWeek(1);
         return c.get(Calendar.WEEK_OF_MONTH);
         // return date.get(WeekFields.ISO.weekOfMonth());
+    }
+
+    public static int getNumOfWeekOfMonth(LocalDateTime time) {
+        return getWeekOfMonth(getLastDayOfMonth(time));
     }
 
     public static int getPreviousWeekOfMonth(int weekOfMonth) {

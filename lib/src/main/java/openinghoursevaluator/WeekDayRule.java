@@ -90,7 +90,7 @@ public class WeekDayRule {
     /**
      * @return the current weekday of this weekday
      */
-    public WeekDay getCurrentWeekDay() {
+    public WeekDay getWeekDay() {
         return weekday;
     }
 
@@ -250,6 +250,25 @@ public class WeekDayRule {
             }
         }
         return false;
+    }
+
+    /**
+     * Check if this WeekDayRule is affected by any day offset
+     * 
+     * @return
+     */
+    public boolean isApplicableOffset(WeekDayRange weekdays) {
+        int offset = weekdays.getOffset();
+        if (offset == 0) {
+            throw new IllegalArgumentException("Offset not 0 should have been checked before this function is called");
+        } else if (weekdays.getEndDay() != null) {
+            throw new IllegalArgumentException("There cannot be a end day in a WeekDayRange with an offset");
+        }
+        LocalDate offsetDate = getOffsetDate(defDate, -offset);
+        WeekDayRule offsetDay = new WeekDayRule(offsetDate);
+        WeekDay offsetWeekDay = offsetDay.getWeekDay();
+        return offsetWeekDay == weekdays.getStartDay()
+                && offsetDay.isApplicableNth(weekdays.getNths());
     }
 
     /**
@@ -554,6 +573,30 @@ public class WeekDayRule {
     public static int getReverseNthWeekOfMonth(LocalDate date) {
         int lastWeekDayOfMonthNth = getNthWeekDayOfMonth(getLastWeekDayOfMonth(date));
         return getNthWeekDayOfMonth(date) - 1 - lastWeekDayOfMonthNth;
+    }
+
+    /**
+     * Return the date that is offset by some days from the input date,
+     * according to the following
+     * <ol>
+     * <li> offset < 0: return [offset] days before input date
+     * <li> offset > 0: return [offset] days after input date
+     * <li> offset = 0: return original date
+     * </ol>
+     * <p>
+     * 
+     * @param date an input date
+     * @param offset offset, in days
+     * @return the date that is offset by some [offset] days from the input date
+     */
+    public static LocalDate getOffsetDate(LocalDate date, int offset) {
+        if (offset > 0) {
+            return date.plusDays(offset);
+        } 
+        if (offset < 0) {
+            return date.minusDays(-offset);
+        }
+        return date;
     }
 
     @Override

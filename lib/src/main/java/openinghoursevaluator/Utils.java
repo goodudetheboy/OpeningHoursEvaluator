@@ -2,6 +2,8 @@ package openinghoursevaluator;
 
 import java.time.LocalDateTime;
 
+import ch.poole.openinghoursparser.WeekDay;
+
 public class Utils {
     /** Default constructor */
     private Utils() {
@@ -30,4 +32,20 @@ public class Utils {
     public static int timeInMinute(LocalDateTime time) {
         return time.getHour()*60 + time.getMinute();
     }
+
+    /**
+     * Check if input WeekDay is between a start Weekday and a end WeekDay.
+     * Supports WeekDay spanning between two weeks (e.g. Su is between Sa-Tu)
+     * 
+     * @param value WeekDay to check
+     * @param start start WeekDay
+     * @param end endWeekDay
+     * @return if value WeekDay is between start and end WeekDay
+     */
+    public static boolean isBetweenWeekDays(WeekDay value, WeekDay start, WeekDay end) {
+        int startO = start.ordinal();
+        int endO = (end.ordinal() < startO) ? end.ordinal() + 7 : end.ordinal();
+        return isBetween(value.ordinal(), startO, endO);
+    }
+
 }

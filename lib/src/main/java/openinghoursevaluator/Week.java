@@ -159,7 +159,11 @@ public class Week {
             weekdayRange.add(allWeek);
         }
         for (WeekDayRange weekdays : weekdayRange) {
-            updateWithRange(rule, weekdays);
+            if (weekdays.getOffset() == 0) {
+                updateWithRange(rule, weekdays);
+            } else {
+                updateWithOffsetRange(rule, weekdays);
+            }
         }
         clean();
     }
@@ -172,9 +176,18 @@ public class Week {
                             ? weekdays.getEndDay()
                             : current;
         do {
-            // TODO: optimize this part
             if (hasWeekDay(current)
-                    && (weekDayStorage.get(current).isApplicableNth(nths))) {
+                    && weekDayStorage.get(current).isApplicableNth(nths)) {
+                weekDayStorage.get(current).build(rule);
+            }
+        } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
+    }
+
+    private void updateWithOffsetRange(Rule rule, WeekDayRange weekdays) {
+        WeekDay current = startWeekDay;
+        WeekDay end = endWeekDay;
+        do {
+            if (weekDayStorage.get(current).isApplicableOffset(weekdays)) {
                 weekDayStorage.get(current).build(rule);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
@@ -211,8 +224,7 @@ public class Week {
      * @return true if this WeekDay is between this Week's start WeekDay and end WeekDay, false otherwise
      */
     public boolean hasWeekDay(WeekDay weekday) {
-        return Utils.isBetween(weekday.ordinal(), startWeekDay.ordinal(),
-                                endWeekDay.ordinal());
+        return Utils.isBetweenWeekDays(weekday, startWeekDay, endWeekDay);
     }
 
     /**
@@ -329,7 +341,7 @@ public class Week {
      */
     public static List<TimeRange> simulateSpill(Week week, Rule rule) {
         LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
-        LocalDate previousDay = firstDateOfWeek.minusDays(1);
+        LocalDate previousDay = WeekDayRule.getOffsetDate(firstDateOfWeek, -1);
         Week w = new Week(previousDay);
         w.update(rule);
         return w.getWeekSpill();

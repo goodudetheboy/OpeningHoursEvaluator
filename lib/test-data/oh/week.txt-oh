@@ -1,3 +1,5 @@
 24/7
 Th[3,5]; Fr[1-2]; Sa[3]
 Su[2,3] 00:00-48:00 unknown
+Su[-3,-4] 00:00-48:00
+We[2,-2]; Sa[-1, 4]; Tu,Th,Su[3-5,-5] "something happens"

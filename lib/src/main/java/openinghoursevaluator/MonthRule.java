@@ -1,10 +1,7 @@
 package openinghoursevaluator;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
-import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -12,7 +9,6 @@ import java.util.Locale;
 
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
-import ch.poole.openinghoursparser.WeekDay;
 
 public class MonthRule {
     int         year;
@@ -46,7 +42,6 @@ public class MonthRule {
             if (weekStorage.size() > 1) {
                 weekStorage.get(1).update(rule);
             }
-            // System.out.println(toWeekString());
         }
     }
 

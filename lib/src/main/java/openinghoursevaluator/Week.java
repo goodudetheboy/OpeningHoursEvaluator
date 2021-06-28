@@ -3,7 +3,6 @@ package openinghoursevaluator;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -17,7 +16,7 @@ import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 
 public class Week {
-    public static int INVALID_NUM = Integer.MIN_VALUE;
+    public static final int INVALID_NUM = Integer.MIN_VALUE;
 
     // defining date of this Week
     LocalDate defDate               = null;
@@ -72,8 +71,6 @@ public class Week {
     private void dissectDefDate(LocalDate defDate) {
         this.month = MonthRule.convertMonth(defDate);
         this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekBasedYear());
-        // setWeekOfMonth(MonthRule.getNthWeekOfMonth(defDate, Locale.FRANCE));
-        // setReverseWeekOfMonth(reverseWeekOfMonth);
     }
 
     public void setWeekOfMonth(int weekOfMonth) {
@@ -403,7 +400,9 @@ public class Week {
      * @return the LocalDate of an input weekday in the week of input date
      */
     public static LocalDate getWeekDayOfWeek(LocalDate date, WeekDay weekday) {
-        return date.with(WeekFields.ISO.dayOfWeek(), weekday.ordinal() + 1);
+        // ordinal starts with 0, so need this to make up for date.with()
+        int n = weekday.ordinal() + 1;
+        return date.with(WeekFields.ISO.dayOfWeek(), n);
     }
 
     @Override

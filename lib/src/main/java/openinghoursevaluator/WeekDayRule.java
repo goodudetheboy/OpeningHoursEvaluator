@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,8 +29,8 @@ public class WeekDayRule {
     LocalDate       defDate         = null;
 
     // used used during eval
-    // int             year            = INVALID_NUM;
-    // Month           month           = null;
+    int             year            = INVALID_NUM;
+    Month           month           = null;
     int             date            = INVALID_NUM;
     WeekDay         weekday         = null;
     int             nthWeekDay      = INVALID_NUM;
@@ -73,8 +72,8 @@ public class WeekDayRule {
      * defining date
      */
     private void dissectDefDate(LocalDate defDate) {
-        // year = defDate.getYear();
-        // month = MonthRule.convertMonth(defDate);
+        year = defDate.getYear();
+        month = MonthRule.convertMonth(defDate);
         date = defDate.getDayOfYear();
         weekday = Week.convertWeekDay(defDate.getDayOfWeek());
         nthWeekDay = getNthWeekDayOfMonth(defDate);

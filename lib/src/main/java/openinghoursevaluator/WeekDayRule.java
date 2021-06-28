@@ -1,47 +1,84 @@
 package openinghoursevaluator;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ch.poole.openinghoursparser.Month;
+import ch.poole.openinghoursparser.Nth;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.TimeSpan;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 
 public class WeekDayRule {
+    public static final int INVALID_NUM = Integer.MIN_VALUE;
+
     // TODO: This rule storage is to be dealt later
     Rule            currentRule     = null;
     List<Rule>      offRule         = null;
     List<Rule>      unknownRule     = null;
     List<Rule>      additiveRule    = null;
     List<Rule>      fallbackRule    = null;
+
+    // store the defining LocalDate of this WeekDayRule
+    LocalDate       defDate         = null;
+
+    // used used during eval
+    // int             year            = INVALID_NUM;
+    // Month           month           = null;
+    int             date            = INVALID_NUM;
     WeekDay         weekday         = null;
-    List<TimeRange> openingTimes    = null;
+    int             nthWeekDay      = INVALID_NUM;
+    int             reverseNth      = INVALID_NUM;
+
+    // used for connecting between days
     WeekDayRule     nextDayRule     = null;
     List<TimeRange> yesterdaySpill  = null;
 
+    // opening times storage
+    List<TimeRange> openingTimes    = null;
+
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
-        this(null);
+        // nothing here
     }
     
     /** Constructor with Weekday */    
-    public WeekDayRule(WeekDay weekday) {
-        this.weekday = weekday;
-        this.offRule = new ArrayList<>();
-        this.unknownRule = new ArrayList<>();
-        this.additiveRule = new ArrayList<>();
-        this.fallbackRule = new ArrayList<>();
-        this.openingTimes = new ArrayList<>();
-        this.yesterdaySpill = new ArrayList<>();
+    public WeekDayRule(LocalDate defDate) {
+        this.defDate = defDate;
+        dissectDefDate(defDate);
+        offRule = new ArrayList<>();
+        unknownRule = new ArrayList<>();
+        additiveRule = new ArrayList<>();
+        fallbackRule = new ArrayList<>();
+        openingTimes = new ArrayList<>();
+        yesterdaySpill = new ArrayList<>();
     }
 
     /** Constructor with a WeekDay and a next WeekDayRule */
-    public WeekDayRule(WeekDay weekday, WeekDayRule nextDayRule) {
-        this(weekday);
+    public WeekDayRule(LocalDate defDate, WeekDayRule nextDayRule) {
+        this(defDate);
         this.nextDayRule = nextDayRule;
+    }
+
+
+    /**
+     * Helper function for constructor, used for gathering info from
+     * defining date
+     */
+    private void dissectDefDate(LocalDate defDate) {
+        // year = defDate.getYear();
+        // month = MonthRule.convertMonth(defDate);
+        date = defDate.getDayOfYear();
+        weekday = Week.convertWeekDay(defDate.getDayOfWeek());
+        nthWeekDay = getNthWeekDayOfMonth(defDate);
+        reverseNth = getReverseNthWeekOfMonth(defDate);
     }
 
     /**
@@ -70,6 +107,10 @@ public class WeekDayRule {
      */
     public List<TimeRange> getSpilledTime() {
         return yesterdaySpill;
+    }
+
+    public LocalDate getDefDate() {
+        return defDate;
     }
 
     /**
@@ -106,6 +147,10 @@ public class WeekDayRule {
      */
     public void setSpilledTime(List<TimeRange> yesterdaySpill) {
         this.yesterdaySpill = yesterdaySpill;
+    }
+
+    public void setDefiningDate(LocalDate defDate) {
+        this.defDate = defDate;
     }
 
     /** Build the opening times of this weekday with the current rule */
@@ -171,6 +216,41 @@ public class WeekDayRule {
         for (TimeSpan timespan : rule.getTimes()) {
             addTime(timespan, status, comment, rule.isFallBack());
         }
+    }
+
+    /**
+     * Check if input weekOfMonth is within Nth range. Supports negative
+     * 
+     * @param nth input Nth
+     * @param weekOfMonth week of month (max 5)
+     * @return if applicable or not
+     */
+    public boolean isApplicableNth(List<Nth> nths) {
+        if (nths == null) {
+            return true;
+        }
+        for (Nth nth : nths) {
+            int startNth = nth.getStartNth();
+            int endNth = nth.getEndNth();
+            if ((endNth == Nth.INVALID_NTH)) {
+                if ((startNth > 0 && nthWeekDay == startNth) // positive Nth
+                        || (startNth < 0 && reverseNth == startNth)) { // negative Nth
+                return true;
+                }
+            } else {
+                // handle illegal cases
+                if (endNth < startNth) {
+                    throw new IllegalArgumentException("Start nth " + startNth + " cannot be less than " + endNth);
+                } else if (startNth < 0 && endNth > 0) {
+                    throw new IllegalArgumentException("Illegal range: " + startNth + " - " + endNth);
+                }
+                if (Utils.isBetween(nthWeekDay, startNth, endNth)
+                        || Utils.isBetween(reverseNth, startNth, endNth)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
@@ -397,6 +477,9 @@ public class WeekDayRule {
      * @param timerange
      */
     public void addSpill(TimeRange timerange) {
+        if (yesterdaySpill == null) {
+            yesterdaySpill = new ArrayList<>();
+        }
         yesterdaySpill.add(timerange);
     }
 
@@ -445,10 +528,39 @@ public class WeekDayRule {
             i++;
         }
     }
+    
+    /**
+     * 
+     * @param date input LocalDate
+     * @return nth weekday of a month from an input LocalDate, from 1 to 5
+     */
+    public static int getNthWeekDayOfMonth(LocalDate date) {
+        return date.get(ChronoField.ALIGNED_WEEK_OF_MONTH);
+    }
+
+    /**
+     * 
+     * @param date input LocalDate
+     * @return last date of the last weekday of the month, weekday similar to input LocalDate's
+     */
+    public static LocalDate getLastWeekDayOfMonth(LocalDate date) {
+        return date.with(TemporalAdjusters.lastInMonth(date.getDayOfWeek()));
+    }
+
+    /**
+     * 
+     * @param date input LocalDate
+     * @return reverse nth of the weekday of a month from an input LocalDate, from -5 to -1
+     */
+    public static int getReverseNthWeekOfMonth(LocalDate date) {
+        int lastWeekDayOfMonthNth = getNthWeekDayOfMonth(getLastWeekDayOfMonth(date));
+        return getNthWeekDayOfMonth(date) - 1 - lastWeekDayOfMonthNth;
+    }
 
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
+        b.append(weekday + " (" + defDate + ") : ");
         for (TimeRange openingTime : openingTimes) {
             b.append(openingTime.toString());
             b.append(" ");

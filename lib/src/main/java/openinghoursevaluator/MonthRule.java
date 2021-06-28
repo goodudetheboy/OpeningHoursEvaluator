@@ -36,6 +36,8 @@ public class MonthRule {
      * @param time input LocalDateTime
      */
     public void build(LocalDateTime time) {
+        year = time.getYear();
+        month = convertMonth(time.toLocalDate());
         populate(time);
         for (Rule rule : rules) {
             List<TimeRange> previousSpill = Week.simulateSpill(weekStorage.get(0), rule);
@@ -44,6 +46,7 @@ public class MonthRule {
             if (weekStorage.size() > 1) {
                 weekStorage.get(1).update(rule);
             }
+            // System.out.println(toWeekString());
         }
     }
 
@@ -54,9 +57,7 @@ public class MonthRule {
      * @return the result of the evaluation
      */
     public Result checkStatus(LocalDateTime time) {
-        year = time.getYear();
-        month = monthConvert(time);
-        if (weekStorage.get(0).hasWeekDay(Week.toWeekDay(time.getDayOfWeek()))) {
+        if (weekStorage.get(0).hasWeekDay(Week.convertWeekDay(time.getDayOfWeek()))) {
             return weekStorage.get(0).checkStatus(time);
         } else {
             return weekStorage.get(1).checkStatus(time);
@@ -69,56 +70,99 @@ public class MonthRule {
      * @param time input LocalDateTime
      */
     public void populate(LocalDateTime time) {
-        int weekOfMonth = getWeekOfMonth(time);
-        int lastWeekNum = getNumOfWeekOfMonth(time);
-        WeekDay cutoff = null;
-        if (weekOfMonth == 1) {
-            cutoff = Week.toWeekDay(getFirstDayOfMonth(time).getDayOfWeek());
-            if (cutoff != WeekDay.MO) {
-                int previousWeekOfMonth = getWeekOfMonth(Week.getFirstDayOfWeek(time));
-                weekStorage = Week.createEmptyWeek(previousWeekOfMonth, Week.getPreviousWeekDay(cutoff), weekOfMonth);
-                return;
-            }
-        } else if (weekOfMonth == lastWeekNum) {
-            cutoff = Week.toWeekDay(getLastDayOfMonth(time).getDayOfWeek());
-            if(cutoff != WeekDay.SU) {
-                weekStorage = Week.createEmptyWeek(weekOfMonth, cutoff, 1);                    
-                return;
-            }            
-        }
-        // case 2, 3, 4
-        weekStorage = Week.createEmptyWeek(weekOfMonth);
+        weekStorage = Week.createEmptyWeek(time.toLocalDate());
     }
 
-    public static LocalDateTime getFirstDayOfMonth(LocalDateTime time) {
-        return time.withDayOfMonth(1);
+    /**
+     * Return the first day of a month, based on an input time
+     *  
+     * @param date input time
+     * @return the first day of a month, based on an input time
+     */
+    public static LocalDate getFirstDayOfMonth(LocalDate date) {
+        return date.withDayOfMonth(1);
     }
 
-    public static LocalDateTime getLastDayOfMonth(LocalDateTime time) {
-        YearMonth month = YearMonth.from(time);
-        return month.atEndOfMonth().atStartOfDay();
+    /**
+     * Return the last day of a month, based on an input time
+     *  
+     * @param date input time
+     * @return the last day of a month, based on an input time
+     */
+    public static LocalDate getLastDayOfMonth(LocalDate date) {
+       return date.withDayOfMonth(date.lengthOfMonth());
     }
 
-    public static Month monthConvert(LocalDateTime time) {
-        return Month.values()[time.getMonth().ordinal()];
+    /**
+     * Convert the Month class in the LocalDateTime to Month class in the OpeningHoursParser
+     * 
+     * @param time
+     * @return
+     */
+    public static Month convertMonth(LocalDate date) {
+        return Month.values()[date.getMonth().ordinal()];
     }
 
-    public static int getWeekOfMonth(LocalDateTime time) {
-        Calendar c = Calendar.getInstance(Locale.FRANCE);
-        c.set(time.getYear(), time.getMonthValue()-1, time.getDayOfMonth());
+    /**
+     * Return the week of a month, based on a time and a Locale
+     * 
+     * @param date
+     * @return
+     */
+    public static int getNthWeekOfMonth(LocalDate date, Locale locale) {
+        Calendar c = Calendar.getInstance(locale);
+        c.set(date.getYear(), date.getMonthValue()-1, date.getDayOfMonth());
         c.setMinimalDaysInFirstWeek(1);
         return c.get(Calendar.WEEK_OF_MONTH);
-        // return date.get(WeekFields.ISO.weekOfMonth());
     }
 
-    public static int getNumOfWeekOfMonth(LocalDateTime time) {
-        return getWeekOfMonth(getLastDayOfMonth(time));
+    /**
+     * Return the order of a week of the input time, in reverse order of the month.
+     * For example: normally, in a 5-week month, the 2nd week would be the 3rd week
+     * in reverse of the month
+     * 
+     * @param date input time
+     * @return order of a week of the input time, in reverse order of the month
+     */
+    public static int getReverseNthWeekOfMonth(LocalDate date, Locale locale) {
+        return getNthWeekOfMonth(date, locale) - 1 - getNumOfWeekOfMonth(date, locale);
     }
 
+    /**
+     * Return the number of week of a month of an input time
+     * 
+     * @param time input time
+     * @return number of week of a month of an input time
+     */
+    public static int getNumOfWeekOfMonth(LocalDate date, Locale locale) {
+        return getNthWeekOfMonth(getLastDayOfMonth(date), locale);
+    }
+
+    /**
+     * Return the number of the previous week of a week of a month
+     * 
+     * @param weekOfMonth input week of month
+     * @return the number of the previous week of a week of a month
+     */
     public static int getPreviousWeekOfMonth(int weekOfMonth) {
+        // TODO: Refactor this to be more dynamic
         return (weekOfMonth == 1) ? 5 : weekOfMonth-1;
     }
 
+    /**
+     * Return the number of the previous week of a week of a month
+     * 
+     * @param weekOfMonth input week of month
+     * @return the number of the previous week of a week of a month
+     */
+    public static int getPreviousReverseWeekOfMonth(int weekOfMonth) {
+        // TODO: Refactor this to be more dynamic
+        return (weekOfMonth == -5) ? -1 : weekOfMonth-1;
+    }
+
+    /**
+     * @return the toString of the Week stored in this MonthRule
+     */
     public String toWeekString() {
         StringBuilder b = new StringBuilder();
         if(weekStorage.size() == 1) {

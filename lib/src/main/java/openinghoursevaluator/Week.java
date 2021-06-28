@@ -1,56 +1,93 @@
 package openinghoursevaluator;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjuster;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 
+import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 
 public class Week {
-    int     weekOfYear;
-    int     weekOfMonth;
-    EnumMap<WeekDay, WeekDayRule>   weekDayStorage;
-    List<Rule>                      rules;
+    public static int INVALID_NUM = Integer.MIN_VALUE;
+
+    // defining date of this Week
+    LocalDate defDate               = null;
+
+    // used during eval
+    Month   month                   = null;
+    int     weekOfYear              = INVALID_NUM;
+    int     weekOfMonth             = INVALID_NUM;
+    int     reverseWeekOfMonth      = INVALID_NUM;
+
+    WeekDay startWeekDay            = null;
+    WeekDay endWeekDay              = null;
+
+    // used for connecting between days
     List<TimeRange> previousSpill   = null;
-    WeekDayRule dayAfter        = null;
-    // this is for custom week
-    WeekDay startWeekDay        = null;
-    WeekDay endWeekDay          = null;
+    WeekDayRule dayAfter            = null;
+    
+    // weekday storage
+    EnumMap<WeekDay, WeekDayRule>   weekDayStorage = null;
 
     public Week() {
         // nothing here
     }
 
-    public Week(List<Rule> rules, int weekOfMonth) {
+    public Week(LocalDate defDate) {
         // setting weekOfYear and weekOfMonth
-        this(rules, weekOfMonth, WeekDay.MO, WeekDay.SU);
+        this(defDate, WeekDay.MO, WeekDay.SU);
     }
 
-    public Week(List<Rule> rules, int weekOfMonth, WeekDay oneWeekDay) {
-        this(rules, weekOfMonth, oneWeekDay, oneWeekDay);
+    public Week(LocalDate defDate, WeekDay oneWeekDay) {
+        this(defDate, oneWeekDay, oneWeekDay);
     }
 
-    public Week(List<Rule> rules, int weekOfMonth, WeekDay startWeekDay, WeekDay endWeekDay) {
-        if(startWeekDay.ordinal() > endWeekDay.ordinal()) {
-            throw new IllegalArgumentException("Start weekday cannot be after end weekday");
-        }
-        this.weekOfMonth = weekOfMonth;
+    /**
+     * 
+     * @param rules 
+     * @param defDate
+     * @param startWeekDay
+     * @param endWeekDay
+     */
+    public Week(LocalDate defDate,
+                    WeekDay startWeekDay, WeekDay endWeekDay) {
+        this.defDate = defDate;
+        dissectDefDate(defDate);
+        setStartWeekDay(startWeekDay);
+        setEndWeekDay(endWeekDay);
         weekDayStorage = new EnumMap<>(WeekDay.class);
-        this.rules = rules;
-        this.startWeekDay = startWeekDay;
-        this.endWeekDay = endWeekDay;
         populate();
     }
 
+    /** Helper function for constructor */
+    private void dissectDefDate(LocalDate defDate) {
+        this.month = MonthRule.convertMonth(defDate);
+        this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekBasedYear());
+        // setWeekOfMonth(MonthRule.getNthWeekOfMonth(defDate, Locale.FRANCE));
+        // setReverseWeekOfMonth(reverseWeekOfMonth);
+    }
+
     public void setWeekOfMonth(int weekOfMonth) {
+        if (weekOfMonth < 1 || weekOfMonth > 5) {
+            throw new IllegalArgumentException("Illegal nth week of month: " + weekOfMonth);
+        }
         this.weekOfMonth = weekOfMonth;
+    }
+
+    public void setReverseWeekOfMonth(int reverseWeekOfMonth) {
+        if (reverseWeekOfMonth > -1 || reverseWeekOfMonth < -5) {
+            throw new IllegalArgumentException("Illegal reverse nth week of month: " + weekOfMonth);
+        }
+        this.reverseWeekOfMonth = reverseWeekOfMonth;
     }
 
     public void setPreviousSpill(List<TimeRange> previousSpill) {
@@ -62,11 +99,21 @@ public class Week {
     }
 
     public void setEndWeekDay(WeekDay endWeekDay) {
+        if (startWeekDay == null) {
+            throw new IllegalArgumentException("Start day has not been set");
+        }
+        if(startWeekDay.ordinal() > endWeekDay.ordinal()) {
+            throw new IllegalArgumentException("Start weekday cannot be after end weekday");
+        }
         this.endWeekDay = endWeekDay;
     }
 
     public int getWeekOfMonth() {
         return weekOfMonth;
+    }
+
+    public int getReverseWeekOfMonth() {
+        return reverseWeekOfMonth;
     }
 
     public List<TimeRange> getPreviousSpill() {
@@ -90,12 +137,12 @@ public class Week {
      * 
      * @param isStrict strict or not
      */
-    public void build() {
-        populate();
-        for (Rule rule : rules) {
-            update(rule);
-        }
-    }
+    // public void build() {
+    //     populate();
+    //     for (Rule rule : rules) {
+    //         update(rule);
+    //     }
+    // }
 
     /**
      * Update Week with a rule
@@ -115,27 +162,25 @@ public class Week {
             weekdayRange.add(allWeek);
         }
         for (WeekDayRange weekdays : weekdayRange) {
-            updateWithWeekDay(rule, weekdays);
+            updateWithRange(rule, weekdays);
         }
         clean();
     }
 
     /** update() helper */
-    private void updateWithWeekDay(Rule rule, WeekDayRange weekdays) {
+    private void updateWithRange(Rule rule, WeekDayRange weekdays) {
         List<Nth> nths = weekdays.getNths();
-        if(nths == null || isApplicableNth(nths, weekOfMonth)) {
-            WeekDay current = weekdays.getStartDay();
-            WeekDay end = (weekdays.getEndDay() != null)
-                                ? weekdays.getEndDay()
-                                : current;
-            do {
-                // TODO: optimize this part
-                if (hasWeekDay(current)) {
-                    weekDayStorage.get(current).build(rule);
-                }
-            } while ((current = getNextWeekDay(current)) 
-                        != getNextWeekDay(end));
-        }
+        WeekDay current = weekdays.getStartDay();
+        WeekDay end = (weekdays.getEndDay() != null)
+                            ? weekdays.getEndDay()
+                            : current;
+        do {
+            // TODO: optimize this part
+            if (hasWeekDay(current)
+                    && (weekDayStorage.get(current).isApplicableNth(nths))) {
+                weekDayStorage.get(current).build(rule);
+            }
+        } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
 
     /**
@@ -153,7 +198,7 @@ public class Week {
      * @return the result of the evaluation
      */
     public Result checkStatus(LocalDateTime time) {
-        WeekDay weekday = toWeekDay(time.getDayOfWeek());
+        WeekDay weekday = convertWeekDay(time.getDayOfWeek());
         WeekDayRule toCheck = weekDayStorage.get(weekday);
         if (toCheck == null) {
             return null;
@@ -179,14 +224,8 @@ public class Week {
      * @param dayOfWeek an enum of DayOfWeek to be converted
      * @return an equivalent weekday in WeekDay enum
      */
-    public static WeekDay toWeekDay(DayOfWeek dayOfWeek) {
-        int dayOfWeekNth = dayOfWeek.ordinal();
-        for (WeekDay weekday : WeekDay.values()) {
-            if (weekday.ordinal() == dayOfWeekNth) {
-                return weekday;
-            }
-        }
-        return null;
+    public static WeekDay convertWeekDay(DayOfWeek dayOfWeek) {
+        return WeekDay.values()[dayOfWeek.ordinal()];
     }
     
     /**
@@ -243,7 +282,9 @@ public class Week {
 
     /** Helper of populate() */
     private void populateHelper(WeekDay current) {
-        weekDayStorage.put(current, new WeekDayRule(current));
+        LocalDate dateOfCurrent = getWeekDayOfWeek(defDate, current);
+        WeekDayRule newWeekDay = new WeekDayRule(dateOfCurrent);
+        weekDayStorage.put(current, newWeekDay);
         WeekDay nextDay = getNextWeekDay(current);
         if(current != endWeekDay) {
             populateHelper(nextDay);
@@ -290,81 +331,79 @@ public class Week {
      * @return the simulated spill
      */
     public static List<TimeRange> simulateSpill(Week week, Rule rule) {
-        WeekDay previousDay = Week.getPreviousWeekDay(week.getStartWeekday());
-        int weekOfMonth = (previousDay == WeekDay.SU)
-                            ? MonthRule.getPreviousWeekOfMonth(week.getWeekOfMonth())
-                            : week.getWeekOfMonth();
-        Week simulatedSunday = new Week(null, weekOfMonth, previousDay);
-        simulatedSunday.update(rule);
-        return simulatedSunday.getWeekSpill();
+        LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
+        LocalDate previousDay = firstDateOfWeek.minusDays(1);
+        Week w = new Week(previousDay);
+        w.update(rule);
+        return w.getWeekSpill();
     }
 
     /**
-     * Check if input weekOfMonth is within Nth range, or equals to startNth
-     * if there's no endNth
+     * Create and return a List<Week> created from an input date. The weekday data
+     * is extracted from the week of input date. If there's a cutoff (a week between
+     * months), List<Week> will cotain two
      * 
-     * @param nth input Nth
-     * @param weekOfMonth week of month (max 5)
-     * @return if applicable or not
+     * @param date a LocalDate to be built around
+     * @return a List<Week> built around LocalDate
      */
-    public static boolean isApplicableNth(List<Nth> nths, int weekOfMonth) {
-        for(Nth nth : nths) {
-            if (nth.getEndNth() == Nth.INVALID_NTH && weekOfMonth == nth.getStartNth()
-                    || Utils.isBetween(weekOfMonth, nth.getStartNth(), nth.getEndNth())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Create and return a List<Week> containing one full Week (from MO to SU)
-     * 
-     * @param weekOfMonth weekOfMonth
-     * @return a List<Week> containing a full Week
-     */
-    public static List<Week> createEmptyWeek(int weekOfMonth) {
-        return createEmptyWeek(weekOfMonth, null, 0);
-    }
-
-    /**
-     * Create and return a List<Week> containing two Week, cut by the specified cutoff.
-     * If cutoff is null, creates a full Week instead.
-     * 
-     * @param weekOfMonth week of month of first part
-     * @param cutoff a WeekDay cutoff (belongs to the first part of the Week)
-     * @param otherWeekOfMonth week of month of second part
-     * @return a List<Week> containing two Week, cut by the specified cutoff
-     */
-    public static List<Week> createEmptyWeek(int weekOfMonth, WeekDay cutoff, int otherWeekOfMonth) {
+    public static List<Week> createEmptyWeek(LocalDate date) {
         List<Week> result = new ArrayList<>();
-        if(cutoff == null) {
-            Week week = new Week(null, weekOfMonth);
-            result.add(week);
+        LocalDate firstDayOfWeek = getFirstDayOfWeek(date);
+        LocalDate lastDayOfWeek = getLastDayOfWeek(date);
+        LocalDate cutoffDate = null;
+        // check for cutoff between months
+        Week first = null;
+        Week second = null;
+        // handles when input week of date is split between previous and this month
+        if (firstDayOfWeek.getMonth() != date.getMonth()) {
+            cutoffDate = MonthRule.getLastDayOfMonth(firstDayOfWeek);
+            WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
+            first = new Week(cutoffDate, WeekDay.MO, cutoff);
+            second = new Week(date, getNextWeekDay(cutoff), WeekDay.SU);
+        // handles when input week of date is split between this and next month
+        } else if (lastDayOfWeek.getMonth() != date.getMonth()) {
+            cutoffDate = MonthRule.getFirstDayOfMonth(lastDayOfWeek);
+            WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
+            first = new Week(date, WeekDay.MO, getPreviousWeekDay(cutoff));
+            second = new Week(cutoffDate, cutoff, WeekDay.SU);
+        // handles when input week of date is wholly in a month
         } else {
-            Week first = new Week(null, weekOfMonth, WeekDay.MO, cutoff);
-            Week second = new Week(null, otherWeekOfMonth, Week.getNextWeekDay(cutoff), WeekDay.SU);
-            first.connect(second);
-            result.add(first);
-            result.add(second);
+            Week week = new Week(date);
+            result.add(week);
+            return result;
         }
+        first.connect(second);
+        result.add(first);
+        result.add(second);
         return result;
     }
 
     /**
+     * 
      * @param time the LocalDateTime of desired week
-     * @return the first day of a week
+     * @return the LocalDate of the first weekday in the week of input date
      */
-    public static LocalDateTime getFirstDayOfWeek(LocalDateTime time) {
-        return time.with(WeekFields.ISO.dayOfWeek(), 1);
+    public static LocalDate getFirstDayOfWeek(LocalDate date) {
+        return getWeekDayOfWeek(date, WeekDay.MO);
     }
 
     /**
+     * 
      * @param time the LocalDateTime of desired week
-     * @return the last day of a week
+     * @return the LocalDate of the last weekday in the week of input date
      */
-    public static LocalDateTime getLastDayOfWeek(LocalDateTime time) {
-        return time.with(WeekFields.ISO.dayOfWeek(), 7);
+    public static LocalDate getLastDayOfWeek(LocalDate date) {
+        return getWeekDayOfWeek(date, WeekDay.SU);
+    }
+
+    /**
+     * 
+     * @param date
+     * @param weekday
+     * @return the LocalDate of an input weekday in the week of input date
+     */
+    public static LocalDate getWeekDayOfWeek(LocalDate date, WeekDay weekday) {
+        return date.with(WeekFields.ISO.dayOfWeek(), weekday.ordinal() + 1);
     }
 
     @Override
@@ -372,8 +411,6 @@ public class Week {
         StringBuilder b = new StringBuilder();
         WeekDay current = startWeekDay;
         do {
-            b.append(current);
-            b.append(" : ");
             if (weekDayStorage.get(current) != null) {
                 b.append(weekDayStorage.get(current).toString());
             }

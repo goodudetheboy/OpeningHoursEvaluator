@@ -4,3 +4,4 @@ Su[2,3] 00:00-48:00 unknown
 Su[-3,-4] 00:00-48:00
 We[2,-2]; Sa[-1, 4]; Tu,Th,Su[3-5,-5] "something happens"
 We[3] +1 day; Tu[2,4] +4 days 00:00-48:00 "maybe closed"; Fr[1, -1] -1 day
+Jun 4, 12, 20-25, Jul 2-14, 23-31; Jun 14-20 unknown; Jun 17-20 off "something happens"; Jun 29-Jul 3 00:00-48:00 "nothing here"

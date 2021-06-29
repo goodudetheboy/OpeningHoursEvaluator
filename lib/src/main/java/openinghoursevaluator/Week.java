@@ -22,6 +22,7 @@ public class Week {
     LocalDate defDate               = null;
 
     // used during eval
+    int     year                    = INVALID_NUM;
     Month   month                   = null;
     int     weekOfYear              = INVALID_NUM;
     int     weekOfMonth             = INVALID_NUM;
@@ -69,8 +70,17 @@ public class Week {
 
     /** Helper function for constructor */
     private void dissectDefDate(LocalDate defDate) {
+        this.year = defDate.getYear();
         this.month = MonthRule.convertMonth(defDate);
         this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekBasedYear());
+    }
+
+    public void setYear(int year) {
+        this.year = year;
+    }
+
+    public void setMonth(Month month) {
+        this.month = month;
     }
 
     public void setWeekOfMonth(int weekOfMonth) {
@@ -105,6 +115,14 @@ public class Week {
         this.endWeekDay = endWeekDay;
     }
 
+    public int getYear() {
+        return year;
+    }
+
+    public Month getMonth() {
+        return month;
+    }
+
     public int getWeekOfMonth() {
         return weekOfMonth;
     }
@@ -129,25 +147,38 @@ public class Week {
         return weekDayStorage.get(startWeekDay);
     }
 
+    public WeekDayRule getEndWeekDayRule() {
+        return weekDayStorage.get(endWeekDay);
+    }
+
     /**
-     * Build Week with the current openingHours string
+     * Build Week with an input rule
      * 
      * @param isStrict strict or not
      */
-    // public void build() {
-    //     populate();
-    //     for (Rule rule : rules) {
-    //         update(rule);
-    //     }
-    // }
+    public void build(Rule rule) {
+        build(rule, null);
+    }
+
+    /**
+     * Build the WeekDayRule in this week with an input rule and a restriction
+     * on what weekday this can apply. Used during build() of MonthRule()
+     * 
+     * @param rule an input rule
+     * @param restriction a WeekDayRange restriction
+     */
+    public void build(Rule rule, WeekDayRange restriction) {
+        applyPreviousSpill();
+        update(rule, restriction);
+        clean();
+    }
 
     /**
      * Update Week with a rule
      * 
      * @param rule a Rule
      */
-    public void update(Rule rule) {
-        applyPreviousSpill();
+    public void update(Rule rule, WeekDayRange restriction) {
         List<WeekDayRange> weekdayRange;
         if (rule.getDays() != null) {
             weekdayRange = rule.getDays();
@@ -159,13 +190,49 @@ public class Week {
             weekdayRange.add(allWeek);
         }
         for (WeekDayRange weekdays : weekdayRange) {
-            if (weekdays.getOffset() == 0) {
-                updateWithRange(rule, weekdays);
-            } else {
-                updateWithOffsetRange(rule, weekdays);
+            WeekDayRange processed = processRestriction(weekdays, restriction);
+            if (processed != null) {
+                if (weekdays.getOffset() == 0) {
+                    updateWithRange(rule, processed);
+                } else {
+                    updateWithOffsetRange(rule, processed);
+                }
             }
         }
-        clean();
+    }
+
+    /**
+     * Process and return an applicable WeekDayRange after being processed
+     * by the restriction. Return null if restriction wipes the whole range
+     * 
+     * @param range input WeekDayRange
+     * @param restriction input restriction
+     * @return applicable WeekDayRange after being processed by the restriction
+     */
+    private WeekDayRange processRestriction(WeekDayRange range, WeekDayRange restriction) {
+        if (restriction == null) {
+            return range;
+        }
+        WeekDayRange result = range.copy();
+        int startRange = range.getStartDay().ordinal();
+        WeekDay endDay = range.getEndDay();
+        int endRange;
+        int startRes = restriction.getStartDay().ordinal();
+        int endRes = restriction.getEndDay().ordinal();
+        if (range.getEndDay() != null) {
+            endRange = (endDay.ordinal() < startRange)
+                            ? endDay.ordinal() + 7
+                            : endDay.ordinal();
+        } else {
+            endRange = startRange;
+        }
+        List<Integer> overlap = Utils.getOverlap(startRange, endRange, startRes, endRes);
+        if (overlap == null) {
+            return null;
+        }
+        result.setStartDay(getWeekDayByNumber(overlap.get(0)));
+        result.setEndDay(getWeekDayByNumber(overlap.get(1)));
+        return result;
     }
 
     /** update() helper */
@@ -183,6 +250,7 @@ public class Week {
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
 
+    /** update() helper, used for WeekDayRange with offset */
     private void updateWithOffsetRange(Rule rule, WeekDayRange weekdays) {
         WeekDay current = startWeekDay;
         WeekDay end = endWeekDay;
@@ -332,22 +400,6 @@ public class Week {
     }
 
     /**
-     * Used during MonthRule build(). This is to get the time spills of previous
-     * week
-     * 
-     * @param week a Week to be simulated
-     * @param rule a Rule to be applied
-     * @return the simulated spill
-     */
-    public static List<TimeRange> simulateSpill(Week week, Rule rule) {
-        LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
-        LocalDate previousDay = WeekDayRule.getOffsetDate(firstDateOfWeek, -1);
-        Week w = new Week(previousDay);
-        w.update(rule);
-        return w.getWeekSpill();
-    }
-
-    /**
      * Create and return a List<Week> created from an input date. The weekday data
      * is extracted from the week of input date. If there's a cutoff (a week between
      * months), List<Week> will cotain two
@@ -415,6 +467,10 @@ public class Week {
         // ordinal starts with 0, so need this to make up for date.with()
         int n = weekday.ordinal() + 1;
         return date.with(WeekFields.ISO.dayOfWeek(), n);
+    }
+
+    public static WeekDay getWeekDayByNumber(int i) {
+        return WeekDay.values()[i];
     }
 
     @Override

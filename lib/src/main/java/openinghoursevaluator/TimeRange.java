@@ -157,17 +157,20 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Returns a code indicating how the other TimeRange is overlapped with this TimeRange,
-     * adhering to the following:
-     * 
-     * 0: Doesn't overlap
-     * 1: This TimeRange is inside other TimeRange
-     * 2: This TimeRange has start inside the other TimeRange and end outside
-     * 3: This TimeRange has start outside the other TimeRange and end inside
-     * 4: The other TimeRange is inside this TimeRange
-     * 
+     * Returns a code indicating how the other TimeRange is overlapped
+     * with this TimeRange, adhering to the following:
+     * <ul>
+     * <li>0: Doesn't overlap
+     * <li>1: This TimeRange is inside other TimeRange
+     * <li>2: This TimeRange has start inside the other TimeRange and
+     * end outside
+     * <li>3: This TimeRange has start outside the other TimeRange and
+     * end inside
+     * <li>4: The other TimeRange is inside this TimeRange
+     * </ul>
+     * <p>
      * @param other the other TimeRange
-     * @return 1
+     * @return a number (0-4) adhering to the above specification
      */
     public int overlapsCode(TimeRange other) {
         int otherStart = other.getStart();

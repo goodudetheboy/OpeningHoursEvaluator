@@ -1,5 +1,6 @@
 package openinghoursevaluator;
 
+import java.time.chrono.ChronoLocalDate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -7,8 +8,12 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import ch.poole.openinghoursparser.DateRange;
+import ch.poole.openinghoursparser.DateWithOffset;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
+import ch.poole.openinghoursparser.WeekDayRange;
+import ch.poole.openinghoursparser.YearRange;
 
 public class MonthRule {
     int         year;
@@ -36,13 +41,67 @@ public class MonthRule {
         month = convertMonth(time.toLocalDate());
         populate(time);
         for (Rule rule : rules) {
-            List<TimeRange> previousSpill = Week.simulateSpill(weekStorage.get(0), rule);
+            List<TimeRange> previousSpill = simulateSpill(weekStorage.get(0), rule);
             weekStorage.get(0).setPreviousSpill(previousSpill);
-            weekStorage.get(0).update(rule);
-            if (weekStorage.size() > 1) {
-                weekStorage.get(1).update(rule);
+            for (Week week : weekStorage) {
+                update(week, rule);
             }
         }
+    }
+
+    public void update(Week week, Rule rule) {
+        if (rule.getDates() != null) {
+            for (DateRange dateRange : rule.getDates()) {
+                List<LocalDate> temp = processDateRange(dateRange, week.getYear(), week.getMonth());
+                LocalDate start = temp.remove(0);
+                LocalDate end = (temp.isEmpty()) ? start : temp.remove(0);
+                LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
+                LocalDate endWDR = week.getEndWeekDayRule().getDefDate();
+                WeekDayRange restriction = new WeekDayRange();
+                List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
+                if (overlap != null) {
+                    restriction.setStartDay(Week.convertWeekDay(((LocalDate) overlap.get(0)).getDayOfWeek()));
+                    restriction.setEndDay(Week.convertWeekDay(((LocalDate) overlap.get(1)).getDayOfWeek()));
+                    week.build(rule, restriction);
+                }
+            }
+        } else {
+            week.build(rule);
+        }
+    }
+
+    /**
+     * Used during MonthRule build(). This is to get the time spills of previous
+     * week
+     * 
+     * @param week a Week to be simulated
+     * @param rule a Rule to be applied
+     * @return the simulated spill
+     */
+    private List<TimeRange> simulateSpill(Week week, Rule rule) {
+        LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
+        LocalDate previousDay = WeekDayRule.getOffsetDate(firstDateOfWeek, -1);
+        Week w = new Week(previousDay);
+        update(w, rule);
+        return w.getWeekSpill();
+    }
+
+    private static List<LocalDate> processDateRange(DateRange dateRange, int year, Month month) {
+        List<LocalDate> result = new ArrayList<>();
+        DateWithOffset start = dateRange.getStartDate();
+        DateWithOffset end = dateRange.getEndDate();
+        result.add(Utils.convertToLocalDate(start, year, month));
+        if (end != null) {
+            if (Utils.compareDateWithOffset(start, end) > 0) {
+                int optionalYear = (end.getYear() != YearRange.UNDEFINED_YEAR) 
+                                        ? end.getYear() + 1
+                                        : year+1;
+                result.add(Utils.convertToLocalDate(end, optionalYear, start.getMonth()));
+            } else {
+                result.add(Utils.convertToLocalDate(end, year, start.getMonth()));
+            }
+        }
+        return result;
     }
 
     /**

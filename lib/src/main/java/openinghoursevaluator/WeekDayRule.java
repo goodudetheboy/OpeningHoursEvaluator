@@ -525,6 +525,17 @@ public class WeekDayRule {
         clean(openingTimes);
     }
 
+    /**
+     * Similar to a compareTo(), but this is for comparing with a DateWithOffset.
+     * Using the defining date stored during construction
+     * 
+     * @param date input DateWithOffset
+     * @return <0 if this day is before, >0 if this day is after, =0 if same day
+     */
+    public int compareToDate(LocalDate date) {
+        return defDate.compareTo(date);
+    }
+
     /** 
      * Sort the TimeRange of input List<TimeRange> by order of start time
      */

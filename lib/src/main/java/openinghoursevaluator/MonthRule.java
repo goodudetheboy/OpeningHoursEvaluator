@@ -83,7 +83,7 @@ public class MonthRule {
     private List<TimeRange> simulateSpill(Week week, Rule rule) {
         LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
         LocalDate previousDay = WeekDayRule.getOffsetDate(firstDateOfWeek, -1);
-        Week w = new Week(previousDay);
+        Week w = new Week(previousDay, Week.convertWeekDay(previousDay.getDayOfWeek()));
         update(w, rule);
         return w.getWeekSpill();
     }

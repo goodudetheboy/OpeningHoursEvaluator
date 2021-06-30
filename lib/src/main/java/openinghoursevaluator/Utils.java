@@ -1,15 +1,8 @@
 package openinghoursevaluator;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import ch.poole.openinghoursparser.DateWithOffset;
-import ch.poole.openinghoursparser.Month;
-import ch.poole.openinghoursparser.WeekDay;
-import ch.poole.openinghoursparser.WeekDayRange;
-import ch.poole.openinghoursparser.YearRange;
 
 public class Utils {
     /** Default constructor */
@@ -40,33 +33,6 @@ public class Utils {
         return time.getHour()*60 + time.getMinute();
     }
 
-    /**
-     * Check if input WeekDay is between a start Weekday and a end WeekDay.
-     * Supports WeekDay spanning between two weeks (e.g. Su is between Sa-Tu)
-     * 
-     * @param value WeekDay to check
-     * @param start start WeekDay
-     * @param end endWeekDay
-     * @return if value WeekDay is between start and end WeekDay
-     */
-    public static boolean isBetweenWeekDays(WeekDay value, WeekDay start, WeekDay end) {
-        int startO = start.ordinal();
-        int endO = (end.ordinal() < startO) ? end.ordinal() + 7 : end.ordinal();
-        return isBetween(value.ordinal(), startO, endO);
-    }
-
-    /**
-     * Check if input WeekDay is between a start and end in a WeekDayRange
-     * Supports WeekDay spanning between two weeks (e.g. Su is between Sa-Tu)
-     * 
-     * @param value WeekDay to check
-     * @param start start WeekDay
-     * @param end endWeekDay
-     * @return if value WeekDay is between start and end WeekDay
-     */
-    public static boolean isBetweenWeekDays(WeekDay value, WeekDayRange weekdays) {
-        return isBetweenWeekDays(value, weekdays.getStartDay(), weekdays.getEndDay());
-    }
 
     /**
      * Get the overlap range of the alpha range (a1 to a2) and the beta
@@ -169,15 +135,5 @@ public class Utils {
      */
     public static <T extends Comparable<T>> boolean isOverlapped(T a1, T a2, T b1, T b2) {
         return overlapsCode(a1, a2, b1, b2) != 0;
-    }
-
-    public static LocalDate convertToLocalDate(DateWithOffset date, int optionalYear, Month optionalMonth) {
-        int monthInt = (date.getMonth() == null)
-                        ? optionalMonth.ordinal() + 1
-                        : date.getMonth().ordinal() + 1;
-        int yearInt = (date.getYear() == YearRange.UNDEFINED_YEAR)
-                        ? optionalYear
-                        : date.getYear();
-        return LocalDate.of(yearInt, monthInt, date.getDay());
     }
 }

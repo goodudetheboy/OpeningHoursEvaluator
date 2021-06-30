@@ -328,7 +328,7 @@ public class Week {
      * @return true if this WeekDay is between this Week's start WeekDay and end WeekDay, false otherwise
      */
     public boolean hasWeekDay(WeekDay weekday) {
-        return Utils.isBetweenWeekDays(weekday, startWeekDay, endWeekDay);
+        return DateManager.isBetweenWeekDays(weekday, startWeekDay, endWeekDay);
     }
 
     /**

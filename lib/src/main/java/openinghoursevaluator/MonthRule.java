@@ -9,11 +9,9 @@ import java.util.List;
 import java.util.Locale;
 
 import ch.poole.openinghoursparser.DateRange;
-import ch.poole.openinghoursparser.DateWithOffset;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.WeekDayRange;
-import ch.poole.openinghoursparser.YearRange;
 
 public class MonthRule {
     int         year;
@@ -54,8 +52,9 @@ public class MonthRule {
      */
     private void update(Week week, Rule rule) {
         if (rule.getDates() != null) {
+            DateManager manager = new DateManager();
             for (DateRange dateRange : rule.getDates()) {
-                List<List<LocalDate>> temps = processDateRange(dateRange, week);
+                List<List<LocalDate>> temps = manager.processDateRange(dateRange, week);
                 LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
                 LocalDate endWDR = week.getEndWeekDayRule().getDefDate();
                 for (List<LocalDate> temp : temps) {
@@ -85,80 +84,12 @@ public class MonthRule {
      */
     private List<TimeRange> simulateSpill(Week week, Rule rule) {
         LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
-        LocalDate previousDay = WeekDayRule.getOffsetDate(firstDateOfWeek, -1);
+        LocalDate previousDay = DateManager.getOffsetDate(firstDateOfWeek, -1);
         Week w = new Week(previousDay, Week.convertWeekDay(previousDay.getDayOfWeek()));
         update(w, rule);
         return w.getWeekSpill();
     }
 
-    /**
-     * Process the DateRange inside to a LocalDate range. Used to find applicable
-     * WeekDay to which a Rule can apply.
-     * 
-     * @param dateRange a DateRange
-     * @param week a Week where this DateRange will apply
-     * @return a LocalDate range processed from DateRange
-     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#monthday_range, explanation
-     */
-    private List<List<LocalDate>> processDateRange(DateRange dateRange, Week week) {
-        int defaultYear = week.getYear();
-        List<List<LocalDate>> result = new ArrayList<>();
-        DateWithOffset start = dateRange.getStartDate();
-        DateWithOffset end = dateRange.getEndDate();
-        checkError(start, end);
-        // there is always a start of DateRange
-        List<LocalDate> subResult = new ArrayList<>();
-        result.add(subResult);
-        subResult.add(Utils.convertToLocalDate(start, defaultYear, start.getMonth()));
-        if (end != null) {
-            // handle when there is no year specified but there is year wrapping
-            // the compare below only check for date and month
-            // @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:monthday_range:date_offset:to:date_offset
-            if (compareStartAndEnd(start, end) > 0) {
-                subResult.add(Utils.convertToLocalDate(end, defaultYear + 1, start.getMonth()));
-                List<LocalDate> otherResult = new ArrayList<>();
-                otherResult.add(Utils.convertToLocalDate(start, defaultYear-1, start.getMonth()));
-                otherResult.add(Utils.convertToLocalDate(end, defaultYear, start.getMonth()));
-                result.add(otherResult);
-            } else { 
-                subResult.add(Utils.convertToLocalDate(end, defaultYear, start.getMonth()));
-            }
-        }
-        return result;
-    }
-
-    /**
-     * compareTo() for DateWithOffset (for now), check only the date stored in it
-     * 
-     * @param start start of a DateRange
-     * @param end end of a DateRange
-     * @return <0 if d1 is before d2, >0 if d1 is after d2, =0 if d1 is same day as d2
-     */
-    private int compareStartAndEnd(DateWithOffset start, DateWithOffset end) {
-        return ((end.getMonth() == null) || start.getMonth() == end.getMonth())
-                ? start.getDay() - end.getDay()
-                : start.getMonth().ordinal() - end.getMonth().ordinal();
-    }
-
-    private void checkError(DateWithOffset start, DateWithOffset end) {
-        String rangeString = "(" + start + " - " + end + ")";
-        if (end == null) {
-            return;
-        }
-        // check if start year is not defined and end year is defined
-        if (start.getYear() == YearRange.UNDEFINED_YEAR
-                && end.getYear() != YearRange.UNDEFINED_YEAR) {
-            throw new IllegalArgumentException("Year must be defined at start rather than end, this range "
-                                                + rangeString + " is meaningless");
-        }
-        // check if start is after end
-        if (start.getYear() != YearRange.UNDEFINED_YEAR
-                && ((compareStartAndEnd(start, end) > 0)
-                        || (end.getYear() != YearRange.UNDEFINED_YEAR
-                            && start.getYear() > end.getYear()))) {
-            throw new IllegalArgumentException("Illegal range " + rangeString + ", please double check");
-        }
-    }
 
     /**
      * Evaluate the stored OH string with a time to see if it's opening or closed

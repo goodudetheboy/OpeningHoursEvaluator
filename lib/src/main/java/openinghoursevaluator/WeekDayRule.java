@@ -264,7 +264,7 @@ public class WeekDayRule {
         } else if (weekdays.getEndDay() != null) {
             throw new IllegalArgumentException("There cannot be a end day in a WeekDayRange with an offset");
         }
-        LocalDate offsetDate = getOffsetDate(defDate, -offset);
+        LocalDate offsetDate = DateManager.getOffsetDate(defDate, -offset);
         WeekDayRule offsetDay = new WeekDayRule(offsetDate);
         WeekDay offsetWeekDay = offsetDay.getWeekDay();
         return offsetWeekDay == weekdays.getStartDay()
@@ -404,17 +404,9 @@ public class WeekDayRule {
         for (TimeRange openingTime : openingTimes) {
             newOpeningTimes.addAll(openingTime.cut(timerange));
         }
-        switch(timerange.getStatus()) {
-            case CLOSED:
-                if(!timerange.hasComment()) {
-                    break;
-                }
-            case UNKNOWN:
-            case OPEN:
-                newOpeningTimes.add(timerange);
-                break;
-            default:
-        }
+        if (timerange.hasComment() || timerange.getStatus() != Status.CLOSED) {
+            newOpeningTimes.add(timerange);
+        } 
         openingTimes = newOpeningTimes;
     }
 
@@ -600,29 +592,6 @@ public class WeekDayRule {
         return getNthWeekDayOfMonth(date) - 1 - lastWeekDayOfMonthNth;
     }
 
-    /**
-     * Return the date that is offset by some days from the input date,
-     * according to the following
-     * <ol>
-     * <li> offset < 0: return [offset] days before input date
-     * <li> offset > 0: return [offset] days after input date
-     * <li> offset = 0: return original date
-     * </ol>
-     * <p>
-     * 
-     * @param date an input date
-     * @param offset offset, in days
-     * @return the date that is offset by some [offset] days from the input date
-     */
-    public static LocalDate getOffsetDate(LocalDate date, int offset) {
-        if (offset > 0) {
-            return date.plusDays(offset);
-        } 
-        if (offset < 0) {
-            return date.minusDays(-offset);
-        }
-        return date;
-    }
 
     @Override
     public String toString() {

@@ -113,7 +113,14 @@ public class DateManager {
                         ? optionalYear
                         : date.getYear();
         int offset = date.getDayOffset();
-        return getOffsetDate(LocalDate.of(yearInt, monthInt, date.getDay()), offset);
+        LocalDate pending = LocalDate.of(yearInt, monthInt, date.getDay());
+        // handle weekday offset
+        if (date.getWeekDayOffset() != null) {
+            pending = findNextWeekDay(pending, date.isWeekDayOffsetPositive(),
+                                        date.getWeekDayOffset());
+        }
+        // handle day offset
+        return getOffsetDate(pending, offset);
     }
     
     /**
@@ -140,6 +147,21 @@ public class DateManager {
         return date;
     }
 
+    /**
+     * Return the first date of the specified week day after or before an
+     * input date. 
+     * 
+     * @param date a LocalDate to be searched from
+     * @param isForward 
+     * @param weekday
+     * @return
+     */
+    public static LocalDate findNextWeekDay(LocalDate date, boolean isAfter, WeekDay weekday) {
+        if (Week.convertWeekDay(date.getDayOfWeek()) == weekday) {
+            return date;
+        }
+        return findNextWeekDay(getOffsetDate(date, (isAfter) ? 1 : -1), isAfter, weekday);
+    }
     
     /**
      * Check if input WeekDay is between a start Weekday and a end WeekDay.

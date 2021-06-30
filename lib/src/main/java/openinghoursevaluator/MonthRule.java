@@ -49,7 +49,10 @@ public class MonthRule {
         }
     }
 
-    public void update(Week week, Rule rule) {
+    /**
+     * Helper function for build().
+     */
+    private void update(Week week, Rule rule) {
         if (rule.getDates() != null) {
             for (DateRange dateRange : rule.getDates()) {
                 List<List<LocalDate>> temps = processDateRange(dateRange, week);
@@ -88,7 +91,16 @@ public class MonthRule {
         return w.getWeekSpill();
     }
 
-    private static List<List<LocalDate>> processDateRange(DateRange dateRange, Week week) {
+    /**
+     * Process the DateRange inside to a LocalDate range. Used to find applicable
+     * WeekDay to which a Rule can apply.
+     * 
+     * @param dateRange a DateRange
+     * @param week a Week where this DateRange will apply
+     * @return a LocalDate range processed from DateRange
+     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#monthday_range, explanation
+     */
+    private List<List<LocalDate>> processDateRange(DateRange dateRange, Week week) {
         int defaultYear = week.getYear();
         List<List<LocalDate>> result = new ArrayList<>();
         DateWithOffset start = dateRange.getStartDate();
@@ -101,6 +113,7 @@ public class MonthRule {
         if (end != null) {
             // handle when there is no year specified but there is year wrapping
             // the compare below only check for date and month
+            // @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:monthday_range:date_offset:to:date_offset
             if (compareStartAndEnd(start, end) > 0) {
                 subResult.add(Utils.convertToLocalDate(end, defaultYear + 1, start.getMonth()));
                 List<LocalDate> otherResult = new ArrayList<>();
@@ -117,17 +130,17 @@ public class MonthRule {
     /**
      * compareTo() for DateWithOffset (for now), check only the date stored in it
      * 
-     * @param d1 
-     * @param d2
+     * @param start start of a DateRange
+     * @param end end of a DateRange
      * @return <0 if d1 is before d2, >0 if d1 is after d2, =0 if d1 is same day as d2
      */
-    public static int compareStartAndEnd(DateWithOffset start, DateWithOffset end) {
+    private int compareStartAndEnd(DateWithOffset start, DateWithOffset end) {
         return ((end.getMonth() == null) || start.getMonth() == end.getMonth())
                 ? start.getDay() - end.getDay()
                 : start.getMonth().ordinal() - end.getMonth().ordinal();
     }
 
-    private static void checkError(DateWithOffset start, DateWithOffset end) {
+    private void checkError(DateWithOffset start, DateWithOffset end) {
         String rangeString = "(" + start + " - " + end + ")";
         if (end == null) {
             return;

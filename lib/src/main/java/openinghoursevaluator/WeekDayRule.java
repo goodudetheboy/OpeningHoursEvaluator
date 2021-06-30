@@ -308,7 +308,21 @@ public class WeekDayRule {
         }
     }
 
-    /** Helper function to add TimeSpan with open end to this WeekDayRule */
+    /** 
+     * Helper function to add TimeSpan with open end to this WeekDayRule.
+     * <p>
+     * Open-ended time is evaluated similar to the opening_hours.js (the javascript
+     * version of the evaluator), according to the following rule (extracted from
+     * README.md of opening_hours.js):
+     * <ul>
+     * <li>Open end applies until the end of the day if the opening time is before 17:00.
+     * If the opening time is between 17:00 and 21:59 the open end time ends 10 hours after
+     * the opening. And if the opening time is after 22:00 (including 22:00) the closing
+     * time will be interpreted as 8 hours after the opening time.
+     * </ul>
+     * <p>
+     * @see https://github.com/opening-hours/opening_hours.js#time-ranges, open-ended time section
+     * */
     private void addOpenEnd(TimeSpan timespan, Status status, String comment, boolean isFallback) {
         int openEndStart = 0;
         if (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {

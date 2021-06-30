@@ -247,6 +247,12 @@ public class Week {
         return helperMerge(result, otherResult);
     }
 
+    /**
+     * A very specific merge for two WeekDayRange. Used for connecting week
+     * spilling.
+     * <p>
+     * For example, w1: Fr-Su, w2: Mo-Tu, output: Fr-Tu
+     */
     private WeekDayRange helperMerge(WeekDayRange w1, WeekDayRange w2) {
         if (w1 == null) {
             return w2;

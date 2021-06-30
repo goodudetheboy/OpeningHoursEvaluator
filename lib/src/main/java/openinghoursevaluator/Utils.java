@@ -69,28 +69,6 @@ public class Utils {
     }
 
     /**
-     * compareTo() for DateWithOffset (for now), check only the date stored in it
-     * 
-     * @param d1 
-     * @param d2
-     * @return <0 if d1 is before d2, >0 if d1 is after d2, =0 if d1 is same day as d2
-     */
-    public static int compareDateWithOffset(DateWithOffset d1, DateWithOffset d2) {
-        if ((d1.getYear() == d2.getYear())) {
-            if (d1.getYear() == d2.getYear()) {
-                return ((d2.getMonth() == null)
-                            || d1.getMonth() == d2.getMonth())
-                        ? d1.getDay() - d2.getDay()
-                        : d1.getMonth().ordinal() - d2.getMonth().ordinal();
-            } else {
-                return d1.getYear() - d2.getYear();
-            }
-        } else {
-            return d1.getYear() - d2.getYear();
-        }
-    }
-
-    /**
      * Get the overlap range of the alpha range (a1 to a2) and the beta
      * range(b1 to b2).
      * <p>

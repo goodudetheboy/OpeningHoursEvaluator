@@ -52,17 +52,19 @@ public class MonthRule {
     public void update(Week week, Rule rule) {
         if (rule.getDates() != null) {
             for (DateRange dateRange : rule.getDates()) {
-                List<LocalDate> temp = processDateRange(dateRange, week.getYear(), week.getMonth());
-                LocalDate start = temp.remove(0);
-                LocalDate end = (temp.isEmpty()) ? start : temp.remove(0);
+                List<List<LocalDate>> temps = processDateRange(dateRange, week);
                 LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
                 LocalDate endWDR = week.getEndWeekDayRule().getDefDate();
-                WeekDayRange restriction = new WeekDayRange();
-                List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
-                if (overlap != null) {
-                    restriction.setStartDay(Week.convertWeekDay(((LocalDate) overlap.get(0)).getDayOfWeek()));
-                    restriction.setEndDay(Week.convertWeekDay(((LocalDate) overlap.get(1)).getDayOfWeek()));
-                    week.build(rule, restriction);
+                for (List<LocalDate> temp : temps) {
+                    LocalDate start = temp.remove(0);
+                    LocalDate end = (temp.isEmpty()) ? start : temp.remove(0);
+                    List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
+                    if (overlap != null) {
+                        WeekDayRange restriction = new WeekDayRange();
+                        restriction.setStartDay(Week.convertWeekDay(((LocalDate) overlap.get(0)).getDayOfWeek()));
+                        restriction.setEndDay(Week.convertWeekDay(((LocalDate) overlap.get(1)).getDayOfWeek()));
+                        week.build(rule, restriction);
+                    }
                 }
             }
         } else {
@@ -86,22 +88,64 @@ public class MonthRule {
         return w.getWeekSpill();
     }
 
-    private static List<LocalDate> processDateRange(DateRange dateRange, int year, Month month) {
-        List<LocalDate> result = new ArrayList<>();
+    private static List<List<LocalDate>> processDateRange(DateRange dateRange, Week week) {
+        int defaultYear = week.getYear();
+        List<List<LocalDate>> result = new ArrayList<>();
         DateWithOffset start = dateRange.getStartDate();
         DateWithOffset end = dateRange.getEndDate();
-        result.add(Utils.convertToLocalDate(start, year, month));
+        checkError(start, end);
+        // there is always a start of DateRange
+        List<LocalDate> subResult = new ArrayList<>();
+        result.add(subResult);
+        subResult.add(Utils.convertToLocalDate(start, defaultYear, start.getMonth()));
         if (end != null) {
-            if (Utils.compareDateWithOffset(start, end) > 0) {
-                int optionalYear = (end.getYear() != YearRange.UNDEFINED_YEAR) 
-                                        ? end.getYear() + 1
-                                        : year+1;
-                result.add(Utils.convertToLocalDate(end, optionalYear, start.getMonth()));
-            } else {
-                result.add(Utils.convertToLocalDate(end, year, start.getMonth()));
+            // handle when there is no year specified but there is year wrapping
+            // the compare below only check for date and month
+            if (compareStartAndEnd(start, end) > 0) {
+                subResult.add(Utils.convertToLocalDate(end, defaultYear + 1, start.getMonth()));
+                List<LocalDate> otherResult = new ArrayList<>();
+                otherResult.add(Utils.convertToLocalDate(start, defaultYear-1, start.getMonth()));
+                otherResult.add(Utils.convertToLocalDate(end, defaultYear, start.getMonth()));
+                result.add(otherResult);
+            } else { 
+                subResult.add(Utils.convertToLocalDate(end, defaultYear, start.getMonth()));
             }
         }
         return result;
+    }
+
+    /**
+     * compareTo() for DateWithOffset (for now), check only the date stored in it
+     * 
+     * @param d1 
+     * @param d2
+     * @return <0 if d1 is before d2, >0 if d1 is after d2, =0 if d1 is same day as d2
+     */
+    public static int compareStartAndEnd(DateWithOffset start, DateWithOffset end) {
+        return ((end.getMonth() == null) || start.getMonth() == end.getMonth())
+                ? start.getDay() - end.getDay()
+                : start.getMonth().ordinal() - end.getMonth().ordinal();
+    }
+
+    private static void checkError(DateWithOffset start, DateWithOffset end) {
+        String rangeString = "(" + start + " - " + end + ")";
+        if (end == null) {
+            return;
+        }
+        if (start.getYear() == YearRange.UNDEFINED_YEAR
+                && end.getYear() != YearRange.UNDEFINED_YEAR) {
+            throw new IllegalArgumentException("Year must be defined at start rather than end, this range "
+                                                + rangeString + " is meaningless");
+        }
+        if (start.getYear() != YearRange.UNDEFINED_YEAR
+                && compareStartAndEnd(start, end) > 0) {
+            throw new IllegalArgumentException("Illegal range " + rangeString + ", please double check");
+        }
+        if (start.getYear() != YearRange.UNDEFINED_YEAR
+                && end.getYear() != YearRange.UNDEFINED_YEAR
+                && start.getYear() > end.getYear()) {
+            throw new IllegalArgumentException("Illegal range " + rangeString + ", please double check");
+        }
     }
 
     /**

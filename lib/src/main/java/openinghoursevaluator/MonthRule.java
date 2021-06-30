@@ -145,18 +145,17 @@ public class MonthRule {
         if (end == null) {
             return;
         }
+        // check if start year is not defined and end year is defined
         if (start.getYear() == YearRange.UNDEFINED_YEAR
                 && end.getYear() != YearRange.UNDEFINED_YEAR) {
             throw new IllegalArgumentException("Year must be defined at start rather than end, this range "
                                                 + rangeString + " is meaningless");
         }
+        // check if start is after end
         if (start.getYear() != YearRange.UNDEFINED_YEAR
-                && compareStartAndEnd(start, end) > 0) {
-            throw new IllegalArgumentException("Illegal range " + rangeString + ", please double check");
-        }
-        if (start.getYear() != YearRange.UNDEFINED_YEAR
-                && end.getYear() != YearRange.UNDEFINED_YEAR
-                && start.getYear() > end.getYear()) {
+                && ((compareStartAndEnd(start, end) > 0)
+                        || (end.getYear() != YearRange.UNDEFINED_YEAR
+                            && start.getYear() > end.getYear()))) {
             throw new IllegalArgumentException("Illegal range " + rangeString + ", please double check");
         }
     }

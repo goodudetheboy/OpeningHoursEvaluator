@@ -58,8 +58,7 @@ public class Week {
      * @param startWeekDay
      * @param endWeekDay
      */
-    public Week(LocalDate defDate,
-                    WeekDay startWeekDay, WeekDay endWeekDay) {
+    public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay) {
         this.defDate = defDate;
         dissectDefDate(defDate);
         setStartWeekDay(startWeekDay);
@@ -213,25 +212,56 @@ public class Week {
         if (restriction == null) {
             return range;
         }
-        WeekDayRange result = range.copy();
+        WeekDayRange result = null;
+        WeekDayRange otherResult = null;
         int startRange = range.getStartDay().ordinal();
         WeekDay endDay = range.getEndDay();
         int endRange;
         int startRes = restriction.getStartDay().ordinal();
         int endRes = restriction.getEndDay().ordinal();
         if (range.getEndDay() != null) {
-            endRange = (endDay.ordinal() < startRange)
-                            ? endDay.ordinal() + 7
-                            : endDay.ordinal();
+            if (endDay.ordinal() >= startRange) {
+                endRange = endDay.ordinal();
+            } else {
+                // handle week spilling
+                endRange = WeekDay.SU.ordinal();
+                List<Integer> overlap = Utils.getOverlap(WeekDay.MO.ordinal(),
+                                                            endDay.ordinal(),
+                                                            startRes, endRes);
+                if (overlap != null) {
+                    otherResult = range.copy();
+                    otherResult.setStartDay(getWeekDayByNumber(overlap.get(0)));
+                    otherResult.setEndDay(getWeekDayByNumber(overlap.get(1)));
+                }
+            }   
         } else {
             endRange = startRange;
         }
-        List<Integer> overlap = Utils.getOverlap(startRange, endRange, startRes, endRes);
-        if (overlap == null) {
-            return null;
+        List<Integer> overlap = Utils.getOverlap(startRange, endRange, 
+                                                    startRes, endRes);
+        if (overlap != null) {
+            result = range.copy(); 
+            result.setStartDay(getWeekDayByNumber(overlap.get(0)));
+            result.setEndDay(getWeekDayByNumber(overlap.get(1)));
         }
-        result.setStartDay(getWeekDayByNumber(overlap.get(0)));
-        result.setEndDay(getWeekDayByNumber(overlap.get(1)));
+        return helperMerge(result, otherResult);
+    }
+
+    private WeekDayRange helperMerge(WeekDayRange w1, WeekDayRange w2) {
+        if (w1 == null) {
+            return w2;
+        }
+        if (w2 == null) {
+            return w1;
+        }
+        WeekDayRange result = w1.copy();
+        if (w1.getEndDay() == WeekDay.SU) {
+            result.setStartDay(w1.getStartDay());
+            result.setEndDay(w2.getEndDay());
+        } else { // assume that w2.getEndDay() == WeekDay.SU
+            result.setStartDay(w2.getStartDay());
+            result.setEndDay(w1.getEndDay());
+        }
         return result;
     }
 
@@ -470,7 +500,7 @@ public class Week {
     }
 
     public static WeekDay getWeekDayByNumber(int i) {
-        return WeekDay.values()[i];
+        return WeekDay.values()[i % 7];
     }
 
     @Override

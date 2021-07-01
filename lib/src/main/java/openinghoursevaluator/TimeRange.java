@@ -18,12 +18,11 @@ public class TimeRange implements Comparable<TimeRange> {
     public static final int     UNDEFINED_TIME     = Integer.MIN_VALUE;
     public static final int     MIN_TIME           = 0;
     public static final int     MAX_TIME           = HOURS_24;
-    public static final String  DEFAULT_OPEN_ENDED_COMMENT = "open ended time";
 
-    int     start   = UNDEFINED_TIME;
-    int     end     = UNDEFINED_TIME;
-    Status  status  = null;
-    String  comment = null;
+    int     start       = UNDEFINED_TIME;
+    int     end         = UNDEFINED_TIME;
+    Status  status      = null;
+    String  comment     = null;
 
     /**
      * Default constructor

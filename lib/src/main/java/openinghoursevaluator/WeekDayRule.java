@@ -311,17 +311,20 @@ public class WeekDayRule {
     /** 
      * Helper function to add TimeSpan with open end to this WeekDayRule.
      * <p>
-     * Open-ended time is evaluated similar to the opening_hours.js (the javascript
-     * version of the evaluator), according to the following rule (extracted from
-     * README.md of opening_hours.js):
+     * Open-ended time is evaluated similar to the opening_hours.js (the
+     * javascript version of the evaluator), according to the following
+     * rule (extracted from opening_hours.js
+     * {@link https://github.com/opening-hours/opening_hours.js#time-ranges}):
      * <ul>
-     * <li>Open end applies until the end of the day if the opening time is before 17:00.
-     * If the opening time is between 17:00 and 21:59 the open end time ends 10 hours after
-     * the opening. And if the opening time is after 22:00 (including 22:00) the closing
-     * time will be interpreted as 8 hours after the opening time.
+     * <li>Open end applies until the end of the day if the opening time is
+     * before 17:00. If the opening time is between 17:00 and 21:59 the open
+     * end time ends 10 hours after the opening. And if the opening time is
+     * after 22:00 (including 22:00) the closing time will be interpreted as
+     * 8 hours after the opening time.
      * </ul>
      * <p>
-     * @see https://github.com/opening-hours/opening_hours.js#time-ranges, open-ended time section
+     * @see https://github.com/opening-hours/opening_hours.js#time-ranges,
+     * open-ended time section
      * */
     private void addOpenEnd(TimeSpan timespan, Status status, String comment, boolean isFallback) {
         int openEndStart = 0;
@@ -332,20 +335,28 @@ public class WeekDayRule {
             openEndStart = timespan.getStart();
         }
         String openEndedComment = (comment == null)
-                                    ? TimeRange.DEFAULT_OPEN_ENDED_COMMENT
+                                    ? OpenEndRange.DEFAULT_COMMENT
                                     : comment;
         Status openEndedStatus = (status == Status.CLOSED)
                                     ? status
                                     : Status.UNKNOWN;
         int nextDayStart = openEndStart - TimeRange.MAX_TIME; // this is for the start of open ended time in the next day
         if (nextDayStart < 0) {
-            addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, openEndedStatus, openEndedComment), isFallback);
+            OpenEndRange range = new OpenEndRange(openEndStart,
+                                            TimeRange.MAX_TIME,
+                                            openEndedStatus,
+                                            openEndedComment);
+            addTime(range, isFallback);
             int firstCutOff = 17*60;
             int secondCutOff = 22*60;
             if (openEndStart >= firstCutOff) {
                 int timespill = openEndStart - TimeRange.MAX_TIME;
                 timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
-                nextDayRule.addSpill(new TimeRange(0, timespill, openEndedStatus, openEndedComment));
+                OpenEndRange spillRange = new OpenEndRange(0, timespill,
+                                                        openEndedStatus,
+                                                        openEndedComment);
+                range.setNextDaySpill(spillRange);
+                nextDayRule.addSpill(spillRange);
             }
         } else if (nextDayStart >= TimeRange.MAX_TIME + 17*60) {
             throw new IllegalArgumentException("Time spanning more than two days not supported");
@@ -395,14 +406,23 @@ public class WeekDayRule {
     }
 
     /**
-     * Add a TimeRange to this WeekDayRule
-     * 
+     * Add a TimeRange to this WeekDayRule. Adding also follows the rule listed
+     * below (extracted from opening_hours.js
+     * {@link https://github.com/opening-hours/opening_hours.js}): 
+     * <ol>
+     * <li> 07:00+,12:00-16:00: If an open end time is used in a way that the
+     * first time range includes the second one (07:00+ is interpreted as
+     * 07:00-24:00 and thus includes the complete 12:00-16:00 time selector),
+     * the second time selector cuts of the part which would follow after 16:00.
+     * </ol>
+     * <p>
      * @param timerange
+     * @see https://github.com/opening-hours/opening_hours.js#time-ranges
      */
     public void addTime(TimeRange timerange) {
         List<TimeRange> newOpeningTimes = new ArrayList<>();
         for (TimeRange openingTime : openingTimes) {
-            newOpeningTimes.addAll(openingTime.cut(timerange));
+            addHelper(timerange, openingTime, newOpeningTimes);
         }
         if (timerange.hasComment() || timerange.getStatus() != Status.CLOSED) {
             newOpeningTimes.add(timerange);
@@ -425,10 +445,10 @@ public class WeekDayRule {
                 TimeRange check = remains.remove(0);
                 if(openingTime.getStatus() != Status.CLOSED) {
                     temp.addAll(check.cut(openingTime));
+                    addHelper(timerange, openingTime, temp);
                 } else {
                     temp.add(check);
                 }
-
             }
             remains = temp;
         }
@@ -438,14 +458,33 @@ public class WeekDayRule {
         }
     }
 
+    private void addHelper(TimeRange timerange, TimeRange openingTime, List<TimeRange> newOpeningTimes) {
+        if (!(openingTime instanceof OpenEndRange
+                && ((OpenEndRange) openingTime).isNeededRemoving())) {
+            List<TimeRange> cutTimes = openingTime.cut(timerange); 
+            for (TimeRange cutTime : cutTimes) {
+                // handle checking open ended
+                if (!(openingTime instanceof OpenEndRange)
+                        || cutTime.getStart() == openingTime.getStart()) {
+                    newOpeningTimes.add(cutTime);
+                } else {
+                    OpenEndRange nextDaySpill = ((OpenEndRange) openingTime).getNextDaySpill();
+                    if (nextDaySpill != null) {
+                        nextDaySpill.setNeededRemoving(true);
+                    }
+                }
+            }
+        }
+    }
+
     public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {
         int start = weekDayRange.getStartDay().ordinal();
         WeekDay endDay = weekDayRange.getEndDay();
         int current = weekday.ordinal();
         return (endDay != null) ?
                     (current >= start && current <= endDay.ordinal()
-                    || current <= start + 7 && current >= endDay.ordinal()) :
-                    (current == start);
+                        || current <= start + 7 && current >= endDay.ordinal())
+                    : (current == start);
 
     }
 
@@ -522,10 +561,10 @@ public class WeekDayRule {
     }
 
     /**
-     * Clean by sorting and removing duplicates of this WeekDay in this WeekDayRule.
+     * Clean by sorting and removing duplicate TimeRange or any OpenEndRange
+     * marked for removal of this WeekDay in this WeekDayRule.
      * This also applies all time spills, if any
-     * 
-     * */
+     */
     public void clean() {
         flushSpill();
         clean(openingTimes);
@@ -549,18 +588,31 @@ public class WeekDayRule {
         Collections.sort(timeranges);
     }
 
-    /** Clean by sorting and removing duplicates of input List<TimeRange> */
+    /**
+     * Clean by sorting and removing duplicate TimeRange or any OpenEndRange
+     * marked for removal of input List<TimeRange>
+     */
     public static void clean(List<TimeRange> timeranges) {
         sort(timeranges);
         int i = 0;
-        while(i < timeranges.size()-1) {
+        while (i < timeranges.size()-1) {
             TimeRange merge = timeranges.get(i).merge(timeranges.get(i+1));
-            if(merge != null) {
+            if (merge != null) {
                 timeranges.set(i, merge);
                 timeranges.remove(i+1);
                 i--;
             }
             i++;
+        }
+        int k = 0;
+        while (k < timeranges.size()) {
+            TimeRange checking = timeranges.get(k);
+            if ((checking instanceof OpenEndRange)
+                    && ((OpenEndRange) checking).isNeededRemoving()) {
+                timeranges.remove(k);
+            } else {
+                k++;
+            }
         }
     }
     

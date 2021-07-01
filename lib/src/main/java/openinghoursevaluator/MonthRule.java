@@ -158,18 +158,6 @@ public class MonthRule {
     }
 
     /**
-     * Return the order of a week of the input time, in reverse order of the month.
-     * For example: normally, in a 5-week month, the 2nd week would be the 3rd week
-     * in reverse of the month
-     * 
-     * @param date input time
-     * @return order of a week of the input time, in reverse order of the month
-     */
-    public static int getReverseNthWeekOfMonth(LocalDate date, Locale locale) {
-        return getNthWeekOfMonth(date, locale) - 1 - getNumOfWeekOfMonth(date, locale);
-    }
-
-    /**
      * Return the number of week of a month of an input time
      * 
      * @param time input time
@@ -177,28 +165,6 @@ public class MonthRule {
      */
     public static int getNumOfWeekOfMonth(LocalDate date, Locale locale) {
         return getNthWeekOfMonth(getLastDayOfMonth(date), locale);
-    }
-
-    /**
-     * Return the number of the previous week of a week of a month
-     * 
-     * @param weekOfMonth input week of month
-     * @return the number of the previous week of a week of a month
-     */
-    public static int getPreviousWeekOfMonth(int weekOfMonth) {
-        // TODO: Refactor this to be more dynamic
-        return (weekOfMonth == 1) ? 5 : weekOfMonth-1;
-    }
-
-    /**
-     * Return the number of the previous week of a week of a month
-     * 
-     * @param weekOfMonth input week of month
-     * @return the number of the previous week of a week of a month
-     */
-    public static int getPreviousReverseWeekOfMonth(int weekOfMonth) {
-        // TODO: Refactor this to be more dynamic
-        return (weekOfMonth == -5) ? -1 : weekOfMonth-1;
     }
 
     /**

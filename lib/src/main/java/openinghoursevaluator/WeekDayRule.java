@@ -74,7 +74,7 @@ public class WeekDayRule {
     private void dissectDefDate(LocalDate defDate) {
         year = defDate.getYear();
         month = MonthRule.convertMonth(defDate);
-        date = defDate.getDayOfYear();
+        date = defDate.getDayOfMonth();
         weekday = Week.convertWeekDay(defDate.getDayOfWeek());
         nthWeekDay = getNthWeekDayOfMonth(defDate);
         reverseNth = getReverseNthWeekOfMonth(defDate);

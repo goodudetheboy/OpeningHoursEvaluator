@@ -1,6 +1,7 @@
 package openinghoursevaluator;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,20 +43,25 @@ public class DateManager {
         // there is always a start of DateRange
         List<LocalDate> subResult = new ArrayList<>();
         result.add(subResult);
-        subResult.add(convertToLocalDate(start, defaultYear, start.getMonth()));
+        subResult.add(convertToLocalDate(start, defaultYear, start.getMonth(), true));
         if (end != null) {
             // handle when there is no year specified but there is year wrapping
             // the compare below only check for date and month
             // @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:monthday_range:date_offset:to:date_offset
             if (compareStartAndEnd(start, end, defaultYear) > 0) {
-                subResult.add(convertToLocalDate(end, defaultYear + 1, start.getMonth()));
+                subResult.add(convertToLocalDate(end, defaultYear + 1, start.getMonth(), false));
                 // get year wraping from previous year
                 List<LocalDate> otherResult = new ArrayList<>();
-                otherResult.add(convertToLocalDate(start, defaultYear-1, start.getMonth()));
-                otherResult.add(convertToLocalDate(end, defaultYear, start.getMonth()));
+                otherResult.add(convertToLocalDate(start, defaultYear-1, start.getMonth(), true));
+                otherResult.add(convertToLocalDate(end, defaultYear, start.getMonth(), false));
                 result.add(otherResult);
             } else { 
-                subResult.add(convertToLocalDate(end, defaultYear, start.getMonth()));
+                subResult.add(convertToLocalDate(end, defaultYear, start.getMonth(), false));
+            }
+        } else {
+            if (start.getDay() == DateWithOffset.UNDEFINED_MONTH_DAY) {
+                // set isStart as false here to get the last day of the month
+                subResult.add(convertToLocalDate(start, defaultYear, start.getMonth(), false));
             }
         }
         return result;
@@ -149,15 +155,18 @@ public class DateManager {
      * 
      * @param date input DateWithOffset
      * @param optionalYear optional year value, used in case of date doesn't
-     * have year specificed
+     *      have year specificed
      * @param optionalMonth optional Month, used in case of date doesn't have
-     * Month specified
+     *      Month specified
+     * @param isStart true if is start date offset, false if is end date offset
+     *      useful when day is not specified. In case of start date, set day to
+     *      1; in case of end date, set day to max days of specified month
      * @return a corresponding LocalDateTime
      */
-    public static LocalDate convertToLocalDate(DateWithOffset date, int optionalYear, Month optionalMonth) {
+    public static LocalDate convertToLocalDate(DateWithOffset date, int optionalYear, Month optionalMonth, boolean isStart) {
         int yearInt = (date.getYear() == YearRange.UNDEFINED_YEAR)
-                        ? optionalYear
-                        : date.getYear();
+                    ? optionalYear
+                    : date.getYear();
         LocalDate pending = null;
         // check for variable date
         if (date.getVarDate() != null) {
@@ -167,9 +176,14 @@ public class DateManager {
             }
         } else {
             int monthInt = (date.getMonth() == null)
-                            ? optionalMonth.ordinal() + 1
-                            : date.getMonth().ordinal() + 1;
-            pending = LocalDate.of(yearInt, monthInt, date.getDay());
+                        ? optionalMonth.ordinal() + 1
+                        : date.getMonth().ordinal() + 1;
+            int dayInt = date.getDay();
+            // check for in case of undefined day of month
+            if (dayInt == DateWithOffset.UNDEFINED_MONTH_DAY) {
+                dayInt = (isStart) ? 1 : YearMonth.of(yearInt, monthInt).lengthOfMonth();
+            }
+            pending = LocalDate.of(yearInt, monthInt, dayInt);
         }
         // handle weekday offset
         if (date.getWeekDayOffset() != null && pending != null) {

@@ -4,6 +4,7 @@ import java.time.chrono.ChronoLocalDate;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -135,6 +136,11 @@ public class MonthRule {
      */
     public static LocalDate getLastDayOfMonth(LocalDate date) {
        return date.withDayOfMonth(date.lengthOfMonth());
+    }
+
+    public static int maxDayOfMonth(int month, int year) {
+        YearMonth monthOfYear = YearMonth.of(year, month);
+        return monthOfYear.lengthOfMonth();
     }
 
     /**

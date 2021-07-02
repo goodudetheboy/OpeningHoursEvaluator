@@ -1,5 +1,7 @@
 package openinghoursevaluator;
 
+import javax.annotation.Nullable;
+
 import ch.poole.openinghoursparser.TimeSpan;
 
 /**
@@ -20,12 +22,15 @@ public class OpenEndRange extends TimeRange {
     boolean         needsRemoving   = false;
     OpenEndRange    nextDaySpill    = null;
 
-
     public OpenEndRange() {
-        // empty
+        this.comment = DEFAULT_COMMENT;
     }
 
-    /** Constructor for copying OpenEndRange */
+    /**
+     * Constructor for copying OpenEndRange
+     * 
+     * @param another another OpenEndRange to copy
+     */
     public OpenEndRange(OpenEndRange another) {
         this(another.getStart(), another.getEnd(), another.getStatus(), another.getComment());
     }
@@ -59,8 +64,8 @@ public class OpenEndRange extends TimeRange {
     }
 
     /**
-     * Constructor for creating a TimePoint with a Status and a comment, the result
-     * will be a OpenEndRange with timepoint-timepoint+1.
+     * Constructor for creating a TimePoint with a Status and a comment,
+     * the result will be a OpenEndRange with timepoint-timepoint+1.
      * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
      * 
      * @param timepoint timepoint
@@ -69,28 +74,41 @@ public class OpenEndRange extends TimeRange {
      */
     public OpenEndRange(int timepoint, Status status, String comment) {
         super(timepoint, status, comment);
+        setComment(comment);
     }
 
-    /** Constructor with TimeSpan and a comment */
+    /** 
+     * Constructor with TimeSpan,a Status and a comment
+     *
+     * @param timepoint timespan
+     * @param status Status to be set
+     * @param comment comment
+     */
     public OpenEndRange(TimeSpan timespan, Status status, String comment) {
         super(timespan, status, comment);
+        setComment(comment);
     }
 
     /**
-     * Constructor for creating a OpenEndRange with a Status and a comment
+     * Constructor for creating a OpenEndRange with a Status and a comment.
+     * If a comment is not specified (== null), the DEFAULT_COMMENT will
+     * be set in its place instead.
      * 
      * @param start start time, must be less than end time
      * @param end end time
      * @param status Status to be set
+     * @param comment a comment
      */
     public OpenEndRange(int start, int end, Status status, String comment) {
         super(start, end, status, comment);
+        setComment(comment);
     }
 
     public boolean isNeededRemoving() {
         return needsRemoving;
     }
 
+    @Nullable
     public OpenEndRange getNextDaySpill() {
         return nextDaySpill;
     }
@@ -103,6 +121,22 @@ public class OpenEndRange extends TimeRange {
         this.nextDaySpill = nextDaySpill;
     }
 
+    /**
+     * Returns true if input TimeRange is an OpenEndRange and needed removing
+     * 
+     * @param timerange input TimeRange
+     * @return true if input TimeRange is an OpenEndRange and needed removing
+     */
+    public static boolean checkNeededRemoving(TimeRange timerange) {
+        return (timerange instanceof OpenEndRange)
+                    && ((OpenEndRange) timerange).isNeededRemoving();
+    }
+
+    @Override
+    public void setComment(String comment) {
+        this.comment = (comment != null) ? comment : DEFAULT_COMMENT;
+    }
+
     @Override
     public boolean equals(Object other) {
         return super.equals(other);
@@ -110,9 +144,6 @@ public class OpenEndRange extends TimeRange {
 
     @Override
     public int hashCode() {
-        int result = 1;
-        result = 37 * result + start;
-        result = 37 * result + end;
-        return result;
+        return super.hashCode();
     }
 }

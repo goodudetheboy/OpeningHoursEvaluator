@@ -134,7 +134,11 @@ public class OpenEndRange extends TimeRange {
 
     @Override
     public void setComment(String comment) {
-        this.comment = (comment != null) ? comment : DEFAULT_COMMENT;
+        if (comment != null) {
+            this.comment = comment;
+        } else {
+            this.comment = (status == Status.CLOSED) ? null : DEFAULT_COMMENT;
+        }
     }
 
     @Override

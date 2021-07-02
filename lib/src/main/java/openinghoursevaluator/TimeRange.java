@@ -3,18 +3,14 @@ package openinghoursevaluator;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nullable;
-
 import ch.poole.openinghoursparser.TimeSpan;
 
 /**
- * A specially created class that resemebles OpeningHoursParser.java, but
- * resized for specific uses in WeekDayRule. The difference is TimeSpan can
- * support 48 hours, but TimeRange can only support 24 hours, among other
- * things.
- * <p>
- * If start value is equal to end value, then this TimeRange is considered a
- * TimePoint
+ * A specially created class that resemebles OpeningHoursParser.java, but resized for
+ * specific uses in WeekDayRule. The difference is TimeSpan can support 48 hours, but
+ * TimeRange can only support 24 hours, among other things.
+ * 
+ * If start value is equal to end value, then this TimeRange is considered a TimePoint
  * 
  */
 public class TimeRange implements Comparable<TimeRange> {
@@ -22,11 +18,12 @@ public class TimeRange implements Comparable<TimeRange> {
     public static final int     UNDEFINED_TIME     = Integer.MIN_VALUE;
     public static final int     MIN_TIME           = 0;
     public static final int     MAX_TIME           = HOURS_24;
+    public static final String  DEFAULT_OPEN_ENDED_COMMENT = "open ended time";
 
-    int     start       = UNDEFINED_TIME;
-    int     end         = UNDEFINED_TIME;
-    Status  status      = null;
-    String  comment     = null;
+    int     start   = UNDEFINED_TIME;
+    int     end     = UNDEFINED_TIME;
+    Status  status  = null;
+    String  comment = null;
 
     /**
      * Default constructor
@@ -37,8 +34,7 @@ public class TimeRange implements Comparable<TimeRange> {
 
     /** Constructor for copying TimeRange */
     public TimeRange(TimeRange another) {
-        this(another.getStart(), another.getEnd(), another.getStatus(),
-                another.getComment());
+        this(another.getStart(), another.getEnd(), another.getStatus(), another.getComment());
     }
 
     /**
@@ -72,15 +68,14 @@ public class TimeRange implements Comparable<TimeRange> {
     public TimeRange(int start, int end, Status status) {
         // TODO: sort out logic in this constructor
         if (start == end && start == MAX_TIME) {
-            throw new IllegalArgumentException("Start and end cannot be both at "
-                                                + MAX_TIME);
+            throw new IllegalArgumentException("Start and end cannot be both at " + MAX_TIME);
         }
         if (start > end) {
             throw new IllegalArgumentException("Start cannot be less than end");
         }
         setStart(start);
         setEnd((start == end) ? ++end : end);
-        setStatus(status);
+        this.status = status;
     }
 
     /**
@@ -99,9 +94,8 @@ public class TimeRange implements Comparable<TimeRange> {
     /** Constructor with TimeSpan and a comment */
     public TimeRange(TimeSpan timespan, Status status, String comment) {
         this(timespan.getStart(),
-            (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) 
-                ? timespan.getEnd()
-                : timespan.getStart(),
+            (timespan.getEnd() != TimeSpan.UNDEFINED_TIME)  ? timespan.getEnd()
+                                                            : timespan.getStart(),
             status, comment);
     }
 
@@ -138,16 +132,14 @@ public class TimeRange implements Comparable<TimeRange> {
 
     public void setStart(int start) {
         if (start > MAX_TIME || start < MIN_TIME) {
-            throw new IllegalArgumentException("Start time " + start
-                                                + " is outside current day");
+            throw new IllegalArgumentException("Start time " + start + " is outside current day");
         }
         this.start = start;
     }
 
     public void setEnd(int end) {
         if (end > MAX_TIME || end < MIN_TIME) {
-            throw new IllegalArgumentException("Invalid time" + end
-                                            + ", please keep time in 24 hours");
+            throw new IllegalArgumentException("Invalid time" + end + ", please keep time in 24 hours");
         }
         this.end = end;
     }
@@ -204,12 +196,10 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Returns a TimeRange where it is the overlap time between this and the
-     * other TimeRange
+     * Returns a TimeRange where it is the overlap time between this and the other TimeRange
      * 
      * @param other the other TimeRange
-     * @return a TimeRange that overlaps both this and other TimeRange, null
-     *      if it can't be merged
+     * @return a TimeRange that overlaps both this and other TimeRange, null if it can't be merged
      */
     public TimeRange overlapWith(TimeRange other) {
         int overlapsCode = this.overlapsCode(other);
@@ -248,8 +238,9 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Cut this TimeRange with the other TimeRange
+     * Cut the TimeRange t with the TimeRange other
      * 
+     * @param t the TimeRange to be cut
      * @param other the TimeRange that will cut t
      * @return a List containing TimeRange(s) resulting from the cut
      */
@@ -259,27 +250,21 @@ public class TimeRange implements Comparable<TimeRange> {
         Status oldStatus = status;
         if (overlap != null) {
             if (overlap.getStart() > start) {
-                result.add(new TimeRange(start, overlap.getStart(), oldStatus,
-                                        comment));
+                result.add(new TimeRange(start, overlap.getStart(), oldStatus, comment));
             } 
             if (overlap.getEnd() < end) {
-                result.add(new TimeRange(overlap.getEnd(), end, oldStatus,
-                                        comment));
+                result.add(new TimeRange(overlap.getEnd(), end, oldStatus, comment));
             }
         } else {
-            result.add(new TimeRange(this));
+            result.add(this);
         }
         return result;
     }
 
     /**
      * This TimeRange is mergeable with the other TimeRange when:
-     * <ol>
-     * <li>both's Status is equal, and
-     * <li>either they both have comments and the comments are equal or neither
-     * of them have comments
-     * </ol>
-     * 
+     * both's Status is equal, and either they both have comments
+     * and the comments are equal or neither of them have comments
      * 
      * @param other the other TimeRange to be checked for merge
      * @return true if mergeable, false otherwise
@@ -293,14 +278,12 @@ public class TimeRange implements Comparable<TimeRange> {
     }                   
 
     /**
-     * Merge two TimeRanges into one TimeRange if there is an overlap and with
-     * similar Status, if not this will return null.
+     * Merge two TimeRanges into one TimeRange if there is an overlap and with similar Status,
+     * if not this will return null
      * 
      * @param other second TimeRange
-     * @return a TimeRange that is a merge of this two t1 and t2, null
-     *      otherwise
+     * @return a TimeRange that is a merge of this two t1 and t2, null otherwise
      */
-    @Nullable
     public TimeRange merge(TimeRange other) {
         int overlapCode = overlapsCode(other);
         if (!this.isMergeable(other) || overlapCode == 0) {
@@ -367,8 +350,7 @@ public class TimeRange implements Comparable<TimeRange> {
         }
         if (other instanceof TimeRange) {
             TimeRange o = (TimeRange) other;
-            return start == o.getStart() && end == o.getEnd()
-                    && status.equals(o.getStatus());
+            return start == o.getStart() && end == o.getEnd() && status.equals(o.getStatus());
         }
         return false;
     }

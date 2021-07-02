@@ -84,14 +84,16 @@ public class Week {
 
     public void setWeekOfMonth(int weekOfMonth) {
         if (weekOfMonth < 1 || weekOfMonth > 5) {
-            throw new IllegalArgumentException("Illegal nth week of month: " + weekOfMonth);
+            throw new IllegalArgumentException("Illegal nth week of month: "
+                                                + weekOfMonth);
         }
         this.weekOfMonth = weekOfMonth;
     }
 
     public void setReverseWeekOfMonth(int reverseWeekOfMonth) {
         if (reverseWeekOfMonth > -1 || reverseWeekOfMonth < -5) {
-            throw new IllegalArgumentException("Illegal reverse nth week of month: " + weekOfMonth);
+            throw new IllegalArgumentException("Illegal reverse nth week of month: "
+                                                + weekOfMonth);
         }
         this.reverseWeekOfMonth = reverseWeekOfMonth;
     }
@@ -226,8 +228,7 @@ public class Week {
                 // handle week spilling
                 endRange = WeekDay.SU.ordinal();
                 List<Integer> overlap = Utils.getOverlap(WeekDay.MO.ordinal(),
-                                                            endDay.ordinal(),
-                                                            startRes, endRes);
+                                            endDay.ordinal(), startRes, endRes);
                 if (overlap != null) {
                     otherResult = range.copy();
                     otherResult.setStartDay(getWeekDayByNumber(overlap.get(0)));
@@ -276,8 +277,8 @@ public class Week {
         List<Nth> nths = weekdays.getNths();
         WeekDay current = weekdays.getStartDay();
         WeekDay end = (weekdays.getEndDay() != null)
-                            ? weekdays.getEndDay()
-                            : current;
+                        ? weekdays.getEndDay()
+                        : current;
         do {
             if (hasWeekDay(current)
                     && weekDayStorage.get(current).isApplicableNth(nths)) {

@@ -42,20 +42,20 @@ public class DateManager {
         // there is always a start of DateRange
         List<LocalDate> subResult = new ArrayList<>();
         result.add(subResult);
-        subResult.add(DateManager.convertToLocalDate(start, defaultYear, start.getMonth()));
+        subResult.add(convertToLocalDate(start, defaultYear, start.getMonth()));
         if (end != null) {
             // handle when there is no year specified but there is year wrapping
             // the compare below only check for date and month
             // @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:monthday_range:date_offset:to:date_offset
             if (compareStartAndEnd(start, end, defaultYear) > 0) {
-                subResult.add(DateManager.convertToLocalDate(end, defaultYear + 1, start.getMonth()));
+                subResult.add(convertToLocalDate(end, defaultYear + 1, start.getMonth()));
                 // get year wraping from previous year
                 List<LocalDate> otherResult = new ArrayList<>();
-                otherResult.add(DateManager.convertToLocalDate(start, defaultYear-1, start.getMonth()));
-                otherResult.add(DateManager.convertToLocalDate(end, defaultYear, start.getMonth()));
+                otherResult.add(convertToLocalDate(start, defaultYear-1, start.getMonth()));
+                otherResult.add(convertToLocalDate(end, defaultYear, start.getMonth()));
                 result.add(otherResult);
             } else { 
-                subResult.add(DateManager.convertToLocalDate(end, defaultYear, start.getMonth()));
+                subResult.add(convertToLocalDate(end, defaultYear, start.getMonth()));
             }
         }
         return result;
@@ -72,14 +72,14 @@ public class DateManager {
     private int compareStartAndEnd(DateWithOffset start, DateWithOffset end, int easterYear) {
         if (isEaster(start)) {
             int year = (start.getYear() != YearRange.UNDEFINED_YEAR)
-                            ? start.getYear()
-                            : easterYear;
+                        ? start.getYear()
+                        : easterYear;
             fillEaster(start, year);
         }
         if (isEaster(end)) {
             int year = (end.getYear() != YearRange.UNDEFINED_YEAR)
-                            ? end.getYear()
-                            : easterYear;
+                        ? end.getYear()
+                        : easterYear;
             fillEaster(end, year);
         }
         return ((end.getMonth() == null) || start.getMonth() == end.getMonth())
@@ -117,15 +117,16 @@ public class DateManager {
         // check if start year is not defined and end year is defined
         if (start.getYear() == YearRange.UNDEFINED_YEAR
                 && end.getYear() != YearRange.UNDEFINED_YEAR) {
-            throw new IllegalArgumentException("Year must be defined at start rather than end, this range "
-                                                + rangeString + " is meaningless");
+            throw new IllegalArgumentException("Year must be defined at start rather than end,"
+                                            + " this range" + rangeString + " is meaningless");
         }
         // check if start is after end
         if (start.getYear() != YearRange.UNDEFINED_YEAR
                 && ((compareStartAndEnd(start, end, easterYear) > 0)
                         || (end.getYear() != YearRange.UNDEFINED_YEAR
                             && start.getYear() > end.getYear()))) {
-            throw new IllegalArgumentException("Illegal range " + rangeString + ", please double check");
+            throw new IllegalArgumentException("Illegal range " + rangeString
+                                                + ", please double check");
         }
     }
 
@@ -166,8 +167,8 @@ public class DateManager {
             }
         } else {
             int monthInt = (date.getMonth() == null)
-                                ? optionalMonth.ordinal() + 1
-                                : date.getMonth().ordinal() + 1;
+                            ? optionalMonth.ordinal() + 1
+                            : date.getMonth().ordinal() + 1;
             pending = LocalDate.of(yearInt, monthInt, date.getDay());
         }
         // handle weekday offset

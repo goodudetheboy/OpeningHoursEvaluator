@@ -1,6 +1,7 @@
 package openinghoursevaluator;
 
 import java.time.chrono.ChronoLocalDate;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -63,8 +64,10 @@ public class MonthRule {
                     List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
                     if (overlap != null) {
                         WeekDayRange restriction = new WeekDayRange();
-                        restriction.setStartDay(Week.convertWeekDay(((LocalDate) overlap.get(0)).getDayOfWeek()));
-                        restriction.setEndDay(Week.convertWeekDay(((LocalDate) overlap.get(1)).getDayOfWeek()));
+                        DayOfWeek startWDay = ((LocalDate) overlap.get(0)).getDayOfWeek();
+                        DayOfWeek endWDay = ((LocalDate) overlap.get(1)).getDayOfWeek();
+                        restriction.setStartDay(Week.convertWeekDay(startWDay));
+                        restriction.setEndDay(Week.convertWeekDay(endWDay));
                         week.build(rule, restriction);
                     }
                 }

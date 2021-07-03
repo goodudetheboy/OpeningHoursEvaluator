@@ -35,8 +35,9 @@ public class MonthRule {
      * Also supports Week that is split between two months.
      * 
      * @param time input LocalDateTime
+     * @throws OpeningHoursEvaluationException
      */
-    public void build(LocalDateTime time) {
+    public void build(LocalDateTime time) throws OpeningHoursEvaluationException {
         year = time.getYear();
         month = convertMonth(time.toLocalDate());
         populate(time);
@@ -51,8 +52,9 @@ public class MonthRule {
 
     /**
      * Helper function for build().
+     * @throws OpeningHoursEvaluationException
      */
-    private void update(Week week, Rule rule) {
+    private void update(Week week, Rule rule) throws OpeningHoursEvaluationException {
         if (rule.getDates() != null) {
             DateManager manager = new DateManager();
             for (DateRange dateRange : rule.getDates()) {
@@ -85,8 +87,9 @@ public class MonthRule {
      * @param week a Week to be simulated
      * @param rule a Rule to be applied
      * @return the simulated spill
+     * @throws OpeningHoursEvaluationException
      */
-    private List<TimeRange> simulateSpill(Week week, Rule rule) {
+    private List<TimeRange> simulateSpill(Week week, Rule rule) throws OpeningHoursEvaluationException {
         LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
         LocalDate previousDay = DateManager.getOffsetDate(firstDateOfWeek, -1);
         Week w = new Week(previousDay, Week.convertWeekDay(previousDay.getDayOfWeek()));

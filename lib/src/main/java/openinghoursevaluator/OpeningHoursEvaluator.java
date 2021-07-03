@@ -38,8 +38,9 @@ public class OpeningHoursEvaluator {
      * 
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @param isStrict
+     * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(String inputTime) {
+    public Result checkStatus(String inputTime) throws OpeningHoursEvaluationException {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         MonthRule monthRule = new MonthRule(rules);
         monthRule.build(time);
@@ -50,7 +51,11 @@ public class OpeningHoursEvaluator {
     public String toString(String inputTime) {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         MonthRule monthRule = new MonthRule(rules);
-        monthRule.build(time);
+        try {
+            monthRule.build(time);
+        } catch (OpeningHoursEvaluationException e) {
+            e.printStackTrace();
+        }
         return monthRule.toWeekString();
     }
 }

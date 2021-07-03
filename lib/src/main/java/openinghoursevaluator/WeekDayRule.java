@@ -152,8 +152,10 @@ public class WeekDayRule {
         this.defDate = defDate;
     }
 
-    /** Build the opening times of this weekday with the current rule */
-    public void build() {
+    /** Build the opening times of this weekday with the current rule 
+     * @throws OpeningHoursEvaluationException
+     */
+    public void build() throws OpeningHoursEvaluationException {
         build(currentRule);
     }
 
@@ -163,10 +165,11 @@ public class WeekDayRule {
      * fallback), if exists. Closed time does not clear days.
      * 
      * @param rule rule to be used in building
+     * @throws OpeningHoursEvaluationException
      */
-    public void build(Rule rule) {
+    public void build(Rule rule) throws OpeningHoursEvaluationException {
         if (rule.isEmpty()) {
-            throw new IllegalArgumentException("There's an empty rule, please remove it");
+            throw new OpeningHoursEvaluationException("There's an empty rule, please remove it");
         }
         if (rule.isAdditive()) {
             additiveRule.add(rule);
@@ -199,8 +202,9 @@ public class WeekDayRule {
      * This also doesn't apply any time spill from previous day
      * 
      * @param rule Rule to be added
+     * @throws OpeningHoursEvaluationException
      */
-    public void addRule(Rule rule) {
+    public void addRule(Rule rule) throws OpeningHoursEvaluationException {
         String comment = (rule.getModifier() != null)
                             ? rule.getModifier().getComment()
                             : null;
@@ -256,13 +260,14 @@ public class WeekDayRule {
      * Check if this WeekDayRule is affected by any day offset
      * 
      * @return
+     * @throws OpeningHoursEvaluationException
      */
-    public boolean isApplicableOffset(WeekDayRange weekdays) {
+    public boolean isApplicableOffset(WeekDayRange weekdays) throws OpeningHoursEvaluationException {
         int offset = weekdays.getOffset();
         if (offset == 0) {
-            throw new IllegalArgumentException("Offset not 0 should have been checked before this function is called");
+            throw new OpeningHoursEvaluationException("Offset not 0 should have been checked before this function is called");
         } else if (weekdays.getEndDay() != null) {
-            throw new IllegalArgumentException("There cannot be a end day in a WeekDayRange with an offset");
+            throw new OpeningHoursEvaluationException("There cannot be a end day in a WeekDayRange with an offset");
         }
         LocalDate offsetDate = DateManager.getOffsetDate(defDate, -offset);
         WeekDayRule offsetDay = new WeekDayRule(offsetDate);
@@ -279,8 +284,9 @@ public class WeekDayRule {
      * @param status desired Status
      * @param comment optional comment
      * @param isFallback if time added is fallback rule
+     * @throws OpeningHoursEvaluationException
      */
-    public void addTime(TimeSpan timespan, Status status, String comment, boolean isFallback) {
+    public void addTime(TimeSpan timespan, Status status, String comment, boolean isFallback) throws OpeningHoursEvaluationException {
         if (timespan.getInterval() != 0) {
             addInterval(timespan, status, comment, isFallback);
         } else if (timespan.isOpenEnded()) {
@@ -321,9 +327,10 @@ public class WeekDayRule {
      * time will be interpreted as 8 hours after the opening time.
      * </ul>
      * <p>
+     * @throws OpeningHoursEvaluationException
      * @see https://github.com/opening-hours/opening_hours.js#time-ranges, open-ended time section
      * */
-    private void addOpenEnd(TimeSpan timespan, Status status, String comment, boolean isFallback) {
+    private void addOpenEnd(TimeSpan timespan, Status status, String comment, boolean isFallback) throws OpeningHoursEvaluationException {
         int openEndStart = 0;
         if (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
             openEndStart = timespan.getEnd();
@@ -348,7 +355,7 @@ public class WeekDayRule {
                 nextDayRule.addSpill(new TimeRange(0, timespill, openEndedStatus, openEndedComment));
             }
         } else if (nextDayStart >= TimeRange.MAX_TIME + 17*60) {
-            throw new IllegalArgumentException("Time spanning more than two days not supported");
+            throw new OpeningHoursEvaluationException("Time spanning more than two days not supported");
         } else {
             nextDayRule.addSpill(new TimeRange(nextDayStart, nextDayStart + 8*60, openEndedStatus, openEndedComment));
         }
@@ -447,21 +454,6 @@ public class WeekDayRule {
                     || current <= start + 7 && current >= endDay.ordinal()) :
                     (current == start);
 
-    }
-
-    /**
-     * Override the current rule with a new rule. Also return the old rule for other purpose
-     * 
-     * @param newRule rule to be replaced
-     * @return the old rule
-     * 
-    */
-    public Rule override(Rule newRule) {
-        Rule oldRule = currentRule.copy();
-        currentRule = newRule;
-        clearOpeningHours();
-        build(newRule);
-        return oldRule;
     }
 
     /** Clear the current opening times in this WeekdayRule */

@@ -1,0 +1,3 @@
+There's an empty rule, please remove it
+Year must be defined at start rather than end, this range (May 12 - 2021 Jun 30) is meaningless
+Illegal range (2021 May 12 - 2019 May 11), start date cannot be after end date

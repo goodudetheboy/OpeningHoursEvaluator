@@ -1,5 +1,6 @@
 package openinghoursevaluator;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -34,6 +35,11 @@ public class InputTest {
     @Test
     public void evaluatorMonthTest() {
         evaluateBatchCheck("test-data/oh/month.txt-oh", "test-data/input-time/month.txt", "test-data/answer/month.txt-answer");
+    }
+
+    @Test
+    public void evaluatorFailTest() {
+        evaluateFailBatchCheck("test-data/oh/fail.txt-oh", "test-data/answer/fail.txt-answer");
     }
 
     @Test
@@ -148,15 +154,60 @@ public class InputTest {
         return true;
     }
 
+    public void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile) {
+        BufferedReader openingHoursReader = null;
+        BufferedReader exceptionMessageReader = null;
+        boolean hasWrong = false;
+        int lineNumOH = 0;
+        try {
+            openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
+            exceptionMessageReader = new BufferedReader(new InputStreamReader(new FileInputStream(exceptionMessageFile), StandardCharsets.UTF_8));
+            String openingHours;
+            String exceptionMessage;
+            lineNumOH = 1;
+            while ((openingHours = openingHoursReader.readLine()) != null &&
+                    (exceptionMessage = exceptionMessageReader.readLine()) != null) {
+                evaluateFail(openingHours, exceptionMessage, lineNumOH);
+                lineNumOH++;
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            fail("Null pointer exception occured, maybe some test cases doesn't have answer yet?");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            fail("File not found exception occured");
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            fail("IOexception occured");
+        } finally {
+            try { 
+                openingHoursReader.close();
+            } catch (IOException ioe) {
+                fail("Error closing BufferedReader");
+            }
+        }
+        if (hasWrong) fail("There's a wrong answer, check output for more info");
+    }
+
     /**
      * Evaluation for an opening hours string, with input time value
      * 
      * @param openingHours opening hours string
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
+     * @throws OpeningHoursEvaluationException
      */
-    public Result evaluate(String openingHours, String inputTime) {
+    public Result evaluate(String openingHours, String inputTime) throws OpeningHoursEvaluationException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
+    }
+
+    public void evaluateFail(String openingHours, String exceptionMessage, int lineNum) {
+        try {
+            evaluate(openingHours, "2021-07-03T20:57:51");
+            fail("This OH tag " + openingHours + " (line num + " + lineNum + ") should have thrown an exception");
+        } catch (OpeningHoursEvaluationException e) {
+            assertEquals(exceptionMessage, e.getMessage());
+        }
     }
 
     /**

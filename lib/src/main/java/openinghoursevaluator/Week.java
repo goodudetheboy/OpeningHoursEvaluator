@@ -156,8 +156,9 @@ public class Week {
      * Build Week with an input rule
      * 
      * @param isStrict strict or not
+     * @throws OpeningHoursEvaluationException
      */
-    public void build(Rule rule) {
+    public void build(Rule rule) throws OpeningHoursEvaluationException {
         build(rule, null);
     }
 
@@ -167,8 +168,9 @@ public class Week {
      * 
      * @param rule an input rule
      * @param restriction a WeekDayRange restriction
+     * @throws OpeningHoursEvaluationException
      */
-    public void build(Rule rule, WeekDayRange restriction) {
+    public void build(Rule rule, WeekDayRange restriction) throws OpeningHoursEvaluationException {
         applyPreviousSpill();
         update(rule, restriction);
         clean();
@@ -178,8 +180,9 @@ public class Week {
      * Update Week with a rule
      * 
      * @param rule a Rule
+     * @throws OpeningHoursEvaluationException
      */
-    public void update(Rule rule, WeekDayRange restriction) {
+    public void update(Rule rule, WeekDayRange restriction) throws OpeningHoursEvaluationException {
         List<WeekDayRange> weekdayRange;
         if (rule.getDays() != null) {
             weekdayRange = rule.getDays();
@@ -272,8 +275,10 @@ public class Week {
         return result;
     }
 
-    /** update() helper */
-    private void updateWithRange(Rule rule, WeekDayRange weekdays) {
+    /** update() helper 
+     * @throws OpeningHoursEvaluationException
+     */
+    private void updateWithRange(Rule rule, WeekDayRange weekdays) throws OpeningHoursEvaluationException {
         List<Nth> nths = weekdays.getNths();
         WeekDay current = weekdays.getStartDay();
         WeekDay end = (weekdays.getEndDay() != null)
@@ -287,8 +292,9 @@ public class Week {
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
 
-    /** update() helper, used for WeekDayRange with offset */
-    private void updateWithOffsetRange(Rule rule, WeekDayRange weekdays) {
+    /** update() helper, used for WeekDayRange with offset 
+     * @throws OpeningHoursEvaluationException*/
+    private void updateWithOffsetRange(Rule rule, WeekDayRange weekdays) throws OpeningHoursEvaluationException {
         WeekDay current = startWeekDay;
         WeekDay end = endWeekDay;
         do {

@@ -510,6 +510,16 @@ public class Week {
         return WeekDay.values()[i % 7];
     }
 
+    /**
+     * 
+     * @param date
+     * @return the week of year in which the input LocalDate is in
+     */
+    public static int getWeekOfYear(LocalDate date, Locale locale) {
+        return date.get(WeekFields.of(locale).weekOfWeekBasedYear());
+
+    }
+
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();

@@ -32,6 +32,11 @@ public class InputTest {
     }
 
     @Test
+    public void evaluatorMonthTest() {
+        evaluateBatchCheck("test-data/oh/month.txt-oh", "test-data/input-time/month.txt", "test-data/answer/month.txt-answer");
+    }
+
+    @Test
     public void unitTest() {
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED, "xxxxx", 0, 0));
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN, "xxxxx", 0, 0));

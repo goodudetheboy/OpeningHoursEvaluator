@@ -23,6 +23,8 @@ public class DataTest {
     public void inputTimeFolderLegalTest() {
         inputTimeFileLegalTest("test-data/input-time/timepoint.txt");
         inputTimeFileLegalTest("test-data/input-time/weekday.txt");
+        inputTimeFileLegalTest("test-data/input-time/week.txt");
+        inputTimeFileLegalTest("test-data/input-time/month.txt");
     }
 
     public void inputTimeFileLegalTest(String inputFileDir) {

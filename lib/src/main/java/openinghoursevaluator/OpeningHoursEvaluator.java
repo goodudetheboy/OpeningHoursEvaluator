@@ -54,7 +54,6 @@ public class OpeningHoursEvaluator {
         try {
             monthRule.build(time);
         } catch (OpeningHoursEvaluationException e) {
-            e.printStackTrace();
         }
         return monthRule.toWeekString();
     }

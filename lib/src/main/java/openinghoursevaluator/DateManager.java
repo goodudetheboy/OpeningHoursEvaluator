@@ -37,17 +37,19 @@ public class DateManager {
      */
     public List<List<LocalDate>> processDateRange(DateRange dateRange, Week week) throws OpeningHoursEvaluationException {
         int defaultYear = week.getYear();
+
+        // check for illegal date range
+        checkError(dateRange, defaultYear);
+
         List<List<LocalDate>> result = new ArrayList<>();
         DateWithOffset start = dateRange.getStartDate();
         DateWithOffset end = dateRange.getEndDate();
-        checkError(start, end, defaultYear);
         // there is always a start of DateRange
         List<LocalDate> subResult = new ArrayList<>();
         result.add(subResult);
         subResult.add(convertToLocalDate(start, defaultYear, start.getMonth(), true));
         if (end != null) {
             // handle when there is no year specified but there is year wrapping
-            // the compare below only check for date and month
             // @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:monthday_range:date_offset:to:date_offset
             if (compareStartAndEnd(start, end, defaultYear) > 0) {
                 subResult.add(convertToLocalDate(end, defaultYear + 1, start.getMonth(), false));
@@ -77,6 +79,28 @@ public class DateManager {
      * @return <0 if d1 is before d2, >0 if d1 is after d2, =0 if d1 is same day as d2
      */
     private int compareStartAndEnd(DateWithOffset start, DateWithOffset end, int easterYear) {
+        // Help fill start and end with easter year, if necessary
+        compareEasterHelper(start, end, easterYear);
+
+        // check year
+        if (start.getYear() != YearRange.UNDEFINED_YEAR
+                && end.getYear() != YearRange.UNDEFINED_YEAR) {
+            return start.getYear() - end.getYear();
+        }
+
+        // check month
+        if (end.getMonth() != null && start.getMonth() != end.getMonth()) {
+            return start.getMonth().ordinal() - end.getMonth().ordinal();
+        }
+
+        // check days
+        return start.getDay() - end.getDay();
+    }
+
+    /**
+     * Help fill start and end with easter year, if necessary
+     */
+    private void compareEasterHelper(DateWithOffset start, DateWithOffset end, int easterYear) {
         if (isEaster(start)) {
             int year = (start.getYear() != YearRange.UNDEFINED_YEAR)
                         ? start.getYear()
@@ -89,9 +113,6 @@ public class DateManager {
                         : easterYear;
             fillEaster(end, year);
         }
-        return ((end.getMonth() == null) || start.getMonth() == end.getMonth())
-                ? start.getDay() - end.getDay()
-                : start.getMonth().ordinal() - end.getMonth().ordinal();
     }
 
     /**
@@ -117,7 +138,9 @@ public class DateManager {
      * @param easterYear optional easter year, TODO: temporary, needs removing
      * @throws OpeningHoursEvaluationException
      */
-    public void checkError(DateWithOffset start, DateWithOffset end, int easterYear) throws OpeningHoursEvaluationException {
+    public void checkError(DateRange dateRange, int easterYear) throws OpeningHoursEvaluationException {
+        DateWithOffset start = dateRange.getStartDate();
+        DateWithOffset end = dateRange.getEndDate();
         String rangeString = "(" + start + " - " + end + ")";
         if (end == null) {
             return;
@@ -128,14 +151,24 @@ public class DateManager {
             throw new OpeningHoursEvaluationException("Year must be defined at start rather than end,"
                                             + " this range " + rangeString + " is meaningless");
         }
+
         // check if start is after end
         if (start.getYear() != YearRange.UNDEFINED_YEAR
-                && ((compareStartAndEnd(start, end, easterYear) > 0)
-                        || (end.getYear() != YearRange.UNDEFINED_YEAR
-                            && start.getYear() > end.getYear()))) {
-            throw new OpeningHoursEvaluationException("Illegal range " + rangeString
-                                                + ", start date cannot be after end date");
+                && compareStartAndEnd(start, end, easterYear) > 0) {
+            throwIllegalRange(start, end);
         }
+
+        if (start.getYear() != YearRange.UNDEFINED_YEAR
+                && (end.getYear() != YearRange.UNDEFINED_YEAR
+                        && start.getYear() > end.getYear())) {
+            throwIllegalRange(start, end);
+        }
+    }
+
+    private void throwIllegalRange(DateWithOffset start, DateWithOffset end) throws OpeningHoursEvaluationException {
+        String rangeString = "(" + start + " - " + end + ")";
+        throw new OpeningHoursEvaluationException("Illegal range " + rangeString
+                                        + ", start date cannot be after end date");
     }
 
     /**

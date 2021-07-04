@@ -60,7 +60,7 @@ public class InputTest {
     @Test
     public void spotCheck() {
         // assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
-        print("Mo-Su; We off \"only after registration\"", "2021-06-09T03:00");
+        // print("week 2-52/2 We 00:00-24:00; week 1-53/2 Sa 00:00-24:00", "2021-06-27T03:00");
     }
 
     /**

@@ -53,6 +53,7 @@ public class InputTest {
         printBatch("test-data/oh/timepoint.txt-oh", "2021-06-09T15:00");
         printBatch("test-data/oh/weekday.txt-oh", "2021-06-09T15:00");
         printBatch("test-data/oh/week.txt-oh", "2021-06-09T15:00");
+        printBatch("test-data/oh/month.txt-oh", "2021-06-09T15:00");
     }
 
     /** Used for checking on the spot, convenient during debugging */

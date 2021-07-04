@@ -25,6 +25,7 @@ public class DataTest {
         inputTimeFileLegalTest("test-data/input-time/weekday.txt");
         inputTimeFileLegalTest("test-data/input-time/week.txt");
         inputTimeFileLegalTest("test-data/input-time/month.txt");
+        inputTimeFileLegalTest("test-data/input-time/year.txt");
     }
 
     public void inputTimeFileLegalTest(String inputFileDir) {

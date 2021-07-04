@@ -54,6 +54,7 @@ public class OpeningHoursEvaluator {
         try {
             monthRule.build(time);
         } catch (OpeningHoursEvaluationException e) {
+            throw new IllegalArgumentException(e.getMessage());
         }
         return monthRule.toWeekString();
     }

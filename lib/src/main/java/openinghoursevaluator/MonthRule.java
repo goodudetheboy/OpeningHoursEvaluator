@@ -15,6 +15,7 @@ import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.WeekDayRange;
 import ch.poole.openinghoursparser.WeekRange;
+import ch.poole.openinghoursparser.YearRange;
 
 public class MonthRule {
     int         year;
@@ -56,6 +57,33 @@ public class MonthRule {
      * @throws OpeningHoursEvaluationException
      */
     private void update(Week week, Rule rule) throws OpeningHoursEvaluationException {
+        updateWithYearRange(rule, week);
+    }
+
+    /** 
+     * Helper function for update(). Check for YearRange and then build accordingly
+     */
+    private void updateWithYearRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
+        if (rule.getYears() != null) {
+            YearManager yearManager = new YearManager();
+            for (YearRange yearRange : rule.getYears()) {
+                // if found applicable YearRange move to check for update with
+                // WeekRange right away
+                if (yearManager.processYearRange(yearRange, week)) {
+                    updateWithWeekRange(rule, week);
+                    return;
+                }
+            }
+        } else {
+            updateWithWeekRange(rule, week);
+        }
+    }
+
+    /** 
+     * Helper function for updateWithYearRange(). Check for WeekRange and then
+     * build accordingly
+     */
+    private void updateWithWeekRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
         if (rule.getWeeks() != null) {
             WeekManager weekManager = new WeekManager();
             for (WeekRange weekRange : rule.getWeeks()) {
@@ -69,12 +97,11 @@ public class MonthRule {
         } else {
             updateWithDateRange(rule, week);
         }
-        
     }
 
     /** 
-     * Helper function for update(). Check for DateRange and then build
-     * accordingly
+     * Helper function for updateWithWeekRange(). Check for DateRange and then
+     * build accordingly
      */
     private void updateWithDateRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
         if (rule.getDates() != null) {

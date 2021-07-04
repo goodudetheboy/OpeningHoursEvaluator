@@ -38,6 +38,11 @@ public class InputTest {
     }
 
     @Test
+    public void evaluatorYearTest() {
+        evaluateBatchCheck("test-data/oh/year.txt-oh", "test-data/input-time/year.txt", "test-data/answer/year.txt-answer");
+    }
+
+    @Test
     public void evaluatorFailTest() {
         evaluateFailBatchCheck("test-data/oh/fail.txt-oh", "test-data/answer/fail.txt-answer");
     }
@@ -54,6 +59,7 @@ public class InputTest {
         printBatch("test-data/oh/weekday.txt-oh", "2021-06-09T15:00");
         printBatch("test-data/oh/week.txt-oh", "2021-06-09T15:00");
         printBatch("test-data/oh/month.txt-oh", "2021-06-09T15:00");
+        printBatch("test-data/oh/year.txt-oh", "2021-06-09T15:00");
     }
 
     /** Used for checking on the spot, convenient during debugging */

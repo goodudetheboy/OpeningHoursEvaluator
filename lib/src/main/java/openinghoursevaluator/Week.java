@@ -71,7 +71,7 @@ public class Week {
     private void dissectDefDate(LocalDate defDate) {
         this.year = defDate.getYear();
         this.month = MonthRule.convertMonth(defDate);
-        this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekBasedYear());
+        this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
     }
 
     public void setYear(int year) {
@@ -126,6 +126,10 @@ public class Week {
 
     public int getWeekOfMonth() {
         return weekOfMonth;
+    }
+
+    public int getWeekOfYear() {
+        return weekOfYear;
     }
 
     public int getReverseWeekOfMonth() {
@@ -402,7 +406,7 @@ public class Week {
 
     /** Helper of populate() */
     private void populateHelper(WeekDay current) {
-        LocalDate dateOfCurrent = getWeekDayOfWeek(defDate, current);
+        LocalDate dateOfCurrent = WeekManager.getWeekDayOfWeek(defDate, current);
         WeekDayRule newWeekDay = new WeekDayRule(dateOfCurrent);
         weekDayStorage.put(current, newWeekDay);
         WeekDay nextDay = getNextWeekDay(current);
@@ -452,8 +456,8 @@ public class Week {
      */
     public static List<Week> createEmptyWeek(LocalDate date) {
         List<Week> result = new ArrayList<>();
-        LocalDate firstDayOfWeek = getFirstDayOfWeek(date);
-        LocalDate lastDayOfWeek = getLastDayOfWeek(date);
+        LocalDate firstDayOfWeek = WeekManager.getFirstDayOfWeek(date);
+        LocalDate lastDayOfWeek = WeekManager.getLastDayOfWeek(date);
         LocalDate cutoffDate = null;
         // check for cutoff between months
         Week first = null;
@@ -480,36 +484,6 @@ public class Week {
         result.add(first);
         result.add(second);
         return result;
-    }
-
-    /**
-     * 
-     * @param time the LocalDateTime of desired week
-     * @return the LocalDate of the first weekday in the week of input date
-     */
-    public static LocalDate getFirstDayOfWeek(LocalDate date) {
-        return getWeekDayOfWeek(date, WeekDay.MO);
-    }
-
-    /**
-     * 
-     * @param time the LocalDateTime of desired week
-     * @return the LocalDate of the last weekday in the week of input date
-     */
-    public static LocalDate getLastDayOfWeek(LocalDate date) {
-        return getWeekDayOfWeek(date, WeekDay.SU);
-    }
-
-    /**
-     * 
-     * @param date
-     * @param weekday
-     * @return the LocalDate of an input weekday in the week of input date
-     */
-    public static LocalDate getWeekDayOfWeek(LocalDate date, WeekDay weekday) {
-        // ordinal starts with 0, so need this to make up for date.with()
-        int n = weekday.ordinal() + 1;
-        return date.with(WeekFields.ISO.dayOfWeek(), n);
     }
 
     public static WeekDay getWeekDayByNumber(int i) {

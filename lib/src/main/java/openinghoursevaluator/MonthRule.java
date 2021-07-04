@@ -14,6 +14,7 @@ import ch.poole.openinghoursparser.DateRange;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.WeekDayRange;
+import ch.poole.openinghoursparser.WeekRange;
 
 public class MonthRule {
     int         year;
@@ -55,10 +56,31 @@ public class MonthRule {
      * @throws OpeningHoursEvaluationException
      */
     private void update(Week week, Rule rule) throws OpeningHoursEvaluationException {
+        if (rule.getWeeks() != null) {
+            WeekManager weekManager = new WeekManager();
+            for (WeekRange weekRange : rule.getWeeks()) {
+                // if found applicable WeekRange move to check for update with
+                // DateRange right away
+                if (weekManager.processWeekRange(weekRange, week)) {
+                    updateWithDateRange(rule, week);
+                    return;
+                }
+            }
+        } else {
+            updateWithDateRange(rule, week);
+        }
+        
+    }
+
+    /** 
+     * Helper function for update(). Check for DateRange and then build
+     * accordingly
+     */
+    private void updateWithDateRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
         if (rule.getDates() != null) {
-            DateManager manager = new DateManager();
+            DateManager dateManager = new DateManager();
             for (DateRange dateRange : rule.getDates()) {
-                List<List<LocalDate>> temps = manager.processDateRange(dateRange, week);
+                List<List<LocalDate>> temps = dateManager.processDateRange(dateRange, week);
                 LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
                 LocalDate endWDR = week.getEndWeekDayRule().getDefDate();
                 for (List<LocalDate> temp : temps) {

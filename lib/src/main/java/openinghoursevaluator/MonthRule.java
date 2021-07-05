@@ -264,4 +264,19 @@ public class MonthRule {
         }
         return b.toString();
     }
+
+    /**
+     * @return the toDebugString of the Week stored in this MonthRule
+     */
+    public String toDebugWeekString() {
+        StringBuilder b = new StringBuilder();
+        if(weekStorage.size() == 1) {
+            b.append(weekStorage.get(0).toDebugString());
+        } else {
+            b.append(weekStorage.get(0).toDebugString());
+            b.append("Next month\n");
+            b.append(weekStorage.get(1).toDebugString());
+        }
+        return b.toString();
+    }
 }

@@ -57,4 +57,15 @@ public class OpeningHoursEvaluator {
         }
         return monthRule.toWeekString();
     }
+
+    public String toDebugString(String inputTime) {
+        LocalDateTime time = LocalDateTime.parse(inputTime);
+        MonthRule monthRule = new MonthRule(rules);
+        try {
+            monthRule.buildWeek(time);
+        } catch (OpeningHoursEvaluationException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        }
+        return monthRule.toDebugWeekString();
+    }
 }

@@ -1,17 +1,22 @@
 package openinghoursevaluator;
 
+import javax.annotation.Nullable;
+
+import ch.poole.openinghoursparser.Rule;
+
 public class Result {
     Status  status      = null;
     String  comment     = null;
+    Rule    defRule     = null;
 
-    public Result(Status status, String comment) {
-        this.status = status;
-        this.comment = comment;
+    public Result(Status status, @Nullable String comment, @Nullable Rule defRule) {
+        setStatus(status);
+        setComment(comment);
+        setDefiningRule(defRule);
     }
 
     public Result(TimeRange timerange) {
-        this.status = timerange.getStatus();
-        this.comment = (timerange.hasComment()) ? timerange.getComment() : null;
+        this(timerange.getStatus(), timerange.getComment(), timerange.getDefiningRule());
     }
 
     public Status getStatus() {
@@ -20,6 +25,10 @@ public class Result {
 
     public String getComment() {
         return comment;
+    }
+
+    public Rule getDefiningRule() {
+        return defRule;
     }
 
     public boolean hasComment() {
@@ -32,5 +41,9 @@ public class Result {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public void setDefiningRule(Rule defRule) {
+        this.defRule = defRule;
     }
 }

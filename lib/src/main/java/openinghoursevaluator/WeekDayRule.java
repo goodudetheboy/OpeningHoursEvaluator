@@ -213,11 +213,11 @@ public class WeekDayRule {
             TimeSpan allDay = new TimeSpan();
             allDay.setStart(0);
             allDay.setEnd(1440);
-            addTime(allDay, status, comment, rule.isFallBack());
+            addTime(allDay, status, comment, rule, rule.isFallBack());
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            addTime(timespan, status, comment, rule.isFallBack());
+            addTime(timespan, status, comment, rule, rule.isFallBack());
         }
     }
 
@@ -309,29 +309,32 @@ public class WeekDayRule {
      * @param isFallback if time added is fallback rule
      * @throws OpeningHoursEvaluationException
      */
-    public void addTime(TimeSpan timespan, Status status, String comment, boolean isFallback) throws OpeningHoursEvaluationException {
+    public void addTime(TimeSpan timespan, Status status, String comment, Rule defRule, boolean isFallback)
+            throws OpeningHoursEvaluationException {
         if (timespan.getInterval() != 0) {
-            addInterval(timespan, status, comment, isFallback);
+            addInterval(timespan, status, comment, defRule, isFallback);
         } else if (timespan.isOpenEnded()) {
-            addOpenEnd(timespan, status, comment, isFallback);
+            addOpenEnd(timespan, status, comment, defRule, isFallback);
         } else {
-            addTime(timespan.getStart(), timespan.getEnd(), status, comment, isFallback);
+            addTime(timespan.getStart(), timespan.getEnd(), status, comment, defRule, isFallback);
         }
     }
 
     /** Helper function to add TimeSpan with interval to this WeekDayRule */
-    private void addInterval(TimeSpan timespan, Status status, String comment, boolean isFallback) {
+    private void addInterval(TimeSpan timespan, Status status, String comment, Rule defRule, boolean isFallback) {
         int interval = timespan.getInterval();
         int current = timespan.getStart();
         int end = timespan.getEnd();
         TimeRange timepoint = null;
         do {
             timepoint = new TimeRange(current, status, comment);
+            timepoint.setDefiningRule(defRule);
             addTime(timepoint, isFallback);
             current = current + interval;
         } while (current <= end && current < TimeRange.MAX_TIME);
         while(current <= end) {
             timepoint = new TimeRange(current - TimeRange.MAX_TIME, status, comment);
+            timepoint.setDefiningRule(defRule);
             nextDayRule.addSpill(timepoint);
             current = current + interval;
         }
@@ -353,11 +356,12 @@ public class WeekDayRule {
      * @throws OpeningHoursEvaluationException
      * @see https://github.com/opening-hours/opening_hours.js#time-ranges, open-ended time section
      * */
-    private void addOpenEnd(TimeSpan timespan, Status status, String comment, boolean isFallback) throws OpeningHoursEvaluationException {
+    private void addOpenEnd(TimeSpan timespan, Status status, String comment, Rule defRule, boolean isFallback)
+            throws OpeningHoursEvaluationException {
         int openEndStart = 0;
         if (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
             openEndStart = timespan.getEnd();
-            addTime(timespan.getStart(), timespan.getEnd(), status, comment, isFallback);
+            addTime(timespan.getStart(), timespan.getEnd(), status, comment, defRule, isFallback);
         } else {
             openEndStart = timespan.getStart();
         }
@@ -369,18 +373,26 @@ public class WeekDayRule {
                                     : Status.UNKNOWN;
         int nextDayStart = openEndStart - TimeRange.MAX_TIME; // this is for the start of open ended time in the next day
         if (nextDayStart < 0) {
-            addTime(new TimeRange(openEndStart, TimeRange.MAX_TIME, openEndedStatus, openEndedComment), isFallback);
+            TimeRange time = new TimeRange(openEndStart, TimeRange.MAX_TIME,
+                                    openEndedStatus, openEndedComment);
+            time.setDefiningRule(defRule);
+            addTime(time, isFallback);
             int firstCutOff = 17*60;
             int secondCutOff = 22*60;
             if (openEndStart >= firstCutOff) {
                 int timespill = openEndStart - TimeRange.MAX_TIME;
                 timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
-                nextDayRule.addSpill(new TimeRange(0, timespill, openEndedStatus, openEndedComment));
+                TimeRange spill = new TimeRange(0, timespill, openEndedStatus, openEndedComment);
+                spill.setDefiningRule(defRule);
+                nextDayRule.addSpill(spill);
             }
         } else if (nextDayStart >= TimeRange.MAX_TIME + 17*60) {
             throw new OpeningHoursEvaluationException("Time spanning more than two days not supported");
         } else {
-            nextDayRule.addSpill(new TimeRange(nextDayStart, nextDayStart + 8*60, openEndedStatus, openEndedComment));
+            TimeRange extra = new TimeRange(nextDayStart, nextDayStart + 8*60,
+                                    openEndedStatus, openEndedComment);
+            extra.setDefiningRule(defRule);
+            nextDayRule.addSpill(extra);
         }
     }
 
@@ -393,18 +405,22 @@ public class WeekDayRule {
      * @param status desired Status
      * @param comment optional comment
      */
-    public void addTime(int start, int end, Status status, String comment, boolean isFallback) {
+    public void addTime(int start, int end, Status status, String comment, Rule defRule, boolean isFallback) {
         int endToday = end; // for the current day
         if (end != TimeSpan.UNDEFINED_TIME) {
             int timespill = end - TimeRange.MAX_TIME;
             if (timespill > 0) {
                 endToday = TimeRange.MAX_TIME;
-                nextDayRule.addSpill(new TimeRange(0, timespill, status, comment));
+                TimeRange spill = new TimeRange(0, timespill, status, comment);
+                spill.setDefiningRule(defRule);
+                nextDayRule.addSpill(spill);
             }
         } else {
             endToday = start;
         }
-        addTime(new TimeRange(start, endToday, status, comment), isFallback);
+        TimeRange time = new TimeRange(start, endToday, status, comment);
+        time.setDefiningRule(defRule);
+        addTime(time, isFallback);
     }
 
     /**
@@ -434,9 +450,9 @@ public class WeekDayRule {
         for (TimeRange openingTime : openingTimes) {
             newOpeningTimes.addAll(openingTime.cut(timerange));
         }
-        if (timerange.hasComment() || timerange.getStatus() != Status.CLOSED) {
+        // if (timerange.hasComment() || timerange.getStatus() != Status.CLOSED) {
             newOpeningTimes.add(timerange);
-        } 
+        // } 
         openingTimes = newOpeningTimes;
     }
 
@@ -507,7 +523,7 @@ public class WeekDayRule {
             }
         }
         // return CLOSED if no fitting opening times is detected
-        return new Result(Status.CLOSED, null);
+        return new Result(Status.CLOSED, null, null);
     }
 
     /**
@@ -607,13 +623,31 @@ public class WeekDayRule {
         return getNthWeekDayOfMonth(date) - 1 - lastWeekDayOfMonthNth;
     }
 
-
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
         b.append(weekday + " (" + defDate + ") : ");
         for (TimeRange openingTime : openingTimes) {
-            b.append(openingTime.toString());
+            if (openingTime.hasComment()
+                   || openingTime.getStatus() != Status.CLOSED) {
+                b.append(openingTime.toString());
+                b.append(" ");
+            }
+        }
+        return b.toString();
+    }
+
+    /**
+     * Similar to toString(), but this also return a String with Closed
+     * TimeRange in it. Also included the defining Rule with it
+     * 
+     * @return
+     */
+    public String toDebugString() {
+        StringBuilder b = new StringBuilder();
+        b.append(weekday + " (" + defDate + ") : ");
+        for (TimeRange openingTime : openingTimes) {
+            b.append(openingTime.toDebugString());
             b.append(" ");
         }
         return b.toString();

@@ -3,6 +3,9 @@ package openinghoursevaluator;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.Nullable;
+
+import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.TimeSpan;
 
 /**
@@ -24,6 +27,7 @@ public class TimeRange implements Comparable<TimeRange> {
     int     end     = UNDEFINED_TIME;
     Status  status  = null;
     String  comment = null;
+    Rule    defRule = null;
 
     /**
      * Default constructor
@@ -34,12 +38,14 @@ public class TimeRange implements Comparable<TimeRange> {
 
     /** Constructor for copying TimeRange */
     public TimeRange(TimeRange another) {
-        this(another.getStart(), another.getEnd(), another.getStatus(), another.getComment());
+        this(another.getStart(), another.getEnd(), another.getStatus(),
+                another.getComment());
     }
 
     /**
      * Constructor for creating a TimePoint with a Status, the result
      * will be a TimeRange with timepoint-timepoint+1.
+     * <p>
      * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
      * 
      * @param timepoint a point in time
@@ -49,7 +55,16 @@ public class TimeRange implements Comparable<TimeRange> {
         this(timepoint, ++timepoint, status);
     }
 
-    // Constructor with TimeSpan
+    /**
+     * Constructor for creating a TimePoint with a Status and an optional comment,
+     * the result will be a TimeRange with timepoint-timepoint+1.
+     * <p>
+     * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
+     * 
+     * @param timepoint timepoint
+     * @param status Status to be set
+     * @param comment
+     */
     public TimeRange(TimeSpan timespan, Status status) {
         this(timespan.getStart(),
             (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) 
@@ -75,24 +90,32 @@ public class TimeRange implements Comparable<TimeRange> {
         }
         setStart(start);
         setEnd((start == end) ? ++end : end);
-        this.status = status;
+        setStatus(status);
+        setDefiningRule(defRule);
     }
 
     /**
-     * Constructor for creating a TimePoint with a Status and a comment, the result
-     * will be a TimeRange with timepoint-timepoint+1.
+     * Constructor for creating a TimePoint with a Status and an optional comment,
+     * the result will be a TimeRange with timepoint-timepoint+1.
+     * <p>
      * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
      * 
      * @param timepoint timepoint
      * @param status Status to be set
      * @param comment
      */
-    public TimeRange(int timepoint, Status status, String comment) {
+    public TimeRange(int timepoint, Status status, @Nullable String comment) {
         this(timepoint, ++timepoint, status, comment);
     }
 
-    /** Constructor with TimeSpan and a comment */
-    public TimeRange(TimeSpan timespan, Status status, String comment) {
+    /**
+     * Constructor with TimeSpan and a comment
+     * 
+     * @param timespan a TimeSpan that this TimeRange will be created from
+     * @param comment optional comment
+     * @param status Status to be set
+     */
+    public TimeRange(TimeSpan timespan, Status status, @Nullable String comment) {
         this(timespan.getStart(),
             (timespan.getEnd() != TimeSpan.UNDEFINED_TIME)  ? timespan.getEnd()
                                                             : timespan.getStart(),
@@ -106,9 +129,9 @@ public class TimeRange implements Comparable<TimeRange> {
      * @param end end time
      * @param status Status to be set
      */
-    public TimeRange(int start, int end, Status status, String comment) {
+    public TimeRange(int start, int end, Status status, @Nullable String comment) {
         this(start, end, status);
-        this.comment = comment;
+        setComment(comment);
     }
     
     /**
@@ -126,8 +149,14 @@ public class TimeRange implements Comparable<TimeRange> {
         return status;
     }
 
+    @Nullable
     public String getComment() {
         return comment;
+    }
+
+    @Nullable
+    public Rule getDefiningRule() {
+        return defRule;
     }
 
     public void setStart(int start) {
@@ -150,6 +179,10 @@ public class TimeRange implements Comparable<TimeRange> {
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public void setDefiningRule(Rule defRule) {
+        this.defRule = defRule;
     }
 
     public boolean hasComment() {
@@ -250,10 +283,16 @@ public class TimeRange implements Comparable<TimeRange> {
         Status oldStatus = status;
         if (overlap != null) {
             if (overlap.getStart() > start) {
-                result.add(new TimeRange(start, overlap.getStart(), oldStatus, comment));
+                TimeRange startRange = new TimeRange(start, overlap.getStart(),
+                                            oldStatus, comment);
+                startRange.setDefiningRule(defRule);
+                result.add(startRange);
             } 
             if (overlap.getEnd() < end) {
-                result.add(new TimeRange(overlap.getEnd(), end, oldStatus, comment));
+                TimeRange endRange = new TimeRange(overlap.getEnd(), end,
+                                            oldStatus, comment);
+                endRange.setDefiningRule(defRule);
+                result.add(endRange);
             }
         } else {
             result.add(this);
@@ -333,6 +372,16 @@ public class TimeRange implements Comparable<TimeRange> {
         }
         b.append(")");
         return b.toString();
+    }
+
+    /**
+     * Similar to toString(), but this also includes defining Rule from which
+     * this TimeRange was created
+     * 
+     * @return
+     */
+    public String toDebugString() {
+        return toString() + " [" + defRule + "]";
     }
 
     @Override

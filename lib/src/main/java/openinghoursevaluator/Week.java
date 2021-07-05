@@ -378,11 +378,11 @@ public class Week {
 
     /** Clean all WeekDayRule in this Week */
     public void clean() {
-        for (WeekDay weekday : WeekDay.values()) {
-            if(weekDayStorage.get(weekday) != null) {
-                weekDayStorage.get(weekday).clean();
-            }
-        }
+        WeekDay current = startWeekDay;
+        do {
+            weekDayStorage.get(current).clean();
+        } while ((current = getNextWeekDay(current))
+                    != getNextWeekDay(endWeekDay));
     }
 
     /** Reset this Week by removing all current WeekDayRule and filling it with empty ones*/

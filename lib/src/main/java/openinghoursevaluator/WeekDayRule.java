@@ -18,13 +18,6 @@ import ch.poole.openinghoursparser.WeekDayRange;
 public class WeekDayRule {
     public static final int INVALID_NUM = Integer.MIN_VALUE;
 
-    // TODO: This rule storage is to be dealt later
-    Rule            currentRule     = null;
-    List<Rule>      offRule         = null;
-    List<Rule>      unknownRule     = null;
-    List<Rule>      additiveRule    = null;
-    List<Rule>      fallbackRule    = null;
-
     // store the defining LocalDate of this WeekDayRule
     LocalDate       defDate         = null;
 
@@ -52,10 +45,6 @@ public class WeekDayRule {
     public WeekDayRule(LocalDate defDate) {
         this.defDate = defDate;
         dissectDefDate(defDate);
-        offRule = new ArrayList<>();
-        unknownRule = new ArrayList<>();
-        additiveRule = new ArrayList<>();
-        fallbackRule = new ArrayList<>();
         openingTimes = new ArrayList<>();
         yesterdaySpill = new ArrayList<>();
     }
@@ -81,13 +70,6 @@ public class WeekDayRule {
     }
 
     /**
-     * @return the current rule affecting this weekday
-     */
-    public Rule getCurrentRule() {
-        return currentRule;
-    }
-
-    /**
      * @return the current weekday of this weekday
      */
     public WeekDay getWeekDay() {
@@ -110,15 +92,6 @@ public class WeekDayRule {
 
     public LocalDate getDefDate() {
         return defDate;
-    }
-
-    /**
-     * Set the current rule of this weekday
-     * 
-     * @param rule rule to be set current
-     */
-    public void setCurrentRule(Rule rule) {
-        this.currentRule = rule;
     }
 
     /**
@@ -152,54 +125,39 @@ public class WeekDayRule {
         this.defDate = defDate;
     }
 
-    /** Build the opening times of this weekday with the current rule 
-     * @throws OpeningHoursEvaluationException
-     */
-    public void build() throws OpeningHoursEvaluationException {
-        build(currentRule);
-    }
-
     /**
-     * Build the opening times of this weekday with a rule. This also resets whatever the
-     * current affecting rule is to the new rule and also clears the opening times (if not
-     * fallback), if exists. Closed time does not clear days.
+     * Build the opening times of this weekday with a rule. A new Rule will
+     * override (clear all current opening hours in this day) when:
+     * <ol>
+     * <li> it is not an additive Rule
+     * <li> it is not a fallback Rule
+     * <li> its status is not closed
+     * </ol>
+     * <p>
+     * Check the links below to learn more about when this does not
+     * clear/override current day
      * 
      * @param rule rule to be used in building
      * @throws OpeningHoursEvaluationException
+     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:rule_modifier:closed
+     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator
+     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:fallback_rule_separator
      */
     public void build(Rule rule) throws OpeningHoursEvaluationException {
         if (rule.isEmpty()) {
             throw new OpeningHoursEvaluationException("There's an empty rule, please remove it");
         }
-        if (rule.isAdditive()) {
-            additiveRule.add(rule);
-        } else if (rule.isFallBack()) {
-            fallbackRule.add(rule);
-        } else {
-            switch (Status.convert(rule.getModifier())) {
-            case CLOSED:
-                offRule.add(rule);
-                break;
-            case UNKNOWN:
-                clearAllRules();
-                clearOpeningHours();
-                unknownRule.add(rule);
-                break;
-            case OPEN:
-                clearAllRules();
-                clearOpeningHours();
-                currentRule = rule;
-                break;
-            default:
-            }
+        if (!rule.isAdditive() && !rule.isFallBack()
+                && Status.convert(rule.getModifier()) != Status.CLOSED) {
+            clearOpeningHours();
         }
         flushSpill();
         addRule(rule);
     }
 
     /**
-     * A soft version of build(), where opening rule does not overwrite current day.
-     * This also doesn't apply any time spill from previous day
+     * A soft version of build(), where opening rule does not overwrite
+     * current day. This also doesn't apply any time spill from previous day
      * 
      * @param rule Rule to be added
      * @throws OpeningHoursEvaluationException
@@ -222,7 +180,7 @@ public class WeekDayRule {
     }
 
     /**
-     * Check if input weekOfMonth is within Nth range. Supports negative
+     * Check if input weekOfMonth is within Nth range. Supports negative nth
      * 
      * @param nth input Nth
      * @param weekOfMonth week of month (max 5)
@@ -450,9 +408,7 @@ public class WeekDayRule {
         for (TimeRange openingTime : openingTimes) {
             newOpeningTimes.addAll(openingTime.cut(timerange));
         }
-        // if (timerange.hasComment() || timerange.getStatus() != Status.CLOSED) {
-            newOpeningTimes.add(timerange);
-        // } 
+        newOpeningTimes.add(timerange);
         openingTimes = newOpeningTimes;
     }
 
@@ -488,24 +444,16 @@ public class WeekDayRule {
         int start = weekDayRange.getStartDay().ordinal();
         WeekDay endDay = weekDayRange.getEndDay();
         int current = weekday.ordinal();
-        return (endDay != null) ?
-                    (current >= start && current <= endDay.ordinal()
-                    || current <= start + 7 && current >= endDay.ordinal()) :
-                    (current == start);
+        return (endDay != null)
+                    ? (current >= start && current <= endDay.ordinal()
+                        || current <= start + 7 && current >= endDay.ordinal())
+                    : (current == start);
 
     }
 
     /** Clear the current opening times in this WeekdayRule */
     public void clearOpeningHours() {
         openingTimes = new ArrayList<>();
-    }
-
-    /** Clear all current rules of this WeekDayRule */
-    public void clearAllRules() {
-        currentRule = null;       
-        offRule = new ArrayList<>();
-        unknownRule = new ArrayList<>();
-        additiveRule = new ArrayList<>();
     }
 
     /**

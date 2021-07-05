@@ -43,7 +43,6 @@ public class OpeningHoursEvaluator {
     public Result checkStatus(String inputTime) throws OpeningHoursEvaluationException {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         MonthRule monthRule = new MonthRule(rules);
-        monthRule.build(time);
         return monthRule.checkStatus(time);
     }
 
@@ -52,7 +51,7 @@ public class OpeningHoursEvaluator {
         LocalDateTime time = LocalDateTime.parse(inputTime);
         MonthRule monthRule = new MonthRule(rules);
         try {
-            monthRule.build(time);
+            monthRule.buildWeek(time);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }

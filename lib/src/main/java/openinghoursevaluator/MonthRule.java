@@ -39,7 +39,7 @@ public class MonthRule {
      * @param time input LocalDateTime
      * @throws OpeningHoursEvaluationException
      */
-    public void build(LocalDateTime time) throws OpeningHoursEvaluationException {
+    public void buildWeek(LocalDateTime time) throws OpeningHoursEvaluationException {
         year = time.getYear();
         month = convertMonth(time.toLocalDate());
         populate(time);
@@ -50,6 +50,29 @@ public class MonthRule {
                 update(week, rule);
             }
         }
+    }
+
+    /**
+     * Build only one day, taken from the date of LocalDateTime. Used during
+     * checkStatus()
+     * 
+     * @param time input LocalDateTime
+     * @return a Week that contains only one WeekDayRule of the date
+     *      from LocalDateTime
+     * @throws OpeningHoursEvaluationException
+     */
+    public Week buildOneDay(LocalDateTime time) throws OpeningHoursEvaluationException {
+        year = time.getYear();
+        month = convertMonth(time.toLocalDate());
+        LocalDate date = time.toLocalDate();
+        Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()));
+        for (Rule rule : rules) {
+            List<TimeRange> previousSpill = simulateSpill(oneDay, rule);
+            oneDay.setPreviousSpill(previousSpill);
+            update(oneDay, rule);
+        }
+        oneDay.applyPreviousSpill();
+        return oneDay;
     }
 
     /**
@@ -152,13 +175,12 @@ public class MonthRule {
      * 
      * @param time input LocalDateTime
      * @return the result of the evaluation
+     * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime time) {
-        if (weekStorage.get(0).hasWeekDay(Week.convertWeekDay(time.getDayOfWeek()))) {
-            return weekStorage.get(0).checkStatus(time);
-        } else {
-            return weekStorage.get(1).checkStatus(time);
-        }
+    public Result checkStatus(LocalDateTime time) throws OpeningHoursEvaluationException {
+        Week dayToCheck = buildOneDay(time);
+        dayToCheck.clean();
+        return dayToCheck.checkStatus(time);
     }
 
     /**

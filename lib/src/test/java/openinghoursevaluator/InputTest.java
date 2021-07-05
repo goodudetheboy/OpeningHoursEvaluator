@@ -66,7 +66,7 @@ public class InputTest {
     @Test
     public void spotCheck() {
         // assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
-        // print("week 2-52/2 We 00:00-24:00; week 1-53/2 Sa 00:00-24:00", "2021-06-27T03:00");
+        // print("Jun 4, 12, 20-25, Jul 2-14, 23-31; Jun 14-20 unknown; Jun 17-20 off \"something happens\"; Jun 29-Jul 3 00:00-48:00 \"nothing here\"", "2021-07-04T03:00");
     }
 
     /**
@@ -79,7 +79,7 @@ public class InputTest {
      * @param inputTimeFile input time value file
      * @param answerFile correct answer corresponding to each input time value
      */
-    public void evaluateBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile) {
+    public static void evaluateBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile) {
         BufferedReader openingHoursReader = null;
         BufferedReader inputTimeReader = null;
         BufferedReader answerReader = null;
@@ -135,7 +135,7 @@ public class InputTest {
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @param answer correct answer corresponding to input time string
      */
-    public boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
+    public static boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
         try {
             Result result = evaluate(openingHours, inputTime);
             Status givenAnswer = result.getStatus();
@@ -161,7 +161,7 @@ public class InputTest {
         return true;
     }
 
-    public void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile) {
+    public static void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile) {
         BufferedReader openingHoursReader = null;
         BufferedReader exceptionMessageReader = null;
         boolean hasWrong = false;
@@ -203,12 +203,12 @@ public class InputTest {
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @throws OpeningHoursEvaluationException
      */
-    public Result evaluate(String openingHours, String inputTime) throws OpeningHoursEvaluationException {
+    public static Result evaluate(String openingHours, String inputTime) throws OpeningHoursEvaluationException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
     }
 
-    public void evaluateFail(String openingHours, String exceptionMessage, int lineNum) {
+    public static void evaluateFail(String openingHours, String exceptionMessage, int lineNum) {
         try {
             evaluate(openingHours, "2021-07-03T20:57:51");
             fail("This OH tag " + openingHours + " (line num + " + lineNum + ") should have thrown an exception");
@@ -224,7 +224,7 @@ public class InputTest {
      * @param openingHoursFile OH files
      * @param inputTime for use to get week data
      */
-    public void printBatch(String openingHoursFile, String inputTime) {
+    public static void printBatch(String openingHoursFile, String inputTime) {
         System.out.println("Printing week schedule created from opening hours in " + openingHoursFile);
         BufferedReader openingHoursReader = null;
         try {
@@ -250,7 +250,7 @@ public class InputTest {
         }
     }
 
-    public void print(String openingHours, String inputTime) {
+    public static void print(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toString(inputTime));
     }

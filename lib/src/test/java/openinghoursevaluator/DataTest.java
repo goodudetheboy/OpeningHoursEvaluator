@@ -28,7 +28,7 @@ public class DataTest {
         inputTimeFileLegalTest("test-data/input-time/year.txt");
     }
 
-    public void inputTimeFileLegalTest(String inputFileDir) {
+    public static void inputTimeFileLegalTest(String inputFileDir) {
         BufferedReader reader = null;
         try {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputFileDir), StandardCharsets.UTF_8));

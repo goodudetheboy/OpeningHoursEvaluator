@@ -14,6 +14,16 @@ import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 public class InputTest {
+    @Test
+    public void evaluatorTestAll() {
+        evaluatorTimepointTest();
+        evaluatorWeekdayTest();
+        evaluatorWeekTest();
+        evaluatorMonthTest();
+        evaluatorYearTest();
+        evaluatorFailTest();
+    }
+
     /**
      * Test only for the timespan test (hours and minutes ONLY)
      */

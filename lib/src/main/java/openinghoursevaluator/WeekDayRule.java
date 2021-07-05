@@ -227,26 +227,22 @@ public class WeekDayRule {
      * @param nth input Nth
      * @param weekOfMonth week of month (max 5)
      * @return if applicable or not
+     * @throws OpeningHoursEvaluationException
      */
-    public boolean isApplicableNth(List<Nth> nths) {
+    public boolean isApplicableNth(List<Nth> nths) throws OpeningHoursEvaluationException {
         if (nths == null) {
             return true;
         }
         for (Nth nth : nths) {
             int startNth = nth.getStartNth();
             int endNth = nth.getEndNth();
-            if ((endNth == Nth.INVALID_NTH)) {
+            if (endNth == Nth.INVALID_NTH) {
                 if ((startNth > 0 && nthWeekDay == startNth) // positive Nth
                         || (startNth < 0 && reverseNth == startNth)) { // negative Nth
-                return true;
+                    return true;
                 }
             } else {
-                // handle illegal cases
-                if (endNth < startNth) {
-                    throw new IllegalArgumentException("Start nth " + startNth + " cannot be less than " + endNth);
-                } else if (startNth < 0 && endNth > 0) {
-                    throw new IllegalArgumentException("Illegal range: " + startNth + " - " + endNth);
-                }
+                checkNthError(startNth, endNth);
                 if (Utils.isBetween(nthWeekDay, startNth, endNth)
                         || Utils.isBetween(reverseNth, startNth, endNth)) {
                     return true;
@@ -257,23 +253,50 @@ public class WeekDayRule {
     }
 
     /**
+     * Helper for isApplicableNth(). Check for illegal range in an Nth 
+     * 
+     * @param startNth start Nth number
+     * @param endNth end Nth number
+     * @throws OpeningHoursEvaluationException
+     */
+    private void checkNthError(int startNth, int endNth) throws OpeningHoursEvaluationException {
+        if (endNth < startNth) {
+            throw new OpeningHoursEvaluationException("Start nth " + startNth + " cannot be less than " + endNth);
+        } else if (startNth < 0 && endNth > 0) {
+            throw new OpeningHoursEvaluationException("Illegal range: " + startNth + " - " + endNth);
+        }
+    }
+
+    /**
      * Check if this WeekDayRule is affected by any day offset
      * 
      * @return
      * @throws OpeningHoursEvaluationException
      */
     public boolean isApplicableOffset(WeekDayRange weekdays) throws OpeningHoursEvaluationException {
+        checkOffsetError(weekdays);
+        int offset = weekdays.getOffset();
+        LocalDate offsetDate = DateManager.getOffsetDate(defDate, -offset);
+        WeekDayRule offsetDay = new WeekDayRule(offsetDate);
+        WeekDay offsetWeekDay = offsetDay.getWeekDay();
+        return offsetWeekDay == weekdays.getStartDay()
+                && offsetDay.isApplicableNth(weekdays.getNths());
+    }
+
+    /**
+     * Helper for isApplicableOffset(). Check for illegal offset with respect
+     * to a WeekDayRange
+     * 
+     * @param weekdays a WeekDayRange
+     * @throws OpeningHoursEvaluationException
+     */
+    private void checkOffsetError(WeekDayRange weekdays) throws OpeningHoursEvaluationException {
         int offset = weekdays.getOffset();
         if (offset == 0) {
             throw new OpeningHoursEvaluationException("Offset not 0 should have been checked before this function is called");
         } else if (weekdays.getEndDay() != null) {
             throw new OpeningHoursEvaluationException("There cannot be a end day in a WeekDayRange with an offset");
         }
-        LocalDate offsetDate = DateManager.getOffsetDate(defDate, -offset);
-        WeekDayRule offsetDay = new WeekDayRule(offsetDate);
-        WeekDay offsetWeekDay = offsetDay.getWeekDay();
-        return offsetWeekDay == weekdays.getStartDay()
-                && offsetDay.isApplicableNth(weekdays.getNths());
     }
 
     /**

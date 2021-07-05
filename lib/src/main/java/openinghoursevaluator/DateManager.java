@@ -20,6 +20,8 @@ import ch.poole.openinghoursparser.YearRange;
  * DateWithOffset, WeekDayRange and so on from OpeningHoursParser
  */
 public class DateManager {
+    public static final String DEFAULT_OPEN_END_COMMENT = "Until further notice";
+
     /** Default constructor */
     public DateManager() {
         // empty on purpose
@@ -62,12 +64,68 @@ public class DateManager {
                 subResult.add(convertToLocalDate(end, defaultYear, start.getMonth(), false));
             }
         } else {
-            if (start.getDay() == DateWithOffset.UNDEFINED_MONTH_DAY) {
+            if (start.isOpenEnded()) {
+                subResult.add(processOpenEnd(subResult.get(0)));
+            } else if (start.getDay() == DateWithOffset.UNDEFINED_MONTH_DAY) {
                 // set isStart as false here to get the last day of the month
                 subResult.add(convertToLocalDate(start, defaultYear, start.getMonth(), false));
             }
         }
         return result;
+    }
+
+    /**
+     * Process in case of open end range. Due to technical hardships, I cannot
+     * cover the "the calendar range starts at this date and has no upper limit."
+     * part of the definition of open end of monthday range yet, so I will create
+     * a hard end to this open end range according to the following rule:
+     * <ol>
+     * <li> if month of start open end range is <= 6, then end of open end range
+     *      is till the end of the specified year
+     *      (for example, for "May 15+", the open end range is May 15 - Dec 31)
+     * <li> if month of start open end range is from 6 to 9 (inclusive 9), then
+     *      end of open end range is +8 months from the month of start
+     *      (for example, for "Aug+", the open end range is Aug 1 - Apr 30
+     *      next year)
+     * <li> if month of start open end range is > 9, then end of open end range
+     *      is +6 months from the month of start
+     *      (for example, for "Dec", the open end range is Dec 1 - Jun 30
+     *      next year)
+     * </ol>
+     * <p>
+     * The year of the open end range is taken from the Week it is built from,
+     * which is from the input time, so there should be no time spilling from
+     * previous year (for example, for "Aug+", and year of input time is 2021,
+     * then the open end range should be only from 2021-08-01 to 2022-04-30,
+     * and not also 2020-08-01 to 2021-04-30, like how it is normally handled
+     * in non-open end range)
+     * <p>
+     * Also, if there's no rule modifier, then the open end range will be
+     * default to unknown
+     * <p>
+     * Check the links below for more info about open end of DateRange
+     * 
+     * @param startOpenEnd start of open end range
+     * @return the end of the open end range w.r.t. to input start open end range
+     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:monthday_range:date_offset:plus
+     */
+    private LocalDate processOpenEnd(LocalDate startOpenEnd) {
+        int yearStart = startOpenEnd.getYear();
+        int monthStart = startOpenEnd.getMonthValue();
+        int yearEnd; 
+        int monthEnd;
+
+        if (monthStart <= 6) {
+            yearEnd = yearStart;
+            monthEnd = 12;
+        } else {
+            yearEnd = yearStart + 1;
+            monthEnd = (monthStart > 9) ? monthStart - 12 + 8
+                                        : monthStart - 12 + 6;
+        }
+
+        return LocalDate.of(yearEnd, monthEnd,
+                        MonthRule.getMaxDayOfMonth(monthEnd, yearEnd));
     }
 
     /**
@@ -216,7 +274,7 @@ public class DateManager {
             int dayInt = date.getDay();
             // check for in case of undefined day of month
             if (dayInt == DateWithOffset.UNDEFINED_MONTH_DAY) {
-                dayInt = (isStart) ? 1 : YearMonth.of(yearInt, monthInt).lengthOfMonth();
+                dayInt = (isStart) ? 1 : MonthRule.getMaxDayOfMonth(monthInt, yearInt);
             }
             pending = LocalDate.of(yearInt, monthInt, dayInt);
         }
@@ -327,5 +385,9 @@ public class DateManager {
      */
     public static boolean isBetweenWeekDays(WeekDay value, WeekDayRange weekdays) {
         return isBetweenWeekDays(value, weekdays.getStartDay(), weekdays.getEndDay());
+    }
+
+    public static boolean isOpenEndDateRange(DateRange dateRange) {
+        return dateRange.getStartDate().isOpenEnded();
     }
 }

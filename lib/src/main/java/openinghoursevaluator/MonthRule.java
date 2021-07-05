@@ -13,9 +13,11 @@ import java.util.Locale;
 import ch.poole.openinghoursparser.DateRange;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
+import ch.poole.openinghoursparser.RuleModifier;
 import ch.poole.openinghoursparser.WeekDayRange;
 import ch.poole.openinghoursparser.WeekRange;
 import ch.poole.openinghoursparser.YearRange;
+import ch.poole.openinghoursparser.RuleModifier.Modifier;
 
 public class MonthRule {
     int         year;
@@ -130,26 +132,65 @@ public class MonthRule {
         if (rule.getDates() != null) {
             DateManager dateManager = new DateManager();
             for (DateRange dateRange : rule.getDates()) {
-                List<List<LocalDate>> temps = dateManager.processDateRange(dateRange, week);
-                LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
-                LocalDate endWDR = week.getEndWeekDayRule().getDefDate();
-                for (List<LocalDate> temp : temps) {
-                    LocalDate start = temp.remove(0);
-                    LocalDate end = (temp.isEmpty()) ? start : temp.remove(0);
-                    List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
-                    if (overlap != null) {
-                        WeekDayRange restriction = new WeekDayRange();
-                        DayOfWeek startWDay = ((LocalDate) overlap.get(0)).getDayOfWeek();
-                        DayOfWeek endWDay = ((LocalDate) overlap.get(1)).getDayOfWeek();
-                        restriction.setStartDay(Week.convertWeekDay(startWDay));
-                        restriction.setEndDay(Week.convertWeekDay(endWDay));
-                        week.build(rule, restriction);
-                    }
-                }
+                List<List<LocalDate>> restrictions = dateManager.processDateRange(dateRange, week);
+                restrictionProcessing(restrictions, rule, week, dateRange);
             }
         } else {
             week.build(rule);
         }
+    }
+
+    /**
+     * Helper function for updateWithDateRange(). Process LocalDate restrictions
+     * on input Week and build if applicable
+     * @throws OpeningHoursEvaluationException
+     * 
+     */
+    private void restrictionProcessing(List<List<LocalDate>> restrictions,
+                    Rule rule, Week week, DateRange dateRange)
+            throws OpeningHoursEvaluationException {
+        // get LocalDate of start and end of input Week
+        LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
+        LocalDate endWDR = week.getEndWeekDayRule().getDefDate();
+        for (List<LocalDate> resDate : restrictions) {
+            // get LocalDate of start and end of restriction
+            LocalDate start = resDate.remove(0);
+            LocalDate end = (resDate.isEmpty()) ? start : resDate.remove(0);
+            List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
+
+            // build if there is applicable range
+            if (overlap != null) {
+                // create weekday restriction
+                WeekDayRange restriction = new WeekDayRange();
+                DayOfWeek startWDay = ((LocalDate) overlap.get(0)).getDayOfWeek();
+                DayOfWeek endWDay = ((LocalDate) overlap.get(1)).getDayOfWeek();
+                restriction.setStartDay(Week.convertWeekDay(startWDay));
+                restriction.setEndDay(Week.convertWeekDay(endWDay));
+
+                // check for open ended date range
+                if (DateManager.isOpenEndDateRange(dateRange)) {
+                    week.build(processRuleWithOpenEnd(rule), restriction);
+                } else {
+                    week.build(rule, restriction);
+                }
+            }
+        }
+    }
+
+    private Rule processRuleWithOpenEnd(Rule rule) {
+        Rule openEndRule = rule.copy();
+        if (openEndRule.getModifier() != null) {
+            RuleModifier modifier = openEndRule.getModifier();
+            if (modifier.getComment() != null) {
+                modifier.setComment(DateManager.DEFAULT_OPEN_END_COMMENT);
+            }
+        } else {
+            RuleModifier modifier = new RuleModifier();
+            modifier.setComment(DateManager.DEFAULT_OPEN_END_COMMENT);
+            modifier.setModifier(Modifier.UNKNOWN);
+            openEndRule.setModifier(modifier);
+        }
+        return openEndRule;
     }
 
     /**
@@ -212,7 +253,7 @@ public class MonthRule {
        return date.withDayOfMonth(date.lengthOfMonth());
     }
 
-    public static int maxDayOfMonth(int month, int year) {
+    public static int getMaxDayOfMonth(int month, int year) {
         YearMonth monthOfYear = YearMonth.of(year, month);
         return monthOfYear.lengthOfMonth();
     }

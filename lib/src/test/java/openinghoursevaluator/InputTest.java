@@ -55,11 +55,13 @@ public class InputTest {
 
     @Test
     public void printTest() {
-        printBatch("test-data/oh/timepoint.txt-oh", "2021-06-09T15:00");
-        printBatch("test-data/oh/weekday.txt-oh", "2021-06-09T15:00");
-        printBatch("test-data/oh/week.txt-oh", "2021-06-09T15:00");
-        printBatch("test-data/oh/month.txt-oh", "2021-06-09T15:00");
-        printBatch("test-data/oh/year.txt-oh", "2021-06-09T15:00");
+        // turn this to false if need to print normally
+        boolean isDebug = true;
+        printBatch("test-data/oh/timepoint.txt-oh", "2021-06-09T15:00", isDebug);
+        printBatch("test-data/oh/weekday.txt-oh", "2021-06-09T15:00", isDebug);
+        printBatch("test-data/oh/week.txt-oh", "2021-06-09T15:00", isDebug);
+        printBatch("test-data/oh/month.txt-oh", "2021-06-09T15:00", isDebug);
+        printBatch("test-data/oh/year.txt-oh", "2021-06-09T15:00", isDebug);
     }
 
     /** Used for checking on the spot, convenient during debugging */
@@ -223,8 +225,9 @@ public class InputTest {
      * 
      * @param openingHoursFile OH files
      * @param inputTime for use to get week data
+     * @param isDebug true to print debug string, false to print normal
      */
-    public static void printBatch(String openingHoursFile, String inputTime) {
+    public static void printBatch(String openingHoursFile, String inputTime, boolean isDebug) {
         System.out.println("Printing week schedule created from opening hours in " + openingHoursFile);
         BufferedReader openingHoursReader = null;
         try {
@@ -232,7 +235,11 @@ public class InputTest {
             String openingHours;
             while ((openingHours = openingHoursReader.readLine()) != null) {
                 System.out.println(openingHours);
-                print(openingHours, inputTime);
+                if (isDebug) {
+                    printDebug(openingHours, inputTime);
+                } else {
+                    print(openingHours, inputTime);
+                }
                 System.out.println("___________________________________\n");
             }
         } catch (FileNotFoundException e) {
@@ -253,5 +260,10 @@ public class InputTest {
     public static void print(String openingHours, String inputTime) {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toString(inputTime));
+    }
+
+    public static void printDebug(String openingHours, String inputTime) {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+        System.out.print(evaluator.toDebugString(inputTime));
     }
 }

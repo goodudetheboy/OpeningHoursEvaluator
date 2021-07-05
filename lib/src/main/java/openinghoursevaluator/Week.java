@@ -506,7 +506,22 @@ public class Week {
         WeekDay current = startWeekDay;
         do {
             if (weekDayStorage.get(current) != null) {
-                b.append(weekDayStorage.get(current).toString());
+                b.append(weekDayStorage.get(current));
+            }
+            b.append(System.getProperty("line.separator"));
+        } while ((current = getNextWeekDay(current)) != getNextWeekDay(endWeekDay));
+        return b.toString();
+    }
+
+    /**
+     * @return similar to toString(), but more debug info is printed out
+     */
+    public String toDebugString() {
+        StringBuilder b = new StringBuilder();
+        WeekDay current = startWeekDay;
+        do {
+            if (weekDayStorage.get(current) != null) {
+                b.append(weekDayStorage.get(current).toDebugString());
             }
             b.append(System.getProperty("line.separator"));
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(endWeekDay));

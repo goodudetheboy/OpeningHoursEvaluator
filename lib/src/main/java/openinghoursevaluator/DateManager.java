@@ -1,7 +1,6 @@
 package openinghoursevaluator;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -82,23 +81,20 @@ public class DateManager {
      * <ol>
      * <li> if month of start open end range is <= 6, then end of open end range
      *      is till the end of the specified year
-     *      (for example, for "May 15+", the open end range is May 15 - Dec 31)
+     *      (for example, for "2021 May 15+", the open end range is 2021 May 15
+     *      - 2021 Dec 31)
      * <li> if month of start open end range is from 6 to 9 (inclusive 9), then
      *      end of open end range is +8 months from the month of start
-     *      (for example, for "Aug+", the open end range is Aug 1 - Apr 30
-     *      next year)
+     *      (for example, for "2021 Aug+", the open end range is 2021 Aug 1 -
+     *      2022 Apr 30)
      * <li> if month of start open end range is > 9, then end of open end range
      *      is +6 months from the month of start
-     *      (for example, for "Dec", the open end range is Dec 1 - Jun 30
-     *      next year)
+     *      (for example, for "2021 Dec+", the open end range is 2021 Dec 1 -
+     *      2022 Jun 30 next year)
      * </ol>
      * <p>
-     * The year of the open end range is taken from the Week it is built from,
-     * which is from the input time, so there should be no time spilling from
-     * previous year (for example, for "Aug+", and year of input time is 2021,
-     * then the open end range should be only from 2021-08-01 to 2022-04-30,
-     * and not also 2020-08-01 to 2021-04-30, like how it is normally handled
-     * in non-open end range)
+     * The year of the open end range has to be predefined by the DateRange
+     * (for example "2019 Aug+"), or else it will be too ambiguous
      * <p>
      * Also, if there's no rule modifier, then the open end range will be
      * default to unknown
@@ -120,8 +116,8 @@ public class DateManager {
             monthEnd = 12;
         } else {
             yearEnd = yearStart + 1;
-            monthEnd = (monthStart > 9) ? monthStart - 12 + 8
-                                        : monthStart - 12 + 6;
+            monthEnd = (monthStart > 9) ? monthStart - 12 + 6
+                                        : monthStart - 12 + 8;
         }
 
         return LocalDate.of(yearEnd, monthEnd,
@@ -199,10 +195,20 @@ public class DateManager {
     public void checkError(DateRange dateRange, int easterYear) throws OpeningHoursEvaluationException {
         DateWithOffset start = dateRange.getStartDate();
         DateWithOffset end = dateRange.getEndDate();
-        String rangeString = "(" + start + " - " + end + ")";
+
+        // check if open ended is ambiguous date of month (without a year)
+        if (start.isOpenEnded() && start.getYear() == YearRange.UNDEFINED_YEAR) {
+            throw new OpeningHoursEvaluationException("Currently open ended "
+                        + "with ambiguous date of month without a year is not "
+                        + "supported, please provide an exact year for "
+                        + start);
+        }
+
         if (end == null) {
             return;
         }
+
+        String rangeString = "(" + start + " - " + end + ")";
         // check if start year is not defined and end year is defined
         if (start.getYear() == YearRange.UNDEFINED_YEAR
                 && end.getYear() != YearRange.UNDEFINED_YEAR) {
@@ -210,12 +216,13 @@ public class DateManager {
                                             + " this range " + rangeString + " is meaningless");
         }
 
-        // check if start is after end
+        // check if start is after end by checking date and month
         if (start.getYear() != YearRange.UNDEFINED_YEAR
                 && compareStartAndEnd(start, end, easterYear) > 0) {
             throwIllegalRange(start, end);
         }
 
+        // check if start if after end by checking the year
         if (start.getYear() != YearRange.UNDEFINED_YEAR
                 && (end.getYear() != YearRange.UNDEFINED_YEAR
                         && start.getYear() > end.getYear())) {

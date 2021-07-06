@@ -13,9 +13,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.junit.Test;
 
+import ch.poole.openinghoursparser.OpeningHoursParseException;
+
 public class InputTest {
     @Test
-    public void evaluatorTestAll() {
+    public void evaluatorTestAll() throws OpeningHoursParseException {
         evaluatorTimepointTest();
         evaluatorWeekdayTest();
         evaluatorWeekTest();
@@ -53,7 +55,7 @@ public class InputTest {
     }
 
     @Test
-    public void evaluatorFailTest() {
+    public void evaluatorFailTest() throws OpeningHoursParseException {
         evaluateFailBatchCheck("test-data/oh/fail.txt-oh", "test-data/answer/fail.txt-answer");
     }
 
@@ -64,7 +66,7 @@ public class InputTest {
     }
 
     @Test
-    public void printTest() {
+    public void printTest() throws OpeningHoursParseException {
         // turn this to false if need to print normally
         boolean isDebug = true;
         printBatch("test-data/oh/timepoint.txt-oh", "2021-06-09T15:00", isDebug);
@@ -173,7 +175,7 @@ public class InputTest {
         return true;
     }
 
-    public static void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile) {
+    public static void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile) throws OpeningHoursParseException {
         BufferedReader openingHoursReader = null;
         BufferedReader exceptionMessageReader = null;
         boolean hasWrong = false;
@@ -214,13 +216,14 @@ public class InputTest {
      * @param openingHours opening hours string
      * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
      * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursParseException
      */
-    public static Result evaluate(String openingHours, String inputTime) throws OpeningHoursEvaluationException {
+    public static Result evaluate(String openingHours, String inputTime) throws OpeningHoursEvaluationException, OpeningHoursParseException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
     }
 
-    public static void evaluateFail(String openingHours, String exceptionMessage, int lineNum) {
+    public static void evaluateFail(String openingHours, String exceptionMessage, int lineNum) throws OpeningHoursParseException {
         try {
             evaluate(openingHours, "2021-07-03T20:57:51");
             fail("This OH tag " + openingHours + " (line num + " + lineNum + ") should have thrown an exception");
@@ -236,8 +239,9 @@ public class InputTest {
      * @param openingHoursFile OH files
      * @param inputTime for use to get week data
      * @param isDebug true to print debug string, false to print normal
+     * @throws OpeningHoursParseException
      */
-    public static void printBatch(String openingHoursFile, String inputTime, boolean isDebug) {
+    public static void printBatch(String openingHoursFile, String inputTime, boolean isDebug) throws OpeningHoursParseException {
         System.out.println("Printing week schedule created from opening hours in " + openingHoursFile);
         BufferedReader openingHoursReader = null;
         try {
@@ -267,12 +271,12 @@ public class InputTest {
         }
     }
 
-    public static void print(String openingHours, String inputTime) {
+    public static void print(String openingHours, String inputTime) throws OpeningHoursParseException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toString(inputTime));
     }
 
-    public static void printDebug(String openingHours, String inputTime) {
+    public static void printDebug(String openingHours, String inputTime) throws OpeningHoursParseException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toDebugString(inputTime));
     }

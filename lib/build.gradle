@@ -62,3 +62,10 @@ task run(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "openinghoursevaluator.Main"
 }
+
+task individualTesting(type: JavaExec) {
+    main = "openinghoursevaluator.IndividualTest"
+    classpath = sourceSets.test.runtimeClasspath
+    standardInput = System.in
+    args('false')
+}

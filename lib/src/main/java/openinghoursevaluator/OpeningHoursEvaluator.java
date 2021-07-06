@@ -4,8 +4,8 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import ch.poole.openinghoursparser.OpeningHoursParseException;
 import ch.poole.openinghoursparser.OpeningHoursParser;
-import ch.poole.openinghoursparser.ParseException;
 import ch.poole.openinghoursparser.Rule;
 
 /**
@@ -20,16 +20,13 @@ public class OpeningHoursEvaluator {
     String openingHours;
     boolean isStrict = false;
 
-    /** Constructor with input time string according to opening hours specification */
-    public OpeningHoursEvaluator(String openingHours, boolean isStrict) {
+    /** Constructor with input time string according to opening hours specification 
+     * @throws OpeningHoursParseException*/
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict) throws OpeningHoursParseException {
         this.openingHours = openingHours;
         this.isStrict = isStrict;
         OpeningHoursParser parser = new OpeningHoursParser(new ByteArrayInputStream(openingHours.getBytes()));
-        try {
-            rules = parser.rules(isStrict);
-        } catch (ParseException e) {
-            throw new IllegalArgumentException("Illegal opening hours input");
-        }
+        rules = parser.rules(isStrict);
     }
 
     /**
@@ -41,9 +38,13 @@ public class OpeningHoursEvaluator {
      * @throws OpeningHoursEvaluationException
      */
     public Result checkStatus(String inputTime) throws OpeningHoursEvaluationException {
-        LocalDateTime time = LocalDateTime.parse(inputTime);
+        return checkStatus(LocalDateTime.parse(inputTime));
+        
+    }
+
+    public Result checkStatus(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
-        return monthRule.checkStatus(time);
+        return monthRule.checkStatus(inputTime);
     }
 
     /** Print the Week created by inputTime, to be used for debugging wrong test case */

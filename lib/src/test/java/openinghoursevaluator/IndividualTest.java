@@ -1,11 +1,8 @@
 package openinghoursevaluator;
 
-import java.io.ByteArrayInputStream;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Scanner;
 
 import ch.poole.openinghoursparser.OpeningHoursParseException;

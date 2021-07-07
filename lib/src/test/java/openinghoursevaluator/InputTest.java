@@ -32,7 +32,7 @@ public class InputTest {
      */
     @Test
     public void evaluatorTimepointTest() {
-        evaluateBatchCheck("test-data/oh/timepoint.txt-oh", "test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer");
+        evaluateBatchCheck("test-data/oh/timepoint.txt-oh","test-data/input-time/timepoint.txt", "test-data/answer/timepoint.txt-answer");
     }
 
     @Test
@@ -61,9 +61,14 @@ public class InputTest {
     }
 
     @Test
-    public void unitTest() {
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED, "xxxxx", 0, 0));
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN, "xxxxx", 0, 0));
+    public void evaluatorOpenNextTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        evaluateOpenNextBatchCheck("test-data/oh/open-next.txt-oh", "test-data/input-time/open-next.txt", "test-data/answer/open-next.txt-answer");
+    }
+
+    @Test
+    public void unitTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED));
+        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN));
     }
 
     @Test
@@ -84,11 +89,11 @@ public class InputTest {
         // print("Jun 4, 12, 20-25, Jul 2-14, 23-31; Jun 14-20 unknown; Jun 17-20 off \"something happens\"; Jun 29-Jul 3 00:00-48:00 \"nothing here\"", "2021-07-04T03:00");
     }
 
+    //-------------------------------------------------------------------------
+
     /**
      * Batch evaluation for an opening hours file, with input time values and its corresponding correct answers.
      * This is successful if the evaluator return all correct answer
-     * 
-     * This is still under construction since I'm moving to LocalDateTime instead
      * 
      * @param openingHoursFile opening hours file
      * @param inputTimeFile input time value file
@@ -107,15 +112,26 @@ public class InputTest {
             String openingHours;
             String[] answers;
             lineNumOH = 1;
-            while ((openingHours = openingHoursReader.readLine())    != null &&
-                  (answers = answerReader.readLine().split("\\s+")) != null) {
+            while ((openingHours = openingHoursReader.readLine()) != null
+                    &&(answers = answerReader.readLine().split("\\s+")) != null) {
                 lineNumInput = 1;
                 inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
                 for (String answerString : answers) {
                     String inputTime = inputTimeReader.readLine();
                     Status answer = Status.convert(answerString);
-                    if (!evaluateCheck(openingHours, inputTime, answer, openingHoursFile, lineNumOH, lineNumInput)) {
-                        hasWrong = true;
+                    try {
+                        if (!evaluateCheck(openingHours, inputTime, answer)) {
+                            System.out.println("Opening hours file: " + openingHoursFile
+                                            + ", line: " + lineNumOH);
+                            System.out.println("Input time line: " + lineNumInput);
+                            hasWrong = true;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.out.println("Error occured in " + openingHoursFile
+                                        + ", line " + lineNumOH);
+                        System.out.println("Input time line " + lineNumInput);
+                        fail("Some exception occured during evaluating");
                     }
                     lineNumInput++;
                 }
@@ -143,41 +159,17 @@ public class InputTest {
     }
 
     /**
-     * Evaluation for an opening hours string, with input time value and its corresponding correct answer.
-     * This is used for unit test
+     * Batch evaluation for an opening hours file, which are expected to throw
+     * an exception, and its corresponding exception message file
+     * <p>
+     * This is successful if the evaluator throw all correct exception message
      * 
-     * @param openingHours opening hours string
-     * @param timeString input time string in the form of "yyyy-mm-ddThh:mm"
-     * @param answer correct answer corresponding to input time string
+     * @param openingHoursFile opening hours file
+     * @param exceptionMessageFile exception message file
+     * @throws OpeningHoursParseException
      */
-    public static boolean evaluateCheck(String openingHours, String timeString, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
-        try {
-            LocalDateTime inputTime = LocalDateTime.parse(timeString);
-            Result result = evaluate(openingHours, inputTime);
-            Status givenAnswer = result.getStatus();
-            if (givenAnswer != answer) {
-                print(openingHours, inputTime);
-                System.out.println("Wrong answer for \"" + openingHours + "\" in file " + openingHoursFile + ", line " + lineNumOH);
-                System.out.println("Input time: \"" + inputTime + "\"" + ", line " + lineNumInput);
-                System.out.println("Correct answer: " + answer);
-                System.out.println("Given answer: " + givenAnswer);
-                System.out.println();
-                return false;
-            }
-            // if(result.hasComment()) {
-            //     System.out.println("Comment for \"" + openingHours + "\" with input time \"" + inputTime + "\": " + result.getComment());
-            // }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Error occured in " + openingHoursFile + ", line " + lineNumOH);
-            System.out.println("Input time line " + lineNumInput);
-            fail("Some exception occured during evaluating");
-        }
-        
-        return true;
-    }
-
-    public static void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile) throws OpeningHoursParseException {
+    public static void evaluateFailBatchCheck(String openingHoursFile, String exceptionMessageFile)
+            throws OpeningHoursParseException {
         BufferedReader openingHoursReader = null;
         BufferedReader exceptionMessageReader = null;
         boolean hasWrong = false;
@@ -188,8 +180,8 @@ public class InputTest {
             String openingHours;
             String exceptionMessage;
             lineNumOH = 1;
-            while ((openingHours = openingHoursReader.readLine()) != null &&
-                    (exceptionMessage = exceptionMessageReader.readLine()) != null) {
+            while ((openingHours = openingHoursReader.readLine()) != null
+                    && (exceptionMessage = exceptionMessageReader.readLine()) != null) {
                 evaluateFail(openingHours, exceptionMessage, lineNumOH);
                 lineNumOH++;
             }
@@ -213,6 +205,109 @@ public class InputTest {
     }
 
     /**
+     * Batch evaluation for an opening hours file in getting next event
+     * (open/close next), with input time from an inputTimeFile compared with
+     * answers from an answerFile
+     * <p>
+     * This is successful if the evaluator get all next event correctly
+     * 
+     * @param openingHoursFile opening hours file
+     * @param inputTimeFile input time file
+     * @param answerFile answer file
+     * @throws OpeningHoursParseException
+     * @throws OpeningHoursEvaluationException
+     */
+    public static void evaluateOpenNextBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile)
+            throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        BufferedReader openingHoursReader = null;
+        BufferedReader inputTimeReader = null;
+        BufferedReader answerReader = null;
+        boolean hasWrong = false;
+        int lineNumInput = 1;
+        try {
+            inputTimeReader = new BufferedReader(new InputStreamReader(new FileInputStream(inputTimeFile), StandardCharsets.UTF_8));
+            String inputTime;
+
+            while ((inputTime = inputTimeReader.readLine()) != null) {
+                lineNumInput = 1;
+                openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
+                answerReader = new BufferedReader(new InputStreamReader(new FileInputStream(answerFile), StandardCharsets.UTF_8));
+                LocalDateTime time = LocalDateTime.parse(inputTime);
+                String openingHours;
+                String answerString;
+                int lineNumOH = 1;
+                while ((openingHours = openingHoursReader.readLine()) != null
+                        && (answerString = answerReader.readLine()) != null) {
+                    String[] answers = answerString.split(",+");
+                    String[] answer = answers[lineNumInput-1].split("\\s+");
+                    
+                    if (!evaluateOpenNextCheck(openingHours, time, answer)) {
+                        System.out.println("Opening hours file: " + openingHoursFile
+                                         + ", line: " + lineNumOH);
+                        System.out.println("Input time line: " + lineNumInput);
+                        System.out.println();
+                        hasWrong = true;
+                    }
+                }
+                lineNumOH++;
+                lineNumInput++;
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            fail("Null pointer exception occured, maybe some test cases doesn't have answer yet?");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            fail("File not found exception occured");
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            fail("IOexception occured");
+        } finally {
+            try { 
+                openingHoursReader.close();
+                inputTimeReader.close();
+                answerReader.close();
+            } catch (IOException ioe) {
+                fail("Error closing BufferedReader");
+            }
+        }
+        if (hasWrong) fail("There's a wrong answer, check output for more info");
+    }
+
+    //-------------------------------------------------------------------------
+
+    /**
+     * Evaluation for an opening hours string, with input time value and its
+     * corresponding correct answer.
+     * <p>
+     * This is used for unit test
+     * 
+     * @param openingHours opening hours string
+     * @param timeString input time string in the form of "yyyy-mm-ddThh:mm"
+     * @param answer correct answer corresponding to input time string
+     * @throws OpeningHoursParseException
+     * @throws OpeningHoursEvaluationException
+     */
+    public static boolean evaluateCheck(String openingHours, String timeString, Status answer)
+            throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        LocalDateTime inputTime = LocalDateTime.parse(timeString);
+        Result result = evaluate(openingHours, inputTime);
+        Status givenAnswer = result.getStatus();
+        if (givenAnswer != answer) {
+            print(openingHours, inputTime);
+            System.out.println("Wrong answer for \"" + openingHours);
+            System.out.println("Input time: \"" + inputTime);
+            System.out.println("Correct answer: " + answer);
+            System.out.println("Given answer: " + givenAnswer);
+            return false;
+        }
+        // if(result.hasComment()) {
+        //     System.out.println("Comment for \"" + openingHours
+        //  + "\" with input time \"" + inputTime + "\": " + result.getComment());
+        // }
+        return true;
+    }
+
+    /**
      * Evaluation for an opening hours string, with input time value
      * 
      * @param openingHours opening hours string
@@ -220,20 +315,87 @@ public class InputTest {
      * @throws OpeningHoursEvaluationException
      * @throws OpeningHoursParseException
      */
-    public static Result evaluate(String openingHours, LocalDateTime inputTime) throws OpeningHoursEvaluationException, OpeningHoursParseException {
-        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+    public static Result evaluate(String openingHours, LocalDateTime inputTime)
+            throws OpeningHoursEvaluationException, OpeningHoursParseException {
+        OpeningHoursEvaluator evaluator
+            = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
     }
 
-    public static void evaluateFail(String openingHours, String exceptionMessage, int lineNum) throws OpeningHoursParseException {
+    /**
+     * Evaluation for an opening hours string, with input time value, which is
+     * expected for throw an OpeningHoursEvaluationException exception
+     * 
+     * @param openingHours opening hours string
+     * @param exceptionMessage expected exception message
+     * @param lineNum optional line number
+     * @throws OpeningHoursParseException
+     */
+    public static void evaluateFail(String openingHours, String exceptionMessage, int lineNum)
+            throws OpeningHoursParseException {
         try {
             LocalDateTime inputTime = LocalDateTime.parse("2021-07-03T20:57:51");
             evaluate(openingHours, inputTime);
-            fail("This OH tag " + openingHours + " (line num + " + lineNum + ") should have thrown an exception");
+            fail("This OH tag " + openingHours + " (line num + " + lineNum
+                + ") should have thrown an exception");
         } catch (OpeningHoursEvaluationException e) {
             assertEquals(exceptionMessage, e.getMessage());
         }
     }
+
+    /**
+     * Evaluation for getting next event (open/close next) of an opening hours
+     * string, with input time value and its corresponding correct answer.
+     * 
+     * @param openingHours opening hours string
+     * @param inputTime input time
+     * @param answer answer string, formatted by
+     *      "(1|0|x), (always|'instance of LocalDateTime YYYY-MM-DD'T'HH:MM')"
+     * @return true if correct, false otherwise
+     * @throws OpeningHoursParseException
+     * @throws OpeningHoursEvaluationException
+     */
+    public static boolean evaluateOpenNextCheck(String openingHours, LocalDateTime inputTime, String[] answer)
+            throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        boolean result = true;
+
+        // get expected answer
+        Status expectedStatus = Status.convert(answer[0]);
+        String timeString = answer[1];
+        
+        // get actual answer
+        Result actual = evaluate(openingHours, inputTime);
+        Status actualStatus = actual.getStatus();
+
+        // check expected and actual
+        if (actualStatus == expectedStatus) {
+            result = (actual.isAlways())
+                    ? timeString.equals("always")
+                    : LocalDateTime.parse(timeString).equals(actual.getNextEventTime());
+        } else {    
+            result = false;
+        }
+
+        // handle wrong answer
+        if (!result) {
+            String expectedAnswer = Status.convert(answer[0]) + ", " + answer[1];
+            String givenAnswer = actualStatus + ", "
+                + ((actual.isAlways()) ? "always" : actual.getNextEventTime());
+            System.out.println("Wrong answer for \"" + openingHours);
+            System.out.println("Input time: \"" + inputTime);
+            System.out.println("Correct answer: " + expectedAnswer);
+            System.out.println("Given answer: " + givenAnswer);
+        }
+
+        return result;
+    }
+
+    public Result getNextEvent(String openingHours, LocalDateTime inputTime) throws OpeningHoursParseException {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+        return evaluator.getNextEvent(inputTime);
+    }
+
+    //-------------------------------------------------------------------------
 
     /**
      * Print the weekly schedule created by all opening hours in an input opening hours file,
@@ -244,8 +406,10 @@ public class InputTest {
      * @param isDebug true to print debug string, false to print normal
      * @throws OpeningHoursParseException
      */
-    public static void printBatch(String openingHoursFile, String inputTime, boolean isDebug) throws OpeningHoursParseException {
-        System.out.println("Printing week schedule created from opening hours in " + openingHoursFile);
+    public static void printBatch(String openingHoursFile, String inputTime, boolean isDebug)
+            throws OpeningHoursParseException {
+        System.out.println("Printing week schedule created from opening hours in "
+                        + openingHoursFile);
         BufferedReader openingHoursReader = null;
         try {
             openingHoursReader = new BufferedReader(new InputStreamReader(new FileInputStream(openingHoursFile), StandardCharsets.UTF_8));
@@ -275,13 +439,17 @@ public class InputTest {
         }
     }
 
-    public static void print(String openingHours, LocalDateTime inputTime) throws OpeningHoursParseException {
-        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+    public static void print(String openingHours, LocalDateTime inputTime)
+            throws OpeningHoursParseException {
+        OpeningHoursEvaluator evaluator
+            = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toString(inputTime));
     }
 
-    public static void printDebug(String openingHours, LocalDateTime inputTime) throws OpeningHoursParseException {
-        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+    public static void printDebug(String openingHours, LocalDateTime inputTime)
+            throws OpeningHoursParseException {
+        OpeningHoursEvaluator evaluator
+            = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toDebugString(inputTime));
     }
 }

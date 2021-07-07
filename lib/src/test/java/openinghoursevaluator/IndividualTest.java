@@ -20,10 +20,11 @@ public class IndividualTest {
                     System.out.print("\nPlease enter time to be checked (takes the form YYYY-MM-DDTHH:MM, for example "
                         + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"))
                         + ")\nor press q to change to a different opening hours tag: ");
-                    String inputTime = sc.nextLine();
-                    if (inputTime.equals("q")) break;
-                    System.out.println("\nEvaluating " + inputTime);
+                    String timeString = sc.nextLine();
+                    if (timeString.equals("q")) break;
+                    System.out.println("\nEvaluating " + timeString);
                     try {
+                        LocalDateTime inputTime = LocalDateTime.parse(timeString);
                         Result result = evaluator.checkStatus(inputTime);
                         System.out.println("Current status: " + result.getStatus() +
                             ((result.hasComment()) ? ", comment: " + result.getComment() : ""));

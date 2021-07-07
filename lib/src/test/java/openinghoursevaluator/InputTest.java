@@ -10,6 +10,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 
 import org.junit.Test;
 
@@ -146,11 +147,12 @@ public class InputTest {
      * This is used for unit test
      * 
      * @param openingHours opening hours string
-     * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
+     * @param timeString input time string in the form of "yyyy-mm-ddThh:mm"
      * @param answer correct answer corresponding to input time string
      */
-    public static boolean evaluateCheck(String openingHours, String inputTime, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
+    public static boolean evaluateCheck(String openingHours, String timeString, Status answer, String openingHoursFile, int lineNumOH, int lineNumInput) {
         try {
+            LocalDateTime inputTime = LocalDateTime.parse(timeString);
             Result result = evaluate(openingHours, inputTime);
             Status givenAnswer = result.getStatus();
             if (givenAnswer != answer) {
@@ -214,18 +216,19 @@ public class InputTest {
      * Evaluation for an opening hours string, with input time value
      * 
      * @param openingHours opening hours string
-     * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
+     * @param inputTime a LocalDateTime instance
      * @throws OpeningHoursEvaluationException
      * @throws OpeningHoursParseException
      */
-    public static Result evaluate(String openingHours, String inputTime) throws OpeningHoursEvaluationException, OpeningHoursParseException {
+    public static Result evaluate(String openingHours, LocalDateTime inputTime) throws OpeningHoursEvaluationException, OpeningHoursParseException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.checkStatus(inputTime);
     }
 
     public static void evaluateFail(String openingHours, String exceptionMessage, int lineNum) throws OpeningHoursParseException {
         try {
-            evaluate(openingHours, "2021-07-03T20:57:51");
+            LocalDateTime inputTime = LocalDateTime.parse("2021-07-03T20:57:51");
+            evaluate(openingHours, inputTime);
             fail("This OH tag " + openingHours + " (line num + " + lineNum + ") should have thrown an exception");
         } catch (OpeningHoursEvaluationException e) {
             assertEquals(exceptionMessage, e.getMessage());
@@ -249,10 +252,11 @@ public class InputTest {
             String openingHours;
             while ((openingHours = openingHoursReader.readLine()) != null) {
                 System.out.println(openingHours);
+                LocalDateTime time = LocalDateTime.parse(inputTime);
                 if (isDebug) {
-                    printDebug(openingHours, inputTime);
+                    printDebug(openingHours, time);
                 } else {
-                    print(openingHours, inputTime);
+                    print(openingHours, time);
                 }
                 System.out.println("___________________________________\n");
             }
@@ -271,12 +275,12 @@ public class InputTest {
         }
     }
 
-    public static void print(String openingHours, String inputTime) throws OpeningHoursParseException {
+    public static void print(String openingHours, LocalDateTime inputTime) throws OpeningHoursParseException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toString(inputTime));
     }
 
-    public static void printDebug(String openingHours, String inputTime) throws OpeningHoursParseException {
+    public static void printDebug(String openingHours, LocalDateTime inputTime) throws OpeningHoursParseException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         System.out.print(evaluator.toDebugString(inputTime));
     }

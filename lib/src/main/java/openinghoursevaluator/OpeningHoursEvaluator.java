@@ -33,37 +33,43 @@ public class OpeningHoursEvaluator {
      * Check if avenue is closed or not according to an input time string in accordance with
      * LocalDateTime parser
      * 
-     * @param inputTime input time string in the form of "yyyy-mm-ddThh:mm"
+     * @param inputTime a LocalDateTime instance
      * @param isStrict
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(String inputTime) throws OpeningHoursEvaluationException {
-        return checkStatus(LocalDateTime.parse(inputTime));
-        
-    }
-
     public Result checkStatus(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
         return monthRule.checkStatus(inputTime);
     }
 
-    /** Print the Week created by inputTime, to be used for debugging wrong test case */
-    public String toString(String inputTime) {
-        LocalDateTime time = LocalDateTime.parse(inputTime);
+    /**
+     * Print the week schedule created by inputTime using the stored opening hours
+     * 
+     * @param inputTime LocalDateTime time
+     * @return week schedule created by inputTime using the stored opening hours
+     */
+    public String toString(LocalDateTime inputTime) {
         MonthRule monthRule = new MonthRule(rules);
         try {
-            monthRule.buildWeek(time);
+            monthRule.buildWeek(inputTime);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
         return monthRule.toWeekString();
     }
 
-    public String toDebugString(String inputTime) {
-        LocalDateTime time = LocalDateTime.parse(inputTime);
+    /**
+     * Print the week schedule created by inputTime using the stored opening
+     * hours, used for debugging purpose. This week includes more details
+     * about each time of day
+     * 
+     * @param inputTime LocalDateTime time
+     * @return week schedule created by inputTime using the stored opening hours
+     */
+    public String toDebugString(LocalDateTime inputTime) {
         MonthRule monthRule = new MonthRule(rules);
         try {
-            monthRule.buildWeek(time);
+            monthRule.buildWeek(inputTime);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }

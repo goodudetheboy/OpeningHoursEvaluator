@@ -6,7 +6,7 @@ An evaluator for opening hours tag according to OSM opening hours specification.
 
 Currently, this evaluator has supported evaluation of most of evaluation syntax, albeit still under construction (to add geocoding etc.)
 
-## Usage
+## Usage ##
 
 ``` java
 try {
@@ -18,6 +18,7 @@ try {
     // Receive result of the evaluation
     LocalDateTime time = LocalDateTime.now();
     Result result = evaluator.checkStatus(time);
+
 } catch (OpeningHoursParseException e) {
     // Grammar-related exception
 } catch (OpeningHoursEvaluationException e) {
@@ -25,10 +26,10 @@ try {
 }
 ```
 
-# Building
+## Building ##
 
-The project uses gradle for building. Standard gradle tasks for the java plugin can be found here https://docs.gradle.org/current/userguide/java_plugin.html. They can be invoked on the command line by running gradlew or gradlew.bat with the name of the task, for example gradlew jar to create the jar archive.
+The project uses gradle for building. Standard gradle tasks for the java plugin can be found here https://docs.gradle.org/current/userguide/java_plugin.html. They can be invoked on the command line by running `gradlew` or `gradlew.bat` with the name of the task, for example `gradlew jar` to create the jar archive.
 
-## Testing
+## Testing ##
 
-There is a REPL instance that you can run in order to test the evaluator in its current state. Run `gradle individualTesting --console=plain` in a Gradle environment  to test this out.
+There is a REPL instance that you can run in order to test the evaluator in its current state. Run `gradle individualTesting --console=plain` in a Gradle environment  to test this out, or `gradle individualTestingStrict --console=plain` to run with evaluator in strict mode.

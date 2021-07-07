@@ -13,6 +13,8 @@ plugins {
     id 'jacoco'
 }
 
+archivesBaseName = 'OpeningHoursEvaluator'
+
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
@@ -69,3 +71,15 @@ task individualTesting(type: JavaExec) {
     standardInput = System.in
     args('false')
 }
+individualTesting.group = 'verification'
+individualTesting.description = "REPL instance to test the evaluator upon an input of an opening hours tag and a LocalDateTime string. Recommended running with '--console=plain'."
+
+
+task individualTestingStrict(type: JavaExec) {
+    main = "openinghoursevaluator.IndividualTest"
+    classpath = sourceSets.test.runtimeClasspath
+    standardInput = System.in
+    args('true')
+}
+individualTestingStrict.group = 'verification'
+individualTestingStrict.description = "REPL instance to test the evaluator upon an input of an opening hours tag and a LocalDateTime string, with parser running on strict mode. Recommended running with '--console=plain'."

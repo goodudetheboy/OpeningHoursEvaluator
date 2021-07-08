@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,6 +37,9 @@ public class WeekDayRule {
 
     // opening times storage
     List<TimeRange> openingTimes    = null;
+
+    // used when need to traverse through a Week, and also in creation of Week
+    boolean         isDummy         = false;
 
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
@@ -93,8 +95,21 @@ public class WeekDayRule {
         return yesterdaySpill;
     }
 
+    /**
+     * @return the defining LocalDate upon which this WeeDayRule is built
+     */
     public LocalDate getDefDate() {
         return defDate;
+    }
+
+    /**
+     * A dummy WeekDayRule is used for a Week, where there is a need to set a
+     * nextDayRule to the endWeekDay's WeekDayRule
+     * 
+     * @return check if this Week is dummy, useful during traversal
+     */
+    public boolean isDummy() {
+        return isDummy;
     }
 
     /**
@@ -124,8 +139,22 @@ public class WeekDayRule {
         this.yesterdaySpill = yesterdaySpill;
     }
 
+    /**
+     * @param defDate set the defining date of this WeekDayRule
+     */
     public void setDefiningDate(LocalDate defDate) {
         this.defDate = defDate;
+    }
+
+    /**
+     * A dummy WeekDayRule is used for a Week, where there is a need to set a
+     * nextDayRule to the endWeekDay's WeekDayRule
+     * 
+     * @param isDummy set this as a dummy WeekDayRule, useful during
+     *      Week traversal
+     */
+    public void setDummy(boolean isDummy) {
+        this.isDummy = isDummy;
     }
 
     /**

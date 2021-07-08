@@ -14,20 +14,48 @@ import ch.poole.openinghoursparser.Rule;
  */
 public class OpeningHoursEvaluator {
     /** List to store rules from the parser */
-    List<Rule> rules;
-    String openingHours;
-    boolean isStrict = false;
+    List<Rule>      rules;
+    String          openingHours;
+    boolean         isStrict = false;
+    TimeTraveller   timeTraveller = null;
 
     /**
      * Constructor with input time string according to opening hours specification 
      * 
      * @throws OpeningHoursParseException
      */
-    public OpeningHoursEvaluator(String openingHours, boolean isStrict) throws OpeningHoursParseException {
-        this.openingHours = openingHours;
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict)
+            throws OpeningHoursParseException {
         this.isStrict = isStrict;
+        setOpeningHoursTag(openingHours);
+    }
+
+    public List<Rule> getRules() {
+        return rules;
+    }
+
+    public String getOpeningHoursTag() {
+        return openingHours;
+    }
+
+    public boolean isStrictParsing() {
+        return isStrict;
+    }
+
+    public void setOpeningHoursTag(String openingHours)
+            throws OpeningHoursParseException {
+        this.openingHours = openingHours;
         OpeningHoursParser parser = new OpeningHoursParser(new ByteArrayInputStream(openingHours.getBytes()));
-        rules = parser.rules(isStrict);
+        setRules(parser.rules(isStrict));
+    }
+
+    public void setRules(List<Rule> rules) {
+        this.rules = rules;
+        timeTraveller = new TimeTraveller(rules);
+    }
+
+    public void setStrictParsing(boolean isStrict) {
+        this.isStrict = isStrict;
     }
 
     /**
@@ -52,7 +80,6 @@ public class OpeningHoursEvaluator {
      *      status of the evaluation of inputTime against the stored rules)
      */
     public Result getNextEvent(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
-        TimeTraveller timeTraveller = new TimeTraveller(rules);
         return timeTraveller.getNextDifferingEvent(inputTime);
     }
 

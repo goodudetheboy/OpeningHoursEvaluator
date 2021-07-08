@@ -44,22 +44,21 @@ public class TimeTraveller {
         Result result = monthRule.getNextDifferingEvent(inputTime, statusToCheck);
 
         // if nothing could be found, go to the future!
-        if (result == null) {
+        if (result != null) {
+            return result;
+        } else {
             LocalDate toTheFuture = inputTime.toLocalDate();
             for (int i=0; i < MAX_FUTURE_WEEKS; i++) {
                 toTheFuture = DateManager.getOffsetDate(toTheFuture, 7);
                 monthRule.buildWeek(toTheFuture.atStartOfDay());
-                result = monthRule.getNextDifferingEvent(null, statusToCheck);
+                result = monthRule.getNextDifferingEvent(statusToCheck);
                 if (result != null) {
                     return result;
                 }
             }
-        } else {
-            return result;
         }
         Result always = new Result(statusToCheck, null, null);
         always.setAlways(true);
         return always;
     }
-
 }

@@ -350,40 +350,34 @@ public class Week {
     Result getNextDifferingEventThisWeek(LocalDateTime inputTime, Status status) {
         WeekDay weekday = convertWeekDay(inputTime.getDayOfWeek());
         int time = Utils.timeInMinute(inputTime);
-        if (!hasWeekDay(weekday)) {
-            return null;
-        }
         WeekDayRule dayToCheck = weekDayStorage.get(weekday);
         TimeRange check = dayToCheck.getNextDifferingEventToday(time);
         return (check != null)
                 ? processNextDifferingEvent(dayToCheck, check)
-                : getNextDifferingEvent(getNextWeekDay(weekday), status);          
+                : getNextDifferingEvent(dayToCheck.getNextDayRule(), status);
     }
 
     /**
      * Return next differing event of the input time (status different
      * from status of the evaluation of inputTime against the stored rules).
-     * This starts looking from the WeekDay defined by start until the
-     * endWeekDay of this Week
+     * This starts looking from the WeekDayRule defined by start until it finds
+     * a dummy WeekDayRule, which usually the end of the Week
      * 
-     * @param start time to be checked
+     * @param start start WeekDayRule, search until dummy
      * @param status the status that needs that the next event's status
      *      has to be different from
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      */
     @Nullable
-    Result getNextDifferingEvent(WeekDay start, Status status) {
-        WeekDay current = start;
-        WeekDay end = getNextWeekDay(endWeekDay);
-        do {
-            TimeRange check = weekDayStorage.get(current)
-                                            .getNextDifferingEvent(status);
+    Result getNextDifferingEvent(WeekDayRule start, Status status) {
+        while (!start.isDummy()) {
+            TimeRange check = start.getNextDifferingEvent(status);
             if (check != null) {
-                WeekDayRule dayToCheck = weekDayStorage.get(current);
-                return processNextDifferingEvent(dayToCheck, check);
+                return processNextDifferingEvent(start, check);
             }
-        } while ((current = getNextWeekDay(current)) != end);
+            start = start.getNextDayRule();
+        }
         return null;
     }
 
@@ -414,40 +408,6 @@ public class Week {
         return DateManager.isBetweenWeekDays(weekday, startWeekDay, endWeekDay);
     }
 
-    /**
-     * Convert java.time.DayOfWeek enum to OpeningHoursParser.WeekDay enum
-     * 
-     * @param dayOfWeek an enum of DayOfWeek to be converted
-     * @return an equivalent weekday in WeekDay enum
-     */
-    public static WeekDay convertWeekDay(DayOfWeek dayOfWeek) {
-        return WeekDay.values()[dayOfWeek.ordinal()];
-    }
-    
-    /**
-     * Return the next WeekDay wrt a current WeekDay
-     * 
-     * @param current the current WeekDay
-     * @return the following WeekDay
-     */
-    public static WeekDay getNextWeekDay(WeekDay current) {
-        WeekDay[] weekdays = WeekDay.values();
-        int next = (current.ordinal()+1) % weekdays.length;
-        return weekdays[next];
-    }
-
-    /**
-     * Return the previous WeekDay wrt a current WeekDay
-     * 
-     * @param current the current WeekDay
-     * @return the previous WeekDay
-     */
-    public static WeekDay getPreviousWeekDay(WeekDay current) {
-        WeekDay[] weekdays = WeekDay.values();
-        int previous = (current.ordinal()-1 + weekdays.length) % weekdays.length;
-        return weekdays[previous];
-    }
-
     /** Clean all WeekDayRule in this Week */
     public void clean() {
         WeekDay current = startWeekDay;
@@ -466,6 +426,7 @@ public class Week {
     public void populate() {
         populateHelper(startWeekDay);
         dayAfter = new WeekDayRule();
+        dayAfter.setDummy(true);
         weekDayStorage.get(endWeekDay).setNextDayRule(dayAfter);
         if (previousSpill != null) {
             for (TimeRange spill : previousSpill) {
@@ -572,6 +533,41 @@ public class Week {
 
     }
 
+    
+    /**
+     * Convert java.time.DayOfWeek enum to OpeningHoursParser.WeekDay enum
+     * 
+     * @param dayOfWeek an enum of DayOfWeek to be converted
+     * @return an equivalent weekday in WeekDay enum
+     */
+    public static WeekDay convertWeekDay(DayOfWeek dayOfWeek) {
+        return WeekDay.values()[dayOfWeek.ordinal()];
+    }
+    
+    /**
+     * Return the next WeekDay wrt a current WeekDay
+     * 
+     * @param current the current WeekDay
+     * @return the following WeekDay
+     */
+    public static WeekDay getNextWeekDay(WeekDay current) {
+        WeekDay[] weekdays = WeekDay.values();
+        int next = (current.ordinal()+1) % weekdays.length;
+        return weekdays[next];
+    }
+
+    /**
+     * Return the previous WeekDay wrt a current WeekDay
+     * 
+     * @param current the current WeekDay
+     * @return the previous WeekDay
+     */
+    public static WeekDay getPreviousWeekDay(WeekDay current) {
+        WeekDay[] weekdays = WeekDay.values();
+        int previous = (current.ordinal()-1 + weekdays.length) % weekdays.length;
+        return weekdays[previous];
+    }
+
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder();
@@ -580,7 +576,7 @@ public class Week {
             if (weekDayStorage.get(current) != null) {
                 b.append(weekDayStorage.get(current));
             }
-            b.append(System.getProperty("line.separator"));
+            b.append(Utils.LINE_SEPARATOR);
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(endWeekDay));
         return b.toString();
     }
@@ -595,7 +591,7 @@ public class Week {
             if (weekDayStorage.get(current) != null) {
                 b.append(weekDayStorage.get(current).toDebugString());
             }
-            b.append(System.getProperty("line.separator"));
+            b.append(Utils.LINE_SEPARATOR);
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(endWeekDay));
         return b.toString();
     }

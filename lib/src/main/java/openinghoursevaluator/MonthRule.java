@@ -238,16 +238,27 @@ public class MonthRule {
      */
     @Nullable
     Result getNextDifferingEvent(LocalDateTime inputTime, Status status) {
-        for (Week week : weekStorage) {
-            Result result;
-            result = (inputTime != null)
-                    ? week.getNextDifferingEventThisWeek(inputTime, status)
-                    : week.getNextDifferingEvent(week.getStartWeekday(), status);
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
+        Week week = weekStorage.get(0);
+        Result result;
+        result = week.getNextDifferingEventThisWeek(inputTime, status);
+        return result;
+    }
+
+    /**
+     * Return next differing event whose status is different from the input
+     * Status
+     * 
+     * @param status the status that needs that the next event's status
+     *      has to be different from
+     * @return next next differing event whose status is different from the input
+     *      Status
+     */
+    @Nullable
+    Result getNextDifferingEvent(Status status) {
+        Week week = weekStorage.get(0);
+        Result result;
+        result = week.getNextDifferingEvent(week.getStartWeekDayRule(), status);
+        return result;
     }
 
     /**

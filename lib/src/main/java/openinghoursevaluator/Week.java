@@ -3,11 +3,14 @@ package openinghoursevaluator;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+
+import javax.annotation.Nullable;
 
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
@@ -330,6 +333,75 @@ public class Week {
         } else {
             return weekDayStorage.get(weekday).checkStatus(time);
         }
+    }
+
+    /**
+     * Return next differing event of the input time (status different
+     * from status of the evaluation of inputTime against the stored rules).
+     * This assumes the input time is within the time of this Week
+     * 
+     * @param inputTime time to be checked
+     * @param status the status that needs that the next event's status
+     *      has to be different from
+     * @return next differing event of the input time (status different from
+     *      status of the evaluation of inputTime against the stored rules)
+     */
+    @Nullable
+    Result getNextDifferingEventThisWeek(LocalDateTime inputTime, Status status) {
+        WeekDay weekday = convertWeekDay(inputTime.getDayOfWeek());
+        int time = Utils.timeInMinute(inputTime);
+        if (!hasWeekDay(weekday)) {
+            return null;
+        }
+        WeekDayRule dayToCheck = weekDayStorage.get(weekday);
+        TimeRange check = dayToCheck.getNextDifferingEventToday(time);
+        return (check != null)
+                ? processNextDifferingEvent(dayToCheck, check)
+                : getNextDifferingEvent(getNextWeekDay(weekday), status);          
+    }
+
+    /**
+     * Return next differing event of the input time (status different
+     * from status of the evaluation of inputTime against the stored rules).
+     * This starts looking from the WeekDay defined by start until the
+     * endWeekDay of this Week
+     * 
+     * @param start time to be checked
+     * @param status the status that needs that the next event's status
+     *      has to be different from
+     * @return next differing event of the input time (status different from
+     *      status of the evaluation of inputTime against the stored rules)
+     */
+    @Nullable
+    Result getNextDifferingEvent(WeekDay start, Status status) {
+        WeekDay current = start;
+        WeekDay end = getNextWeekDay(endWeekDay);
+        do {
+            TimeRange check = weekDayStorage.get(current)
+                                            .getNextDifferingEvent(status);
+            if (check != null) {
+                WeekDayRule dayToCheck = weekDayStorage.get(current);
+                return processNextDifferingEvent(dayToCheck, check);
+            }
+        } while ((current = getNextWeekDay(current)) != end);
+        return null;
+    }
+
+    /**
+     * Process to return a type of special Result containing open/close next
+     * event, used in getting next differing event
+     * 
+     * @param day a desired WeekDayRule
+     * @param timerange a desired TimeRange
+     * @return Result that can be rad
+     */
+    private Result processNextDifferingEvent(WeekDayRule day, TimeRange timerange) {
+        Result result = new Result(timerange);
+        LocalDate date = day.getDefDate();
+        LocalTime time = LocalTime.of(timerange.getStart() / 60, timerange.getStart() % 60);
+        LocalDateTime nextEvent = LocalDateTime.of(date, time);
+        result.setNextEventTime(nextEvent);
+        return result;
     }
 
     /**

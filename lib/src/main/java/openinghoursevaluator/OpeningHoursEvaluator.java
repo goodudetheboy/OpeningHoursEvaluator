@@ -9,9 +9,7 @@ import ch.poole.openinghoursparser.OpeningHoursParser;
 import ch.poole.openinghoursparser.Rule;
 
 /**
- * Implementation of the OpeningHoursEvaluator, currently act as a placeholder for creating testing
- * file
- * 
+ * Implementation of the OpeningHoursEvaluator
  *
  */
 public class OpeningHoursEvaluator {
@@ -20,8 +18,11 @@ public class OpeningHoursEvaluator {
     String openingHours;
     boolean isStrict = false;
 
-    /** Constructor with input time string according to opening hours specification 
-     * @throws OpeningHoursParseException*/
+    /**
+     * Constructor with input time string according to opening hours specification 
+     * 
+     * @throws OpeningHoursParseException
+     */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict) throws OpeningHoursParseException {
         this.openingHours = openingHours;
         this.isStrict = isStrict;
@@ -40,6 +41,19 @@ public class OpeningHoursEvaluator {
     public Result checkStatus(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
         return monthRule.checkStatus(inputTime);
+    }
+
+    /**
+     * Return next differing event of the input time (status different
+     * from status of the evaluation of inputTime against the stored rules).
+     * 
+     * @param inputTime time to be checked
+     * @return next differing event of the input time (status different from
+     *      status of the evaluation of inputTime against the stored rules)
+     */
+    public Result getNextEvent(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
+        TimeTraveller timeTraveller = new TimeTraveller(rules);
+        return timeTraveller.getNextDifferingEvent(inputTime);
     }
 
     /**

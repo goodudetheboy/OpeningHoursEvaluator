@@ -10,6 +10,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import javax.annotation.Nullable;
+
 import ch.poole.openinghoursparser.DateRange;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
@@ -222,6 +224,30 @@ public class MonthRule {
         Week dayToCheck = buildOneDay(time);
         dayToCheck.clean();
         return dayToCheck.checkStatus(time);
+    }
+
+    /**
+     * Return next differing event of the input time (status different
+     * from status of the evaluation of inputTime against the stored rules)
+     * 
+     * @param inputTime time to be checked
+     * @param status the status that needs that the next event's status
+     *      has to be different from
+     * @return next differing event of the input time (status different from
+     *      status of the evaluation of inputTime against the stored rules)
+     */
+    @Nullable
+    Result getNextDifferingEvent(LocalDateTime inputTime, Status status) {
+        for (Week week : weekStorage) {
+            Result result;
+            result = (inputTime != null)
+                    ? week.getNextDifferingEventThisWeek(inputTime, status)
+                    : week.getNextDifferingEvent(week.getStartWeekday(), status);
+            if (result != null) {
+                return result;
+            }
+        }
+        return null;
     }
 
     /**

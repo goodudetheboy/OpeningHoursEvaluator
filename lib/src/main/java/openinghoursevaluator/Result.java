@@ -1,5 +1,9 @@
 package openinghoursevaluator;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import ch.poole.openinghoursparser.Rule;
@@ -9,7 +13,15 @@ public class Result {
     String  comment     = null;
     Rule    defRule     = null;
 
-    public Result(Status status, @Nullable String comment, @Nullable Rule defRule) {
+    // reserved for when asking for open/close next
+    LocalDateTime   nextEvent   = null;
+    boolean         isAlways    = false;
+
+    public Result() {
+        // empty
+    }
+
+    public Result(@Nonnull Status status, @Nullable String comment, @Nullable Rule defRule) {
         setStatus(status);
         setComment(comment);
         setDefiningRule(defRule);
@@ -31,6 +43,15 @@ public class Result {
         return defRule;
     }
 
+    @Nullable
+    public LocalDateTime getNextEventTime() {
+        return nextEvent;
+    }
+
+    public boolean isAlways() {
+        return isAlways;
+    }
+
     public boolean hasComment() {
         return comment != null;
     }
@@ -45,5 +66,13 @@ public class Result {
 
     public void setDefiningRule(Rule defRule) {
         this.defRule = defRule;
+    }
+ 
+    public void setNextEventTime(LocalDateTime nextEvent) {
+        this.nextEvent = nextEvent;
+    }
+
+    public void setAlways(boolean isAlways) {
+        this.isAlways = isAlways;
     }
 }

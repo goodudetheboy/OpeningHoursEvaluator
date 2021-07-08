@@ -364,7 +364,7 @@ public class InputTest {
         String timeString = answer[1];
         
         // get actual answer
-        Result actual = evaluate(openingHours, inputTime);
+        Result actual = getNextEvent(openingHours, inputTime);
         Status actualStatus = actual.getStatus();
 
         // check expected and actual
@@ -390,7 +390,8 @@ public class InputTest {
         return result;
     }
 
-    public Result getNextEvent(String openingHours, LocalDateTime inputTime) throws OpeningHoursParseException {
+    public static Result getNextEvent(String openingHours, LocalDateTime inputTime)
+            throws OpeningHoursParseException, OpeningHoursEvaluationException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.getNextEvent(inputTime);
     }

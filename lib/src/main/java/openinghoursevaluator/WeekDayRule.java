@@ -5,8 +5,11 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
@@ -457,21 +460,78 @@ public class WeekDayRule {
     }
 
     /**
-     * Check if the input time evaluates to the avenue being opened in the current rule
+     * Get the Result of evaluating the inputTime in this WeekDayRule
      * 
-     * @param inputTime input date and time to be checked
-     * @return true if opening; false if closed
+     * @param inputTime input LocalDateTime to be checked
+     * @return a Result containing info on Status and comment
      */
     public Result checkStatus(LocalDateTime inputTime) {
-        int timepoint = Utils.timeInMinute(inputTime); 
+        return checkStatus(Utils.timeInMinute(inputTime));
+    }
+
+    /**
+     * Get the Result of evaluating the inputHour in this WeekDayRule
+     * 
+     * @param inputTime input time in minutes to be checked
+     * @return a Result containg info on Status and comment
+     */
+    Result checkStatus(int inputTime) {
         for (TimeRange openingTime : openingTimes) {
-            if (timepoint >= openingTime.getStart()
-                    && timepoint < openingTime.getEnd()) {
+            if (inputTime >= openingTime.getStart()
+                    && inputTime < openingTime.getEnd()) {
                 return new Result(openingTime);
             }
         }
         // return CLOSED if no fitting opening times is detected
         return new Result(Status.CLOSED, null, null);
+    }
+
+        
+    /**
+     * Return the TimeRange whose Status is different from the TimeRange that
+     * the inputHour is within. If none found, return the TimeRange of the
+     * inputTime instead.
+     * 
+     * @param inputTime input time in minutes
+     * @return the TimeRange that the inputTime is within whose Status is
+     *      different from the TimeRange that the inputTime is within, null
+     *      otherwise
+     */
+    @Nullable
+    TimeRange getNextDifferingEventToday(int inputTime) {
+        TimeRange timeOfInput = null;
+        // pad because during build all CLOSED range not defined is not added
+        List<TimeRange> paddedTime = closePad(openingTimes);
+        for (TimeRange checkTime : paddedTime) {   
+            if (timeOfInput == null) {
+                if (inputTime >= checkTime.getStart()
+                        && inputTime < checkTime.getEnd()) {
+                    timeOfInput = checkTime;
+                }
+            } else if (checkTime.getStatus() != timeOfInput.getStatus()){
+                return checkTime;
+            }
+        }   
+        return null;
+    }
+
+    /**
+     * Return the TimeRange whose Status is different from the input Status
+     * 
+     * @param status input Status
+     * @return TimeRange whose Status is different from the input Status,
+     *      null otherwise
+     */
+    @Nullable
+    TimeRange getNextDifferingEvent(Status status) {
+        // pad because during build all CLOSED range not defined is not added
+        List<TimeRange> paddedTime = closePad(openingTimes);
+        for (TimeRange checkTime : paddedTime) {
+            if (checkTime.getStatus() != status) {
+                return checkTime;
+            }
+        }
+        return null;
     }
 
     /**
@@ -542,7 +602,58 @@ public class WeekDayRule {
             i++;
         }
     }
-    
+
+    /**
+     * Pad a List of TimeRange with closed TimeRange, wherever a time slot is
+     * not occupied by other existing TimeRange
+     * 
+     * @param timeList List of TimeRange that needs to padded
+     * @return padded List of TimeRange with closed TimeRange, wherever a time
+     *      slot is not occupied by other existing TimeRange
+     */
+    public static List<TimeRange> closePad(List<TimeRange> timeList) {
+        List<TimeRange> result = new ArrayList<>(timeList);
+        TimeRange toAdd;
+        // check start of day
+        int startClose = 0;
+        int endClose = result.get(0).getStart();
+        if ((toAdd = closePadHelper(startClose, endClose)) != null) {
+            result.add(0, toAdd);
+        }
+
+        // check between
+        for (int i=0; i < result.size()-1; i++) {
+            startClose = result.get(i).getEnd();
+            endClose = result.get(i+1).getStart();
+            if ((toAdd = closePadHelper(startClose, endClose)) != null) {
+                result.add(i+1, toAdd);
+            }
+        }
+
+        // check end of day
+        startClose = result.get(result.size()-1).getEnd();
+        endClose = 1440;
+        if ((toAdd = closePadHelper(startClose, endClose)) != null) {
+            result.add(toAdd);
+        }
+        return result;
+    }
+
+    @Nullable
+    /**
+     * Helper for closePad. Process start and end of a close range and return
+     * a CLOSED TimeRange accordingly. If start == end, then returns null
+     * 
+     * @param startClose start of CLOSED TimeRange
+     * @param endClose end of CLOSED TimeRange
+     * @return corresponding CLOSED TimeRange, null if startClose == endCLose
+     */
+    private static TimeRange closePadHelper(int startClose, int endClose) {
+        return (startClose < endClose)
+                ? new TimeRange(startClose, endClose, Status.CLOSED)
+                : null;
+    }
+
     /**
      * 
      * @param date input LocalDate

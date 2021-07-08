@@ -249,8 +249,8 @@ public class InputTest {
                         System.out.println();
                         hasWrong = true;
                     }
+                    lineNumOH++;
                 }
-                lineNumOH++;
                 lineNumInput++;
             }
         } catch (NullPointerException e) {
@@ -361,18 +361,24 @@ public class InputTest {
         boolean result = true;
 
         // get expected answer
-        Status expectedStatus = Status.convert(answer[0]);
         String timeString = answer[1];
-        
+        Status expectedStatus = Status.convert(answer[0]);
+        boolean expectedAlways = timeString.equals("always");
+
         // get actual answer
         Result actual = getNextEvent(openingHours, inputTime);
         Status actualStatus = actual.getStatus();
+        boolean actualAlways = actual.isAlways();
 
         // check expected and actual
         if (actualStatus == expectedStatus) {
-            result = (actual.isAlways())
-                    ? timeString.equals("always")
-                    : LocalDateTime.parse(timeString).equals(actual.getNextEventTime());
+            if (expectedAlways) {
+                result = (expectedAlways == actualAlways);
+            } else if (!actualAlways){
+                result = LocalDateTime.parse(timeString).equals(actual.getNextEventTime());
+            } else {
+                result = false;
+            }
         } else {    
             result = false;
         }
@@ -382,8 +388,8 @@ public class InputTest {
             String expectedAnswer = Status.convert(answer[0]) + ", " + answer[1];
             String givenAnswer = actualStatus + ", "
                 + ((actual.isAlways()) ? "always" : actual.getNextEventTime());
-            System.out.println("Wrong answer for \"" + openingHours);
-            System.out.println("Input time: \"" + inputTime);
+            System.out.println("Wrong answer for \"" + openingHours + "\"");
+            System.out.println("Input time: \"" + inputTime + "\"");
             System.out.println("Correct answer: " + expectedAnswer);
             System.out.println("Given answer: " + givenAnswer);
         }

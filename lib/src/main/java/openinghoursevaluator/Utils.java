@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Utils {
+    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
     /** Default constructor */
     private Utils() {
         // empty on purpose

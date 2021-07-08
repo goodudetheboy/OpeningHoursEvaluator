@@ -1,6 +1,5 @@
 package openinghoursevaluator;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import javax.annotation.Nonnull;
@@ -74,5 +73,23 @@ public class Result {
 
     public void setAlways(boolean isAlways) {
         this.isAlways = isAlways;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        b.append("Status: " + status);
+        b.append(Utils.LINE_SEPARATOR);
+        b.append("Comment: " + comment);
+        b.append(Utils.LINE_SEPARATOR);
+        b.append("Defining Rule: " + defRule);
+        if (nextEvent != null) {
+            b.append(Utils.LINE_SEPARATOR);
+            b.append("Time of next event: " + nextEvent);
+            if (isAlways) {
+                b.append("Is always " + status);
+            }
+        }
+        return b.toString();
     }
 }

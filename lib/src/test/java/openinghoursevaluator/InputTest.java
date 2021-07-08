@@ -18,13 +18,14 @@ import ch.poole.openinghoursparser.OpeningHoursParseException;
 
 public class InputTest {
     @Test
-    public void evaluatorTestAll() throws OpeningHoursParseException {
+    public void evaluatorTestAll() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         evaluatorTimepointTest();
         evaluatorWeekdayTest();
         evaluatorWeekTest();
         evaluatorMonthTest();
         evaluatorYearTest();
         evaluatorFailTest();
+        evaluatorOpenNextTest();
     }
 
     /**

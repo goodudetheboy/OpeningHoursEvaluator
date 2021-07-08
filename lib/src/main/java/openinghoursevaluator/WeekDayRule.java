@@ -642,6 +642,13 @@ public class WeekDayRule {
      */
     public static List<TimeRange> closePad(List<TimeRange> timeList) {
         List<TimeRange> result = new ArrayList<>(timeList);
+
+        // handle IndexOutOfBounds
+        if (timeList.isEmpty()) {
+            result.add(new TimeRange(0, 1440, Status.CLOSED));
+            return result;    
+        }
+
         TimeRange toAdd;
         // check start of day
         int startClose = 0;

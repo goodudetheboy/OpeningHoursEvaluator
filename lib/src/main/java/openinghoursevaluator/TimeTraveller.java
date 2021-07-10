@@ -12,8 +12,9 @@ import ch.poole.openinghoursparser.Rule;
  * 
  */
 public class TimeTraveller {
-    // a limit to lookahead into the future when checking open next
+    // a limit to lookahead into the future/past when checking open next
     public static final int MAX_FUTURE_WEEKS = 100;
+    public static final int MAX_PAST_WEEKS = 100;
 
     List<Rule>  rules   = null;
 
@@ -30,28 +31,29 @@ public class TimeTraveller {
      * from status of the evaluation of inputTime against the stored rules)
      * 
      * @param inputTime time to be checked
+     * @param isNext true to look next differing event, false to look last
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      * @throws OpeningHoursEvaluationException
      */
-    public Result getNextDifferingEvent(LocalDateTime inputTime)
+    public Result getDifferingEvent(LocalDateTime inputTime, boolean isNext)
             throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
 
         // checking in current week in monthRule first
         monthRule.buildWeek(inputTime);
         Status statusToCheck = monthRule.checkStatus(inputTime).getStatus();
-        Result result = monthRule.getNextDifferingEvent(inputTime, statusToCheck);
+        Result result = monthRule.getDifferingEvent(inputTime, statusToCheck, isNext);
 
         // if nothing could be found, go to the future!
         if (result != null) {
             return result;
         } else {
-            LocalDate toTheFuture = inputTime.toLocalDate();
+            LocalDate lookahead = inputTime.toLocalDate();
             for (int i=0; i < MAX_FUTURE_WEEKS; i++) {
-                toTheFuture = DateManager.getOffsetDate(toTheFuture, 7);
-                monthRule.buildWeek(toTheFuture.atStartOfDay());
-                result = monthRule.getNextDifferingEvent(statusToCheck);
+                lookahead = DateManager.getOffsetDate(lookahead, (isNext) ? 7 : -7);
+                monthRule.buildWeek(lookahead.atStartOfDay());
+                result = monthRule.getDifferingEvent(statusToCheck, isNext);
                 if (result != null) {
                     return result;
                 }

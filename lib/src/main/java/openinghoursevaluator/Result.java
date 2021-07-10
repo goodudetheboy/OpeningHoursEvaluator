@@ -13,8 +13,9 @@ public class Result {
     Rule    defRule     = null;
 
     // reserved for when asking for open/close next
-    LocalDateTime   nextEvent   = null;
-    boolean         isAlways    = false;
+    LocalDateTime   nextEventTime   = null;
+    LocalDateTime   lastEventTime   = null;
+    boolean         isAlways        = false;
 
     public Result() {
         // empty
@@ -44,7 +45,12 @@ public class Result {
 
     @Nullable
     public LocalDateTime getNextEventTime() {
-        return nextEvent;
+        return nextEventTime;
+    }
+
+    @Nullable
+    public LocalDateTime getLastEventTime() {
+        return lastEventTime;
     }
 
     public boolean isAlways() {
@@ -67,8 +73,12 @@ public class Result {
         this.defRule = defRule;
     }
  
-    public void setNextEventTime(LocalDateTime nextEvent) {
-        this.nextEvent = nextEvent;
+    public void setNextEventTime(LocalDateTime nextEventTime) {
+        this.nextEventTime = nextEventTime;
+    }
+
+    public void setLastEventTime(LocalDateTime lastEventTime) {
+        this.lastEventTime = lastEventTime;
     }
 
     public void setAlways(boolean isAlways) {
@@ -83,12 +93,18 @@ public class Result {
         b.append("Comment: " + comment);
         b.append(Utils.LINE_SEPARATOR);
         b.append("Defining Rule: " + defRule);
-        if (nextEvent != null) {
+        if (nextEventTime != null) {
             b.append(Utils.LINE_SEPARATOR);
-            b.append("Time of next event: " + nextEvent);
-            if (isAlways) {
-                b.append("Is always " + status);
-            }
+            b.append("Time of next event: " + nextEventTime);
+            
+        }
+        if (lastEventTime != null) {
+            b.append(Utils.LINE_SEPARATOR);
+            b.append("Time of last event: " + lastEventTime);
+            
+        }
+        if (isAlways) {
+            b.append("Is always " + status);
         }
         return b.toString();
     }

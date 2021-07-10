@@ -67,6 +67,7 @@ public class InputTest {
         evaluateDifferingEventBatchCheck("test-data/oh/open-next.txt-oh", "test-data/input-time/open-next.txt", "test-data/answer/open-next.txt-answer", true);
     }
 
+    @Test
     public void evaluatorOpenLastTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         evaluateDifferingEventBatchCheck("test-data/oh/open-last.txt-oh", "test-data/input-time/open-last.txt", "test-data/answer/open-last.txt-answer", false);
     }
@@ -91,13 +92,6 @@ public class InputTest {
         printBatch("test-data/oh/week.txt-oh", "2021-06-09T15:00", isDebug);
         printBatch("test-data/oh/month.txt-oh", "2021-06-09T15:00", isDebug);
         printBatch("test-data/oh/year.txt-oh", "2021-06-09T15:00", isDebug);
-    }
-
-    /** Used for checking on the spot, convenient during debugging */
-    @Test
-    public void spotCheck() {
-        // assertTrue(evaluateCheck("00:00-02:00,17:00-24:00, 12:00-14:00; 15:00-16:00 unknown", "2021-06-09T03:00", Status.CLOSED, "xxxxx", 0, 0));
-        // print("Jun 4, 12, 20-25, Jul 2-14, 23-31; Jun 14-20 unknown; Jun 17-20 off \"something happens\"; Jun 29-Jul 3 00:00-48:00 \"nothing here\"", "2021-07-04T03:00");
     }
 
     //-------------------------------------------------------------------------
@@ -376,16 +370,20 @@ public class InputTest {
         boolean expectedAlways = timeString.equals("always");
 
         // get actual answer
-        Result actual = getNextEvent(openingHours, inputTime);
+        Result actual = (isNext) ? getNextEvent(openingHours, inputTime) 
+                                 : getLastEvent(openingHours, inputTime);
         Status actualStatus = actual.getStatus();
         boolean actualAlways = actual.isAlways();
+        LocalDateTime actualTime = (isNext)
+                                    ? actual.getNextEventTime()
+                                    : actual.getLastEventTime();
 
         // check expected and actual
         if (actualStatus == expectedStatus) {
             if (expectedAlways) {
                 result = (expectedAlways == actualAlways);
             } else if (!actualAlways){
-                result = LocalDateTime.parse(timeString).equals(actual.getNextEventTime());
+                result = LocalDateTime.parse(timeString).equals(actualTime);
             } else {
                 result = false;
             }
@@ -397,7 +395,7 @@ public class InputTest {
         if (!result) {
             String expectedAnswer = Status.convert(answer[0]) + ", " + answer[1];
             String givenAnswer = actualStatus + ", "
-                + ((actual.isAlways()) ? "always" : actual.getNextEventTime());
+                + ((actual.isAlways()) ? "always" : actualTime);
             System.out.println("Wrong answer for \"" + openingHours + "\"");
             System.out.println("Input time: \"" + inputTime + "\"");
             System.out.println("Correct answer: " + expectedAnswer);

@@ -16,6 +16,7 @@ import ch.poole.openinghoursparser.DateRange;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.RuleModifier;
+import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 import ch.poole.openinghoursparser.WeekRange;
 import ch.poole.openinghoursparser.YearRange;
@@ -228,19 +229,27 @@ public class MonthRule {
 
     /**
      * Return next differing event of the input time (status different
-     * from status of the evaluation of inputTime against the stored rules)
+     * from status of the evaluation of inputTime against the stored rules).
+     * <p>
+     * This assumes that the weekday of the input time is within this Week
      * 
      * @param inputTime time to be checked
      * @param status the status that needs that the next event's status
      *      has to be different from
+     * @param isNext true to look next differing event, false to look last
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      */
     @Nullable
-    Result getNextDifferingEvent(LocalDateTime inputTime, Status status) {
-        Week week = weekStorage.get(0);
-        Result result;
-        result = week.getNextDifferingEventThisWeek(inputTime, status);
+    Result getDifferingEvent(LocalDateTime inputTime, Status status, boolean isNext) {
+        WeekDay weekday = Week.convertWeekDay(inputTime.getDayOfWeek());
+        Result result = null;
+        for (Week week : weekStorage) {
+            if (week.hasWeekDay(weekday)) {
+                result = week.getDifferingEventThisWeek(inputTime, status, isNext);
+                break;
+            }
+        }
         return result;
     }
 
@@ -250,14 +259,18 @@ public class MonthRule {
      * 
      * @param status the status that needs that the next event's status
      *      has to be different from
-     * @return next next differing event whose status is different from the input
-     *      Status
+     * @param isNext true to look next differing event, false to look last
+     * @return next differing event whose status is different from the
+     *      input Status
      */
     @Nullable
-    Result getNextDifferingEvent(Status status) {
-        Week week = weekStorage.get(0);
+    Result getDifferingEvent(Status status, boolean isNext) {
+        Week week = (isNext) ? weekStorage.get(0) 
+                             : weekStorage.get(weekStorage.size()-1);
         Result result;
-        result = week.getNextDifferingEvent(week.getStartWeekDayRule(), status);
+        WeekDayRule start = (isNext) ? week.getStartWeekDayRule()
+                                     : week.getEndWeekDayRule();
+        result = week.getDifferingEvent(start, status, isNext);
         return result;
     }
 

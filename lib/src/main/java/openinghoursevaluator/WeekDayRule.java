@@ -539,24 +539,30 @@ public class WeekDayRule {
      * inputTime instead.
      * 
      * @param inputTime input time in minutes
+     * @param isNext true to look forward, false to look backward in time
      * @return the TimeRange that the inputTime is within whose Status is
      *      different from the TimeRange that the inputTime is within, null
      *      otherwise
      */
     @Nullable
-    TimeRange getNextDifferingEventToday(int inputTime) {
-        TimeRange timeOfInput = null;
+    TimeRange getDifferingEventToday(int inputTime, boolean isNext) {
+        Status statusToCheck = null;
         // pad because during build all CLOSED range not defined is not added
         List<TimeRange> paddedTime = closePad(openingTimes);
-        for (TimeRange checkTime : paddedTime) {   
-            if (timeOfInput == null) {
+        int current = (isNext) ? 0 : paddedTime.size()-1;
+        int target = (isNext) ? paddedTime.size() : -1;
+
+        while (current != target) {   
+            TimeRange checkTime = paddedTime.get(current);
+            if (statusToCheck == null) {
                 if (inputTime >= checkTime.getStart()
                         && inputTime < checkTime.getEnd()) {
-                    timeOfInput = checkTime;
+                    statusToCheck = checkTime.getStatus();
                 }
-            } else if (checkTime.getStatus() != timeOfInput.getStatus()){
+            } else if (checkTime.getStatus() != statusToCheck){
                 return checkTime;
             }
+            current = current + ((isNext) ? 1: -1);
         }   
         return null;
     }
@@ -565,17 +571,23 @@ public class WeekDayRule {
      * Return the TimeRange whose Status is different from the input Status
      * 
      * @param status input Status
+     * @param isNext true to look forward, false to look backward in time
      * @return TimeRange whose Status is different from the input Status,
      *      null otherwise
      */
     @Nullable
-    TimeRange getNextDifferingEvent(Status status) {
+    TimeRange getDifferingEvent(Status status, boolean isNext) {
         // pad because during build all CLOSED range not defined is not added
         List<TimeRange> paddedTime = closePad(openingTimes);
-        for (TimeRange checkTime : paddedTime) {
+        int current = (isNext) ? 0 : paddedTime.size()-1;
+        int target = (isNext) ? paddedTime.size() : -1;
+        
+        while (current != target) {   
+            TimeRange checkTime = paddedTime.get(current);
             if (checkTime.getStatus() != status) {
                 return checkTime;
             }
+            current = current + ((isNext) ? 1: -1);
         }
         return null;
     }

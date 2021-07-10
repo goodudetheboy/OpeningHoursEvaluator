@@ -80,7 +80,19 @@ public class OpeningHoursEvaluator {
      *      status of the evaluation of inputTime against the stored rules)
      */
     public Result getNextEvent(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
-        return timeTraveller.getNextDifferingEvent(inputTime);
+        return timeTraveller.getDifferingEvent(inputTime, true);
+    }
+
+    /**
+     * Return last differing event of the input time (status different
+     * from status of the evaluation of inputTime against the stored rules).
+     * 
+     * @param inputTime time to be checked
+     * @return last differing event of the input time (status different from
+     *      status of the evaluation of inputTime against the stored rules)
+     */
+    public Result getLastEvent(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
+        return timeTraveller.getDifferingEvent(inputTime, false);
     }
 
     /**

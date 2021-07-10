@@ -344,18 +344,23 @@ public class Week {
      * @param inputTime time to be checked
      * @param status the status that needs that the next event's status
      *      has to be different from
+     * @param isNext true to get next differing event, false to get last
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      */
     @Nullable
-    Result getNextDifferingEventThisWeek(LocalDateTime inputTime, Status status) {
+    Result getDifferingEventThisWeek(LocalDateTime inputTime, Status status, boolean isNext) {
         WeekDay weekday = convertWeekDay(inputTime.getDayOfWeek());
         int time = Utils.timeInMinute(inputTime);
         WeekDayRule dayToCheck = weekDayStorage.get(weekday);
-        TimeRange check = dayToCheck.getNextDifferingEventToday(time);
-        return (check != null)
-                ? processNextDifferingEvent(dayToCheck, check)
-                : getNextDifferingEvent(dayToCheck.getNextDayRule(), status);
+        TimeRange check = dayToCheck.getDifferingEventToday(time, isNext);
+        if (check != null) {
+            return processDifferingEvent(dayToCheck, check, isNext);
+        } else {
+            WeekDayRule toCheck = (isNext) ? dayToCheck.getNextDayRule() 
+                                           : dayToCheck.getLastDayRule();
+            return getDifferingEvent(toCheck, status, isNext); 
+        }
     }
 
     /**
@@ -367,17 +372,18 @@ public class Week {
      * @param start start WeekDayRule, search until dummy
      * @param status the status that needs that the next event's status
      *      has to be different from
+     * @param isNext true to look next differing event, false otherwise
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      */
     @Nullable
-    Result getNextDifferingEvent(WeekDayRule start, Status status) {
+    Result getDifferingEvent(WeekDayRule start, Status status, boolean isNext) {
         while (!start.isDummy()) {
-            TimeRange check = start.getNextDifferingEvent(status);
+            TimeRange check = start.getDifferingEvent(status, isNext);
             if (check != null) {
-                return processNextDifferingEvent(start, check);
+                return processDifferingEvent(start, check, isNext);
             }
-            start = start.getNextDayRule();
+            start = (isNext) ? start.getNextDayRule() : start.getLastDayRule();
         }
         return null;
     }
@@ -388,14 +394,29 @@ public class Week {
      * 
      * @param day a desired WeekDayRule
      * @param timerange a desired TimeRange
+     * @param isNext true if look for next differing event, false otherwise
      * @return Result that can be rad
      */
-    private Result processNextDifferingEvent(WeekDayRule day, TimeRange timerange) {
+    private Result processDifferingEvent(WeekDayRule day, TimeRange timerange, boolean isNext) {
         Result result = new Result(timerange);
         LocalDate date = day.getDefDate();
-        LocalTime time = LocalTime.of(timerange.getStart() / 60, timerange.getStart() % 60);
-        LocalDateTime nextEvent = LocalDateTime.of(date, time);
-        result.setNextEventTime(nextEvent);
+        int timestamp;
+        if (isNext) {
+            timestamp = timerange.getStart();
+        } else {
+            timestamp = (timerange.getEnd() != TimeRange.MAX_TIME)
+                        ? timerange.getEnd()
+                        : timerange.getEnd() - 1;
+            // to prevent Invalid value for HourOfDay exception
+        }
+        LocalTime time = LocalTime.of(timestamp / 60, timestamp % 60);
+        LocalDateTime differingEvent = LocalDateTime.of(date, time);
+
+        if (isNext) {
+            result.setNextEventTime(differingEvent);
+        } else {
+            result.setLastEventTime(differingEvent);
+        }
         return result;
     }
 

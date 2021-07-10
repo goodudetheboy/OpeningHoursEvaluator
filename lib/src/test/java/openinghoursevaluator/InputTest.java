@@ -75,6 +75,11 @@ public class InputTest {
     public void unitTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED));
         assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN));
+        
+        // open next test
+        LocalDateTime time = LocalDateTime.parse("2021-07-01T12:00");
+        LocalDateTime answerTime = LocalDateTime.parse("2021-07-01T14:00");
+        assertEquals(answerTime, getNextEvent("14:00-18:00 unknown", time).getNextEventTime());
     }
 
     @Test

@@ -33,6 +33,7 @@ public class WeekDayRule {
 
     // used for connecting between days
     WeekDayRule     nextDayRule     = null;
+    WeekDayRule     lastDayRule     = null;
     List<TimeRange> yesterdaySpill  = null;
 
     // opening times storage
@@ -89,6 +90,13 @@ public class WeekDayRule {
     }
 
     /**
+     * @return the last day rule
+     */
+    public WeekDayRule getLastDayRule() {
+        return lastDayRule;
+    }
+
+    /**
      * @return the time spill from previous day
      */
     public List<TimeRange> getSpilledTime() {
@@ -124,10 +132,19 @@ public class WeekDayRule {
     /**
      * Set the next WeekDayRule of this WeekDayRule
      * 
-     * @param nextWeekDay WeekDayRule to be set next
+     * @param nextDayRule WeekDayRule to be set next
      */
     public void setNextDayRule(WeekDayRule nextDayRule) {
         this.nextDayRule = nextDayRule;
+    }
+
+    /**
+     * Set the last WeekDayRule of this WeekDayRule
+     * 
+     * @param lastDayRule WeekDayRule to be set last
+     */
+    public void setLastDayRule(WeekDayRule lastDayRule) {
+        this.lastDayRule = lastDayRule;
     }
 
     /**

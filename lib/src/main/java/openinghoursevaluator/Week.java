@@ -36,6 +36,7 @@ public class Week {
 
     // used for connecting between days
     List<TimeRange> previousSpill   = null;
+    WeekDayRule dayBefore           = null;
     WeekDayRule dayAfter            = null;
     
     // weekday storage
@@ -425,9 +426,17 @@ public class Week {
     /** Populate this WeekRule with empty WeekDayRule. */
     public void populate() {
         populateHelper(startWeekDay);
+        // set previous bound
+        dayBefore = new WeekDayRule();
+        dayBefore.setDummy(true);
+        getStartWeekDayRule().setLastDayRule(dayBefore);
+
+        // set next bound
         dayAfter = new WeekDayRule();
         dayAfter.setDummy(true);
-        weekDayStorage.get(endWeekDay).setNextDayRule(dayAfter);
+        getEndWeekDayRule().setNextDayRule(dayAfter);
+
+        // apply previous spill
         if (previousSpill != null) {
             for (TimeRange spill : previousSpill) {
                 weekDayStorage.get(startWeekDay).addSpill(spill);
@@ -442,10 +451,13 @@ public class Week {
         LocalDate dateOfCurrent = WeekManager.getWeekDayOfWeek(defDate, current);
         WeekDayRule newWeekDay = new WeekDayRule(dateOfCurrent);
         weekDayStorage.put(current, newWeekDay);
+
+        // create next weekday rule
         WeekDay nextDay = getNextWeekDay(current);
         if(current != endWeekDay) {
             populateHelper(nextDay);
-            weekDayStorage.get(current).setNextDayRule(weekDayStorage.get(nextDay));
+            newWeekDay.setNextDayRule(weekDayStorage.get(nextDay));
+            weekDayStorage.get(nextDay).setLastDayRule(newWeekDay);
         }
     }
 
@@ -457,8 +469,10 @@ public class Week {
      * @param other the other Week to be connected
      */
     public void connect(Week other) {
-        WeekDayRule nextStartDay = other.weekDayStorage.get(other.getStartWeekday());
-        weekDayStorage.get(endWeekDay).setNextDayRule(nextStartDay);
+        WeekDayRule nextStartDay = other.getStartWeekDayRule();
+        WeekDayRule lastEndDay = getEndWeekDayRule();
+        lastEndDay.setNextDayRule(nextStartDay);
+        nextStartDay.setLastDayRule(lastEndDay);
     }
 
     /**

@@ -26,6 +26,7 @@ public class InputTest {
         evaluatorYearTest();
         evaluatorFailTest();
         evaluatorOpenNextTest();
+        evaluatorOpenLastTest();
     }
 
     /**
@@ -63,7 +64,11 @@ public class InputTest {
 
     @Test
     public void evaluatorOpenNextTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
-        evaluateOpenNextBatchCheck("test-data/oh/open-next.txt-oh", "test-data/input-time/open-next.txt", "test-data/answer/open-next.txt-answer");
+        evaluateDifferingEventBatchCheck("test-data/oh/open-next.txt-oh", "test-data/input-time/open-next.txt", "test-data/answer/open-next.txt-answer", true);
+    }
+
+    public void evaluatorOpenLastTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        evaluateDifferingEventBatchCheck("test-data/oh/open-last.txt-oh", "test-data/input-time/open-last.txt", "test-data/answer/open-last.txt-answer", false);
     }
 
     @Test
@@ -218,7 +223,7 @@ public class InputTest {
      * @throws OpeningHoursParseException
      * @throws OpeningHoursEvaluationException
      */
-    public static void evaluateOpenNextBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile)
+    public static void evaluateDifferingEventBatchCheck(String openingHoursFile, String inputTimeFile, String answerFile, boolean isNext)
             throws OpeningHoursParseException, OpeningHoursEvaluationException {
         BufferedReader openingHoursReader = null;
         BufferedReader inputTimeReader = null;
@@ -242,7 +247,7 @@ public class InputTest {
                     String[] answers = answerString.split(",+");
                     String[] answer = answers[lineNumInput-1].split("\\s+");
                     
-                    if (!evaluateOpenNextCheck(openingHours, time, answer)) {
+                    if (!evaluateDifferingEventCheck(openingHours, time, answer, isNext)) {
                         System.out.println("Opening hours file: " + openingHoursFile
                                          + ", line: " + lineNumOH);
                         System.out.println("Input time line: " + lineNumInput);
@@ -356,7 +361,7 @@ public class InputTest {
      * @throws OpeningHoursParseException
      * @throws OpeningHoursEvaluationException
      */
-    public static boolean evaluateOpenNextCheck(String openingHours, LocalDateTime inputTime, String[] answer)
+    public static boolean evaluateDifferingEventCheck(String openingHours, LocalDateTime inputTime, String[] answer, boolean isNext)
             throws OpeningHoursParseException, OpeningHoursEvaluationException {
         boolean result = true;
 
@@ -401,6 +406,12 @@ public class InputTest {
             throws OpeningHoursParseException, OpeningHoursEvaluationException {
         OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
         return evaluator.getNextEvent(inputTime);
+    }
+
+    public static Result getLastEvent(String openingHours, LocalDateTime inputTime)
+            throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, false);
+        return evaluator.getLastEvent(inputTime);
     }
 
     //-------------------------------------------------------------------------

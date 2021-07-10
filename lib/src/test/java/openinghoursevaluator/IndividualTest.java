@@ -28,6 +28,8 @@ public class IndividualTest {
                         Result result = evaluator.checkStatus(inputTime);
                         System.out.println("Current status: " + result.getStatus() +
                             ((result.hasComment()) ? ", comment: " + result.getComment() : ""));
+                        System.out.println("Weekly schedule");
+                        System.out.println(evaluator.toString(inputTime));
                     } catch (OpeningHoursEvaluationException e) {
                         e.printStackTrace();
                     } catch (DateTimeParseException e) {

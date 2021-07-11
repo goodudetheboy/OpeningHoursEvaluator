@@ -24,6 +24,12 @@ try {
     LocalDateTime time = LocalDateTime.now();
     Result result = evaluator.checkStatus(time);
 
+    // Get next differing event (open/close/unknown next)
+    Result nextEvent = evaluator.getNextEvent(time);
+
+    // Get last differing event (open/close/unknown last)
+    Result lastEvent = evaluator.getLastEvent(time);
+
 } catch (OpeningHoursParseException e) {
     // Grammar-related exception
 } catch (OpeningHoursEvaluationException e) {

@@ -49,8 +49,7 @@ public class MonthRule {
         month = convertMonth(time.toLocalDate());
         populate(time);
         for (Rule rule : rules) {
-            List<TimeRange> previousSpill = simulateSpill(weekStorage.get(0), rule);
-            weekStorage.get(0).setPreviousSpill(previousSpill);
+            simulateSpill(weekStorage.get(0), rule);
             for (Week week : weekStorage) {
                 update(week, rule);
             }
@@ -72,8 +71,8 @@ public class MonthRule {
         LocalDate date = time.toLocalDate();
         Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()));
         for (Rule rule : rules) {
-            List<TimeRange> previousSpill = simulateSpill(oneDay, rule);
-            oneDay.setPreviousSpill(previousSpill);
+            simulateSpill(oneDay, rule);
+            // oneDay.setPreviousSpill(previousSpill);
             update(oneDay, rule);
         }
         oneDay.applyPreviousSpill();
@@ -202,15 +201,11 @@ public class MonthRule {
      * 
      * @param week a Week to be simulated
      * @param rule a Rule to be applied
-     * @return the simulated spill
      * @throws OpeningHoursEvaluationException
      */
-    private List<TimeRange> simulateSpill(Week week, Rule rule) throws OpeningHoursEvaluationException {
-        LocalDate firstDateOfWeek = week.getStartWeekDayRule().getDefDate();
-        LocalDate previousDay = DateManager.getOffsetDate(firstDateOfWeek, -1);
-        Week w = new Week(previousDay, Week.convertWeekDay(previousDay.getDayOfWeek()));
-        update(w, rule);
-        return w.getWeekSpill();
+    private void simulateSpill(Week week, Rule rule) throws OpeningHoursEvaluationException {
+        Week dayBeforeWeek = new Week(week.getDayBefore());
+        update(dayBeforeWeek, rule);
     }
 
 

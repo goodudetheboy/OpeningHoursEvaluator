@@ -66,7 +66,8 @@ public class OpeningHoursEvaluator {
      * @param isStrict
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
+    public Result checkStatus(LocalDateTime inputTime)
+            throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
         return monthRule.checkStatus(inputTime);
     }
@@ -79,7 +80,8 @@ public class OpeningHoursEvaluator {
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      */
-    public Result getNextEvent(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
+    public Result getNextEvent(LocalDateTime inputTime)
+            throws OpeningHoursEvaluationException {
         return timeTraveller.getDifferingEvent(inputTime, true);
     }
 
@@ -91,7 +93,8 @@ public class OpeningHoursEvaluator {
      * @return last differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
      */
-    public Result getLastEvent(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
+    public Result getLastEvent(LocalDateTime inputTime)
+            throws OpeningHoursEvaluationException {
         return timeTraveller.getDifferingEvent(inputTime, false);
     }
 

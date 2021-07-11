@@ -42,6 +42,8 @@ public class WeekDayRule {
     // used when need to traverse through a Week, and also in creation of Week
     boolean         isDummy         = false;
 
+    private boolean isFallbackLast = false;
+
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
         // nothing here
@@ -54,13 +56,6 @@ public class WeekDayRule {
         openingTimes = new ArrayList<>();
         yesterdaySpill = new ArrayList<>();
     }
-
-    /** Constructor with a WeekDay and a next WeekDayRule */
-    public WeekDayRule(LocalDate defDate, WeekDayRule nextDayRule) {
-        this(defDate);
-        this.nextDayRule = nextDayRule;
-    }
-
 
     /**
      * Helper function for constructor, used for gathering info from
@@ -176,17 +171,22 @@ public class WeekDayRule {
 
     /**
      * Build the opening times of this weekday with a rule. A new Rule will
-     * override (clear all current opening hours in this day) when:
+     * override (clear all current opening hours in this day) when all of the
+     * below condition is all satisfied:
      * <ol>
-     * <li> it is not an additive Rule
-     * <li> it is not a fallback Rule
+     * <li> it is a normal Rule (which means it is neither additive nor fallback)
      * <li> its status is not closed
      * </ol>
      * <p>
-     * Check the links below to learn more about when this does not
-     * clear/override current day
+     * Check the links below to learn more about when this does not clear/
+     * override current day
      * 
-     * @param rule rule to be used in building
+     * <p>
+     * Another feature is that any additive Rule followed by a fallback Rule is
+     * considered also a fallback Rule (it will be added as a fallback instead
+     * of an additive)
+     * 
+     * @param rule Rule to be used in building
      * @throws OpeningHoursEvaluationException
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:rule_modifier:closed
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator
@@ -216,15 +216,17 @@ public class WeekDayRule {
                             ? rule.getModifier().getComment()
                             : null;
         Status status = Status.convert(rule.getModifier());
+        boolean isFallback = rule.isFallBack() || (rule.isAdditive() && isFallbackLast);
+
         if (rule.isTwentyfourseven() || rule.getTimes() == null) {
             TimeSpan allDay = new TimeSpan();
             allDay.setStart(0);
             allDay.setEnd(1440);
-            addTime(allDay, status, comment, rule, rule.isFallBack());
+            addTime(allDay, status, comment, rule, isFallback);
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            addTime(timespan, status, comment, rule, rule.isFallBack());
+            addTime(timespan, status, comment, rule, isFallback);
         }
     }
 
@@ -342,6 +344,7 @@ public class WeekDayRule {
         while(current <= end) {
             timepoint = new TimeRange(current - TimeRange.MAX_TIME, status, comment);
             timepoint.setDefiningRule(defRule);
+            timepoint.setFallback(isFallback);
             nextDayRule.addSpill(timepoint);
             current = current + interval;
         }
@@ -391,6 +394,7 @@ public class WeekDayRule {
                 timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
                 TimeRange spill = new TimeRange(0, timespill, openEndedStatus, openEndedComment);
                 spill.setDefiningRule(defRule);
+                spill.setFallback(isFallback);
                 nextDayRule.addSpill(spill);
             }
         } else if (nextDayStart >= TimeRange.MAX_TIME + 17*60) {
@@ -399,6 +403,7 @@ public class WeekDayRule {
             TimeRange extra = new TimeRange(nextDayStart, nextDayStart + 8*60,
                                     openEndedStatus, openEndedComment);
             extra.setDefiningRule(defRule);
+            extra.setFallback(isFallback);
             nextDayRule.addSpill(extra);
         }
     }
@@ -444,6 +449,7 @@ public class WeekDayRule {
         if (isFallback) {
             addFallback(timerange);
         } else {
+            isFallbackLast = false;
             addTime(timerange);
         }
     }
@@ -469,6 +475,7 @@ public class WeekDayRule {
      * @param timerange
      */
     public void addFallback(TimeRange timerange) {
+        isFallbackLast = true;
         List<TimeRange> remains = new ArrayList<>();
         remains.add(timerange);
         for (TimeRange openingTime : openingTimes) {

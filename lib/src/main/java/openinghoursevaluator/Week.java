@@ -71,11 +71,75 @@ public class Week {
         populate();
     }
 
+    /**
+     * Constructs a Week wrapper for a single WeekDayRule
+     * 
+     * @param weekDayRule WeekDayRule 
+     */
+    Week (WeekDayRule weekDayRule) {
+        this.defDate = weekDayRule.getDefDate();
+        dissectDefDate(defDate);
+        WeekDay weekday = weekDayRule.getWeekDay();
+        setStartWeekDay(weekday);
+        setEndWeekDay(weekday);
+        weekDayStorage = new EnumMap<>(WeekDay.class);
+        weekDayStorage.put(weekday, weekDayRule);
+    }
+
     /** Helper function for constructor */
     private void dissectDefDate(LocalDate defDate) {
         this.year = defDate.getYear();
         this.month = MonthRule.convertMonth(defDate);
         this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
+    }
+
+    
+    public int getYear() {
+        return year;
+    }
+
+    public Month getMonth() {
+        return month;
+    }
+
+    public int getWeekOfMonth() {
+        return weekOfMonth;
+    }
+
+    public int getWeekOfYear() {
+        return weekOfYear;
+    }
+
+    public int getReverseWeekOfMonth() {
+        return reverseWeekOfMonth;
+    }
+
+    public List<TimeRange> getPreviousSpill() {
+        return previousSpill;
+    }
+
+    public WeekDay getStartWeekday() {
+        return startWeekDay;
+    }
+
+    public WeekDay getEndWeekDay() {
+        return endWeekDay;
+    }
+
+    public WeekDayRule getStartWeekDayRule() {
+        return weekDayStorage.get(startWeekDay);
+    }
+
+    public WeekDayRule getEndWeekDayRule() {
+        return weekDayStorage.get(endWeekDay);
+    }
+
+    public WeekDayRule getDayAfter() {
+        return dayAfter;
+    }
+
+    public WeekDayRule getDayBefore() {
+        return dayBefore;
     }
 
     public void setYear(int year) {
@@ -118,46 +182,6 @@ public class Week {
             throw new IllegalArgumentException("Start weekday cannot be after end weekday");
         }
         this.endWeekDay = endWeekDay;
-    }
-
-    public int getYear() {
-        return year;
-    }
-
-    public Month getMonth() {
-        return month;
-    }
-
-    public int getWeekOfMonth() {
-        return weekOfMonth;
-    }
-
-    public int getWeekOfYear() {
-        return weekOfYear;
-    }
-
-    public int getReverseWeekOfMonth() {
-        return reverseWeekOfMonth;
-    }
-
-    public List<TimeRange> getPreviousSpill() {
-        return previousSpill;
-    }
-
-    public WeekDay getStartWeekday() {
-        return startWeekDay;
-    }
-
-    public WeekDay getEndWeekDay() {
-        return endWeekDay;
-    }
-
-    public WeekDayRule getStartWeekDayRule() {
-        return weekDayStorage.get(startWeekDay);
-    }
-
-    public WeekDayRule getEndWeekDayRule() {
-        return weekDayStorage.get(endWeekDay);
     }
 
     /**
@@ -448,14 +472,21 @@ public class Week {
     public void populate() {
         populateHelper(startWeekDay);
         // set previous bound
-        dayBefore = new WeekDayRule();
+        WeekDayRule startWeekRule = getStartWeekDayRule();
+        LocalDate dateBefore 
+            = DateManager.getOffsetDate(startWeekRule.getDefDate(), -1);
+        dayBefore = new WeekDayRule(dateBefore);
         dayBefore.setDummy(true);
-        getStartWeekDayRule().setLastDayRule(dayBefore);
+        startWeekRule.setLastDayRule(dayBefore);
+        dayBefore.setNextDayRule(startWeekRule);
 
         // set next bound
-        dayAfter = new WeekDayRule();
+        WeekDayRule endWeekRule = getEndWeekDayRule();
+        LocalDate dateAfter 
+            = DateManager.getOffsetDate(endWeekRule.getDefDate(), 1);
+        dayAfter = new WeekDayRule(dateAfter);
         dayAfter.setDummy(true);
-        getEndWeekDayRule().setNextDayRule(dayAfter);
+        endWeekRule.setNextDayRule(dayAfter);
 
         // apply previous spill
         if (previousSpill != null) {
@@ -512,6 +543,10 @@ public class Week {
             weekDayStorage.get(startWeekDay).setSpilledTime(previousSpill);
             previousSpill = null;
         }
+    }
+
+    void generateSpillDayBefore() {
+
     }
 
     /**

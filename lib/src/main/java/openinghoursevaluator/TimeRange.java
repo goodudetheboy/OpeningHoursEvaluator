@@ -23,11 +23,12 @@ public class TimeRange implements Comparable<TimeRange> {
     public static final int     MAX_TIME           = HOURS_24;
     public static final String  DEFAULT_OPEN_ENDED_COMMENT = "open ended time";
 
-    int     start   = UNDEFINED_TIME;
-    int     end     = UNDEFINED_TIME;
-    Status  status  = null;
-    String  comment = null;
-    Rule    defRule = null;
+    int         start       = UNDEFINED_TIME;
+    int         end         = UNDEFINED_TIME;
+    Status      status      = null;
+    String      comment     = null;
+    Rule        defRule     = null;
+    boolean     isFallback  = false;
 
     /**
      * Default constructor
@@ -37,9 +38,13 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /** Constructor for copying TimeRange */
-    public TimeRange(TimeRange another) {
-        this(another.getStart(), another.getEnd(), another.getStatus(),
-                another.getComment());
+    public TimeRange(TimeRange other) {
+        setStart(other.start);
+        setEnd(other.end);
+        setStatus(other.status);
+        setComment(other.comment);
+        setDefiningRule(other.defRule);
+        setFallback(other.isFallback);
     }
 
     /**
@@ -159,6 +164,10 @@ public class TimeRange implements Comparable<TimeRange> {
         return defRule;
     }
 
+    public boolean isFallback() {
+        return isFallback;
+    }
+
     public void setStart(int start) {
         if (start > MAX_TIME || start < MIN_TIME) {
             throw new IllegalArgumentException("Start time " + start + " is outside current day");
@@ -183,6 +192,10 @@ public class TimeRange implements Comparable<TimeRange> {
 
     public void setDefiningRule(Rule defRule) {
         this.defRule = defRule;
+    }
+
+    public void setFallback(boolean isFallback) {
+        this.isFallback = isFallback;
     }
 
     public boolean hasComment() {
@@ -286,12 +299,14 @@ public class TimeRange implements Comparable<TimeRange> {
                 TimeRange startRange = new TimeRange(start, overlap.getStart(),
                                             oldStatus, comment);
                 startRange.setDefiningRule(defRule);
+                startRange.setFallback(isFallback);
                 result.add(startRange);
             } 
             if (overlap.getEnd() < end) {
                 TimeRange endRange = new TimeRange(overlap.getEnd(), end,
                                             oldStatus, comment);
                 endRange.setDefiningRule(defRule);
+                endRange.setFallback(isFallback);
                 result.add(endRange);
             }
         } else {

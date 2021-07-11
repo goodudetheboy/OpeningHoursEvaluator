@@ -420,6 +420,7 @@ public class WeekDayRule {
                 endToday = TimeRange.MAX_TIME;
                 TimeRange spill = new TimeRange(0, timespill, status, comment);
                 spill.setDefiningRule(defRule);
+                spill.setFallback(isFallback);
                 nextDayRule.addSpill(spill);
             }
         } else {
@@ -485,6 +486,7 @@ public class WeekDayRule {
         }
         clean(remains);
         for(TimeRange remain : remains) {
+            remain.setFallback(true);
             addTime(remain);
         }
     }
@@ -607,7 +609,8 @@ public class WeekDayRule {
     /** Apply all time spills added from previous day. This is used in build()*/
     public void flushSpill() {
         while(!yesterdaySpill.isEmpty()) {
-            addTime(yesterdaySpill.remove(0), false);
+            TimeRange spill = yesterdaySpill.remove(0);
+            addTime(spill, spill.isFallback());
         }
     }
 

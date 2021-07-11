@@ -81,6 +81,11 @@ public class InputTest {
         LocalDateTime time = LocalDateTime.parse("2021-07-01T12:00");
         LocalDateTime answerTime = LocalDateTime.parse("2021-07-01T14:00");
         assertEquals(answerTime, getNextEvent("14:00-18:00 unknown", time).getNextEventTime());
+
+        // open last test
+        LocalDateTime time1 = LocalDateTime.parse("2021-06-30T12:00");
+        LocalDateTime answerTime1 = LocalDateTime.parse("2021-06-29T18:00");
+        assertEquals(answerTime1, getLastEvent("14:00-18:00 unknown", time1).getLastEventTime());
     }
 
     @Test

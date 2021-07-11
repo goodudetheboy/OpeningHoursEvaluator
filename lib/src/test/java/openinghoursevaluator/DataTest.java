@@ -3,6 +3,7 @@ package openinghoursevaluator;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,11 +22,13 @@ public class DataTest {
      */
     @Test
     public void inputTimeFolderLegalTest() {
-        inputTimeFileLegalTest("test-data/input-time/timepoint.txt");
-        inputTimeFileLegalTest("test-data/input-time/weekday.txt");
-        inputTimeFileLegalTest("test-data/input-time/week.txt");
-        inputTimeFileLegalTest("test-data/input-time/month.txt");
-        inputTimeFileLegalTest("test-data/input-time/year.txt");
+        File dir = new File("test-data/input-time/");
+        File[] directoryListing = dir.listFiles();
+        if (directoryListing != null) {
+          for (File child : directoryListing) {
+            inputTimeFileLegalTest(child.getPath());
+          }
+        }
     }
 
     public static void inputTimeFileLegalTest(String inputFileDir) {

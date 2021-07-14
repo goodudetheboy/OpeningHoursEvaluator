@@ -13,11 +13,11 @@ import ch.poole.openinghoursparser.Rule;
  *
  */
 public class OpeningHoursEvaluator {
-    /** List to store rules from the parser */
-    List<Rule>      rules;
-    String          openingHours;
-    boolean         isStrict = false;
-    TimeTraveller   timeTraveller = null;
+    // List to store rules from the parser
+    List<Rule>      rules           = null;
+    String          openingHours    = null;
+    boolean         isStrict        = false;
+    TimeTraveller   timeTraveller   = null;
 
     /**
      * Constructor with input time string according to opening hours specification 

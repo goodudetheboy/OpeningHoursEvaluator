@@ -226,6 +226,7 @@ public class Week {
             weekdayRange.add(allWeek);
         }
         for (WeekDayRange weekdays : weekdayRange) {
+            // restriction taken from previous YearRange, WeekRange, DateRange
             WeekDayRange processed = processRestriction(weekdays, restriction);
             if (processed != null) {
                 if (weekdays.getOffset() == 0) {
@@ -325,7 +326,8 @@ public class Week {
     }
 
     /** update() helper, used for WeekDayRange with offset 
-     * @throws OpeningHoursEvaluationException*/
+     * @throws OpeningHoursEvaluationException
+     */
     private void updateWithOffsetRange(Rule rule, WeekDayRange weekdays) throws OpeningHoursEvaluationException {
         WeekDay current = startWeekDay;
         WeekDay end = endWeekDay;
@@ -334,14 +336,6 @@ public class Week {
                 weekDayStorage.get(current).build(rule);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
-    }
-
-    /**
-     * @return true if input Rule can be applied to any day in the week
-     */
-    private boolean isUniversal(Rule rule) {
-        return rule.isTwentyfourseven()
-                || (rule.getDays() == null && rule.getTimes() == null);
     }
 
     /**
@@ -456,19 +450,27 @@ public class Week {
 
     /** Clean all WeekDayRule in this Week */
     public void clean() {
-        WeekDay current = startWeekDay;
+        WeekDayRule current = weekDayStorage.get(startWeekDay);
+        WeekDay target = getNextWeekDay(endWeekDay);
         do {
-            weekDayStorage.get(current).clean();
-        } while ((current = getNextWeekDay(current))
-                    != getNextWeekDay(endWeekDay));
+            current.clean();
+            current = current.getNextDayRule();
+        } while (current.getWeekDay() != target);
     }
 
-    /** Reset this Week by removing all current WeekDayRule and filling it with empty ones*/
+    /**
+     * Reset this Week by removing all current WeekDayRule and filling it with
+     * empty ones
+     * 
+     */
     public void reset() {
         weekDayStorage = new EnumMap<>(WeekDay.class);
     }
 
-    /** Populate this WeekRule with empty WeekDayRule. */
+    /**
+     * Populate this WeekRule with empty WeekDayRule.
+     * 
+     */
     public void populate() {
         populateHelper(startWeekDay);
         // set previous bound
@@ -545,10 +547,6 @@ public class Week {
         }
     }
 
-    void generateSpillDayBefore() {
-
-    }
-
     /**
      * Create and return a List<Week> created from an input date. The weekday data
      * is extracted from the week of input date. If there's a cutoff (a week between
@@ -602,7 +600,6 @@ public class Week {
         return date.get(WeekFields.of(locale).weekOfWeekBasedYear());
 
     }
-
     
     /**
      * Convert java.time.DayOfWeek enum to OpeningHoursParser.WeekDay enum

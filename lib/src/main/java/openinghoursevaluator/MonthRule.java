@@ -23,8 +23,6 @@ import ch.poole.openinghoursparser.YearRange;
 import ch.poole.openinghoursparser.RuleModifier.Modifier;
 
 public class MonthRule {
-    int         year;
-    Month       month;
     List<Rule>  rules = null;
     List<Week>  weekStorage = null;
 
@@ -45,8 +43,6 @@ public class MonthRule {
      * @throws OpeningHoursEvaluationException
      */
     public void buildWeek(LocalDateTime time) throws OpeningHoursEvaluationException {
-        year = time.getYear();
-        month = convertMonth(time.toLocalDate());
         populate(time);
         for (Rule rule : rules) {
             simulateSpill(weekStorage.get(0), rule);
@@ -66,13 +62,10 @@ public class MonthRule {
      * @throws OpeningHoursEvaluationException
      */
     public Week buildOneDay(LocalDateTime time) throws OpeningHoursEvaluationException {
-        year = time.getYear();
-        month = convertMonth(time.toLocalDate());
         LocalDate date = time.toLocalDate();
         Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()));
         for (Rule rule : rules) {
             simulateSpill(oneDay, rule);
-            // oneDay.setPreviousSpill(previousSpill);
             update(oneDay, rule);
         }
         oneDay.applyPreviousSpill();

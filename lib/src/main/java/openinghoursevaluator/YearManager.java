@@ -17,7 +17,8 @@ public class YearManager {
      *      inside the year range
      * @throws OpeningHoursEvaluationException
      */
-    public boolean processYearRange(YearRange yearRange, Week week) throws OpeningHoursEvaluationException {
+    public boolean processYearRange(YearRange yearRange, Week week)
+            throws OpeningHoursEvaluationException {
         checkError(yearRange);
         int start = yearRange.getStartYear();
         int end = yearRange.getEndYear();
@@ -62,10 +63,12 @@ public class YearManager {
      * @param yearRange input YearRange
      * @throws OpeningHoursEvaluationException
      */
-    public static void checkError(YearRange yearRange) throws OpeningHoursEvaluationException {
+    public static void checkError(YearRange yearRange)
+            throws OpeningHoursEvaluationException {
         if (yearRange.getEndYear() != YearRange.UNDEFINED_YEAR
                 && yearRange.getStartYear() > yearRange.getEndYear()) {
-            throw new OpeningHoursEvaluationException("Illegal range (" + yearRange +"), start year cannot be after end year");
+            throw new OpeningHoursEvaluationException("Illegal range ("
+                + yearRange +"), start year cannot be after end year");
         }
     }
 }

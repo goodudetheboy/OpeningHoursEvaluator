@@ -140,30 +140,45 @@ public class TimeRange implements Comparable<TimeRange> {
     }
     
     /**
-     * @return the start of this TimeRange
+     * @return start time of this TimeRange
      */
     public int getStart() {
         return start;
     }
 
+    /**
+     * @return end time of this TimeRange
+     */
     public int getEnd() {
         return end;
     }
 
+    /**
+     * @return Status of this TimeRange
+     */
     public Status getStatus() {
         return status;
     }
 
+    /**
+     * @return comment of this TimeRange
+     */
     @Nullable
     public String getComment() {
         return comment;
     }
 
+    /**
+     * @return defining rule of this TimeRange
+     */
     @Nullable
     public Rule getDefiningRule() {
         return defRule;
     }
 
+    /**
+     * @return true if this TimeRange is made from a fallback rule
+     */
     public boolean isFallback() {
         return isFallback;
     }

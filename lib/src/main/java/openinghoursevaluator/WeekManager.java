@@ -69,7 +69,6 @@ public class WeekManager {
     }
 
     /**
-     * 
      * @param time the LocalDateTime of desired week
      * @return the LocalDate of the first weekday in the week of input date
      */
@@ -78,7 +77,6 @@ public class WeekManager {
     }
 
     /**
-     * 
      * @param time the LocalDateTime of desired week
      * @return the LocalDate of the last weekday in the week of input date
      */

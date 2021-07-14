@@ -93,63 +93,113 @@ public class Week {
         this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
     }
 
-    
+    /**
+     * @return the year of this Week
+     */
     public int getYear() {
         return year;
     }
 
+    /**
+     * @return the Month of this Week
+     */
     public Month getMonth() {
         return month;
     }
 
+    /**
+     * @return the Week number of stored Month
+     */
     public int getWeekOfMonth() {
         return weekOfMonth;
     }
 
-    public int getWeekOfYear() {
-        return weekOfYear;
-    }
-
+   /**
+     * @return the reverse Week number of stored month
+     */
     public int getReverseWeekOfMonth() {
         return reverseWeekOfMonth;
     }
 
+    /**
+     * @return the Week number of stored Year
+     */
+    public int getWeekOfYear() {
+        return weekOfYear;
+    }
+
+    /**
+     * @return the previous time spill of this Week
+     */
     public List<TimeRange> getPreviousSpill() {
         return previousSpill;
     }
 
+    /**
+     * @return the start WeekDay of this Week
+     */
     public WeekDay getStartWeekday() {
         return startWeekDay;
     }
 
+    /**
+     * @return the end WeekDay of this Week
+     */
     public WeekDay getEndWeekDay() {
         return endWeekDay;
     }
 
+    /**
+     * @return the start WeekDayRule of this Week
+     */
     public WeekDayRule getStartWeekDayRule() {
         return weekDayStorage.get(startWeekDay);
     }
 
+    /**
+     * @return the end WeekDayRule of this Week
+     */
     public WeekDayRule getEndWeekDayRule() {
         return weekDayStorage.get(endWeekDay);
     }
 
+    /**
+     * @return the upper limit WeekDayRule of this Week
+     */
     public WeekDayRule getDayAfter() {
         return dayAfter;
     }
 
+    /**
+     * @return the lower limit WeekDayRule of this Week
+     */
     public WeekDayRule getDayBefore() {
         return dayBefore;
     }
 
+    /**
+     * Set the year of this Week
+     * 
+     * @param year year to be set
+     */
     public void setYear(int year) {
         this.year = year;
     }
 
+    /**
+     * Set the month of this Week
+     * 
+     * @param month Month to be set
+     */
     public void setMonth(Month month) {
         this.month = month;
     }
 
+    /**
+     * Set the weekOfMonth of this Week
+     * 
+     * @param weekOfMonth weekOfMonth to be set
+     */
     public void setWeekOfMonth(int weekOfMonth) {
         if (weekOfMonth < 1 || weekOfMonth > 5) {
             throw new IllegalArgumentException("Illegal nth week of month: "
@@ -158,6 +208,11 @@ public class Week {
         this.weekOfMonth = weekOfMonth;
     }
 
+    /**
+     * Set the reverseWeekOfMonth of this Week
+     * 
+     * @param weekOfMonth weekOfMonth to be set
+     */
     public void setReverseWeekOfMonth(int reverseWeekOfMonth) {
         if (reverseWeekOfMonth > -1 || reverseWeekOfMonth < -5) {
             throw new IllegalArgumentException("Illegal reverse nth week of month: "
@@ -166,14 +221,29 @@ public class Week {
         this.reverseWeekOfMonth = reverseWeekOfMonth;
     }
 
+    /**
+     * Set the previousSpill of this Week
+     * 
+     * @param previousSpill previousSpill to be set
+     */
     public void setPreviousSpill(List<TimeRange> previousSpill) {
         this.previousSpill = previousSpill;
     }
 
+    /**
+     * Set the start WeekDay of this Week
+     * 
+     * @param startWeekDay startWeekDay to be set
+     */
     public void setStartWeekDay(WeekDay startWeekDay) {
         this.startWeekDay = startWeekDay;
     }
 
+    /**
+     * Set the end WeekDay of this Week
+     * 
+     * @param endWeekDay endWeekDay to be set
+     */
     public void setEndWeekDay(WeekDay endWeekDay) {
         if (startWeekDay == null) {
             throw new IllegalArgumentException("Start day has not been set");
@@ -267,8 +337,8 @@ public class Week {
                                             endDay.ordinal(), startRes, endRes);
                 if (overlap != null) {
                     otherResult = range.copy();
-                    otherResult.setStartDay(getWeekDayByNumber(overlap.get(0)));
-                    otherResult.setEndDay(getWeekDayByNumber(overlap.get(1)));
+                    otherResult.setStartDay(getWeekDayByInt(overlap.get(0)));
+                    otherResult.setEndDay(getWeekDayByInt(overlap.get(1)));
                 }
             }   
         } else {
@@ -278,8 +348,8 @@ public class Week {
                                                     startRes, endRes);
         if (overlap != null) {
             result = range.copy(); 
-            result.setStartDay(getWeekDayByNumber(overlap.get(0)));
-            result.setEndDay(getWeekDayByNumber(overlap.get(1)));
+            result.setStartDay(getWeekDayByInt(overlap.get(0)));
+            result.setEndDay(getWeekDayByInt(overlap.get(1)));
         }
         return helperMerge(result, otherResult);
     }
@@ -563,20 +633,22 @@ public class Week {
         // check for cutoff between months
         Week first = null;
         Week second = null;
-        // handles when input week of date is split between previous and this month
         if (firstDayOfWeek.getMonth() != date.getMonth()) {
+            // handles when input week of date is split between previous and this month
             cutoffDate = MonthRule.getLastDayOfMonth(firstDayOfWeek);
             WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
             first = new Week(cutoffDate, WeekDay.MO, cutoff);
             second = new Week(date, getNextWeekDay(cutoff), WeekDay.SU);
-        // handles when input week of date is split between this and next month
+
         } else if (lastDayOfWeek.getMonth() != date.getMonth()) {
+            // handles when input week of date is split between this and next month
             cutoffDate = MonthRule.getFirstDayOfMonth(lastDayOfWeek);
             WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
             first = new Week(date, WeekDay.MO, getPreviousWeekDay(cutoff));
             second = new Week(cutoffDate, cutoff, WeekDay.SU);
-        // handles when input week of date is wholly in a month
+
         } else {
+            // handles when input week of date is wholly in a month
             Week week = new Week(date);
             result.add(week);
             return result;
@@ -587,7 +659,14 @@ public class Week {
         return result;
     }
 
-    public static WeekDay getWeekDayByNumber(int i) {
+    /**
+     * Convert an integer from 0-6 that corresponds to weekday of a week, with
+     * Monday being the start of the week
+     * 
+     * @param i
+     * @return
+     */
+    public static WeekDay getWeekDayByInt(int i) {
         return WeekDay.values()[i % 7];
     }
 

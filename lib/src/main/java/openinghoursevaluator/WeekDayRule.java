@@ -268,11 +268,14 @@ public class WeekDayRule {
      * @param endNth end Nth number
      * @throws OpeningHoursEvaluationException
      */
-    private void checkNthError(int startNth, int endNth) throws OpeningHoursEvaluationException {
+    private void checkNthError(int startNth, int endNth)
+            throws OpeningHoursEvaluationException {
         if (endNth < startNth) {
-            throw new OpeningHoursEvaluationException("Start nth " + startNth + " cannot be less than " + endNth);
+            throw new OpeningHoursEvaluationException("Start nth "
+                + startNth + " cannot be less than " + endNth);
         } else if (startNth < 0 && endNth > 0) {
-            throw new OpeningHoursEvaluationException("Illegal range: " + startNth + " - " + endNth);
+            throw new OpeningHoursEvaluationException("Illegal range: "
+                + startNth + " - " + endNth);
         }
     }
 
@@ -282,7 +285,8 @@ public class WeekDayRule {
      * @return
      * @throws OpeningHoursEvaluationException
      */
-    public boolean isApplicableOffset(WeekDayRange weekdays) throws OpeningHoursEvaluationException {
+    public boolean isApplicableOffset(WeekDayRange weekdays)
+            throws OpeningHoursEvaluationException {
         checkOffsetError(weekdays);
         int offset = weekdays.getOffset();
         LocalDate offsetDate = DateManager.getOffsetDate(defDate, -offset);
@@ -299,7 +303,8 @@ public class WeekDayRule {
      * @param weekdays a WeekDayRange
      * @throws OpeningHoursEvaluationException
      */
-    private void checkOffsetError(WeekDayRange weekdays) throws OpeningHoursEvaluationException {
+    private void checkOffsetError(WeekDayRange weekdays)
+            throws OpeningHoursEvaluationException {
         int offset = weekdays.getOffset();
         if (offset == 0) {
             throw new OpeningHoursEvaluationException("Offset not 0 should have been checked before this function is called");
@@ -318,7 +323,8 @@ public class WeekDayRule {
      * @param isFallback if time added is fallback rule
      * @throws OpeningHoursEvaluationException
      */
-    public void addTime(TimeSpan timespan, Status status, String comment, Rule defRule, boolean isFallback)
+    public void addTime(TimeSpan timespan, Status status, String comment,
+                        Rule defRule, boolean isFallback)
             throws OpeningHoursEvaluationException {
         if (timespan.getInterval() != 0) {
             addInterval(timespan, status, comment, defRule, isFallback);
@@ -330,7 +336,8 @@ public class WeekDayRule {
     }
 
     /** Helper function to add TimeSpan with interval to this WeekDayRule */
-    private void addInterval(TimeSpan timespan, Status status, String comment, Rule defRule, boolean isFallback) {
+    private void addInterval(TimeSpan timespan, Status status, String comment,
+                            Rule defRule, boolean isFallback) {
         int interval = timespan.getInterval();
         int current = timespan.getStart();
         int end = timespan.getEnd();
@@ -366,12 +373,14 @@ public class WeekDayRule {
      * @throws OpeningHoursEvaluationException
      * @see https://github.com/opening-hours/opening_hours.js#time-ranges, open-ended time section
      * */
-    private void addOpenEnd(TimeSpan timespan, Status status, String comment, Rule defRule, boolean isFallback)
+    private void addOpenEnd(TimeSpan timespan, Status status, String comment,
+                            Rule defRule, boolean isFallback)
             throws OpeningHoursEvaluationException {
         int openEndStart = 0;
         if (timespan.getEnd() != TimeSpan.UNDEFINED_TIME) {
             openEndStart = timespan.getEnd();
-            addTime(timespan.getStart(), timespan.getEnd(), status, comment, defRule, isFallback);
+            addTime(timespan.getStart(), timespan.getEnd(),
+                status, comment, defRule, isFallback);
         } else {
             openEndStart = timespan.getStart();
         }
@@ -381,7 +390,8 @@ public class WeekDayRule {
         Status openEndedStatus = (status == Status.CLOSED)
                                     ? status
                                     : Status.UNKNOWN;
-        int nextDayStart = openEndStart - TimeRange.MAX_TIME; // this is for the start of open ended time in the next day
+        // for start of open ended time in the next day
+        int nextDayStart = openEndStart - TimeRange.MAX_TIME;
         if (nextDayStart < 0) {
             TimeRange time = new TimeRange(openEndStart, TimeRange.MAX_TIME,
                                     openEndedStatus, openEndedComment);
@@ -392,7 +402,8 @@ public class WeekDayRule {
             if (openEndStart >= firstCutOff) {
                 int timespill = openEndStart - TimeRange.MAX_TIME;
                 timespill += (openEndStart >= secondCutOff) ? 8*60 : 10*60;
-                TimeRange spill = new TimeRange(0, timespill, openEndedStatus, openEndedComment);
+                TimeRange spill
+                    = new TimeRange(0, timespill, openEndedStatus, openEndedComment);
                 spill.setDefiningRule(defRule);
                 spill.setFallback(isFallback);
                 nextDayRule.addSpill(spill);
@@ -417,7 +428,8 @@ public class WeekDayRule {
      * @param status desired Status
      * @param comment optional comment
      */
-    public void addTime(int start, int end, Status status, String comment, Rule defRule, boolean isFallback) {
+    public void addTime(int start, int end, Status status, String comment,
+                        Rule defRule, boolean isFallback) {
         int endToday = end; // for the current day
         if (end != TimeSpan.UNDEFINED_TIME) {
             int timespill = end - TimeRange.MAX_TIME;
@@ -496,17 +508,6 @@ public class WeekDayRule {
             remain.setFallback(true);
             addTime(remain);
         }
-    }
-
-    public boolean checkIfApplicableWeekDayRange(WeekDayRange weekDayRange) {
-        int start = weekDayRange.getStartDay().ordinal();
-        WeekDay endDay = weekDayRange.getEndDay();
-        int current = weekday.ordinal();
-        return (endDay != null)
-                    ? (current >= start && current <= endDay.ordinal()
-                        || current <= start + 7 && current >= endDay.ordinal())
-                    : (current == start);
-
     }
 
     /** Clear the current opening times in this WeekdayRule */
@@ -613,7 +614,10 @@ public class WeekDayRule {
         yesterdaySpill.add(timerange);
     }
 
-    /** Apply all time spills added from previous day. This is used in build()*/
+    /**
+     * Apply all time spills added from previous day. This is used in build()
+     * 
+     */
     public void flushSpill() {
         while(!yesterdaySpill.isEmpty()) {
             TimeRange spill = yesterdaySpill.remove(0);
@@ -714,7 +718,6 @@ public class WeekDayRule {
         return result;
     }
 
-    @Nullable
     /**
      * Helper for closePad. Process start and end of a close range and return
      * a CLOSED TimeRange accordingly. If start == end, then returns null
@@ -723,6 +726,7 @@ public class WeekDayRule {
      * @param endClose end of CLOSED TimeRange
      * @return corresponding CLOSED TimeRange, null if startClose == endCLose
      */
+    @Nullable
     private static TimeRange closePadHelper(int startClose, int endClose) {
         return (startClose < endClose)
                 ? new TimeRange(startClose, endClose, Status.CLOSED)
@@ -775,7 +779,7 @@ public class WeekDayRule {
      * Similar to toString(), but this also return a String with Closed
      * TimeRange in it. Also included the defining Rule with it
      * 
-     * @return
+     * @return debug string of this WeekDayRule
      */
     public String toDebugString() {
         StringBuilder b = new StringBuilder();

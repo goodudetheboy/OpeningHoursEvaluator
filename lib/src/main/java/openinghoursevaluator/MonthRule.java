@@ -42,7 +42,8 @@ public class MonthRule {
      * @param time input LocalDateTime
      * @throws OpeningHoursEvaluationException
      */
-    public void buildWeek(LocalDateTime time) throws OpeningHoursEvaluationException {
+    public void buildWeek(LocalDateTime time)
+            throws OpeningHoursEvaluationException {
         populate(time);
         for (Rule rule : rules) {
             simulateSpill(weekStorage.get(0), rule);
@@ -61,7 +62,8 @@ public class MonthRule {
      *      from LocalDateTime
      * @throws OpeningHoursEvaluationException
      */
-    public Week buildOneDay(LocalDateTime time) throws OpeningHoursEvaluationException {
+    public Week buildOneDay(LocalDateTime time)
+            throws OpeningHoursEvaluationException {
         LocalDate date = time.toLocalDate();
         Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()));
         for (Rule rule : rules) {
@@ -76,14 +78,17 @@ public class MonthRule {
      * Helper function for build().
      * @throws OpeningHoursEvaluationException
      */
-    private void update(Week week, Rule rule) throws OpeningHoursEvaluationException {
+    private void update(Week week, Rule rule)
+            throws OpeningHoursEvaluationException {
         updateWithYearRange(rule, week);
     }
 
     /** 
-     * Helper function for update(). Check for YearRange and then build accordingly
+     * Helper function for update(). Check for YearRange and then build
+     * accordingly
      */
-    private void updateWithYearRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
+    private void updateWithYearRange(Rule rule, Week week)
+            throws OpeningHoursEvaluationException {
         if (rule.getYears() != null) {
             YearManager yearManager = new YearManager();
             for (YearRange yearRange : rule.getYears()) {
@@ -103,7 +108,8 @@ public class MonthRule {
      * Helper function for updateWithYearRange(). Check for WeekRange and then
      * build accordingly
      */
-    private void updateWithWeekRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
+    private void updateWithWeekRange(Rule rule, Week week)
+            throws OpeningHoursEvaluationException {
         if (rule.getWeeks() != null) {
             WeekManager weekManager = new WeekManager();
             for (WeekRange weekRange : rule.getWeeks()) {
@@ -123,12 +129,14 @@ public class MonthRule {
      * Helper function for updateWithWeekRange(). Check for DateRange and then
      * build accordingly
      */
-    private void updateWithDateRange(Rule rule, Week week) throws OpeningHoursEvaluationException {
+    private void updateWithDateRange(Rule rule, Week week)
+            throws OpeningHoursEvaluationException {
         if (rule.getDates() != null) {
             DateManager dateManager = new DateManager();
             for (DateRange dateRange : rule.getDates()) {
-                List<List<LocalDate>> restrictions = dateManager.processDateRange(dateRange, week);
-                restrictionProcessing(restrictions, rule, week, dateRange);
+                List<List<LocalDate>> restrictions
+                    = dateManager.processDateRange(dateRange, week);
+                resProcess(restrictions, rule, week, dateRange);
             }
         } else {
             week.build(rule);
@@ -141,8 +149,8 @@ public class MonthRule {
      * @throws OpeningHoursEvaluationException
      * 
      */
-    private void restrictionProcessing(List<List<LocalDate>> restrictions,
-                    Rule rule, Week week, DateRange dateRange)
+    private void resProcess(List<List<LocalDate>> restrictions, Rule rule,
+                            Week week, DateRange dateRange)
             throws OpeningHoursEvaluationException {
         // get LocalDate of start and end of input Week
         LocalDate startWDR = week.getStartWeekDayRule().getDefDate();
@@ -151,7 +159,8 @@ public class MonthRule {
             // get LocalDate of start and end of restriction
             LocalDate start = resDate.remove(0);
             LocalDate end = (resDate.isEmpty()) ? start : resDate.remove(0);
-            List<ChronoLocalDate> overlap = Utils.getOverlap(start, end, startWDR, endWDR);
+            List<ChronoLocalDate> overlap
+                = Utils.getOverlap(start, end, startWDR, endWDR);
 
             // build if there is applicable range
             if (overlap != null) {
@@ -164,7 +173,7 @@ public class MonthRule {
 
                 // check for open ended date range
                 if (DateManager.isOpenEndDateRange(dateRange)) {
-                    week.build(processRuleWithOpenEnd(rule), restriction);
+                    week.build(processOpenEndRule(rule), restriction);
                 } else {
                     week.build(rule, restriction);
                 }
@@ -181,7 +190,7 @@ public class MonthRule {
      * @param rule Rule with open end
      * @return a copy of input Rule but with extra adjustment
      */
-    private Rule processRuleWithOpenEnd(Rule rule) {
+    private Rule processOpenEndRule(Rule rule) {
         Rule openEndRule = rule.copy();
         if (openEndRule.getModifier() != null) {
             RuleModifier modifier = openEndRule.getModifier();
@@ -205,7 +214,8 @@ public class MonthRule {
      * @param rule a Rule to be applied
      * @throws OpeningHoursEvaluationException
      */
-    private void simulateSpill(Week week, Rule rule) throws OpeningHoursEvaluationException {
+    private void simulateSpill(Week week, Rule rule) 
+            throws OpeningHoursEvaluationException {
         Week dayBeforeWeek = new Week(week.getDayBefore());
         update(dayBeforeWeek, rule);
     }
@@ -218,7 +228,8 @@ public class MonthRule {
      * @return the result of the evaluation
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime time) throws OpeningHoursEvaluationException {
+    public Result checkStatus(LocalDateTime time)
+            throws OpeningHoursEvaluationException {
         Week dayToCheck = buildOneDay(time);
         dayToCheck.clean();
         return dayToCheck.checkStatus(time);
@@ -243,8 +254,7 @@ public class MonthRule {
         Result result = null;
         for (Week week : weekStorage) {
             if (week.hasWeekDay(weekday)) {
-                result = week.getDifferingEventThisWeek(inputTime, status, isNext);
-                break;
+                return week.getDifferingEventThisWeek(inputTime, status, isNext);
             }
         }
         return result;
@@ -306,10 +316,11 @@ public class MonthRule {
     }
 
     /**
-     * Convert the Month class in the LocalDateTime to Month class in the OpeningHoursParser
+     * Convert the Month class in the LocalDateTime to Month class in the
+     * OpeningHoursParser
      * 
-     * @param time
-     * @return
+     * @param date input LocalDate
+     * @return Month of LocalDate to Month of OpeningHoursParser
      */
     public static Month convertMonth(LocalDate date) {
         return Month.values()[date.getMonth().ordinal()];

@@ -20,8 +20,11 @@ public class OpeningHoursEvaluator {
     TimeTraveller   timeTraveller   = null;
 
     /**
-     * Constructor with input time string according to opening hours specification 
+     * Constructor with input time string according to opening hours
+     * specification and an option to set strict/non-strict parsing
      * 
+     * @param openingHours an opening hours tag
+     * @param isStrict parsing mode of evaluator, true to turn on strict
      * @throws OpeningHoursParseException
      */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict)
@@ -30,18 +33,46 @@ public class OpeningHoursEvaluator {
         setOpeningHoursTag(openingHours);
     }
 
+    /**
+     * Constructor with input time string according to opening hours
+     * specification. The parsing mode is default set to false
+     * 
+     * @param openingHours an opening hours tag
+     * @throws OpeningHoursParseException
+     */
+    public OpeningHoursEvaluator(String openingHours) throws OpeningHoursParseException {
+        this(openingHours, false);
+    }
+
+    /**
+     * @return the current Rules stored in this evaluator
+     */
     public List<Rule> getRules() {
         return rules;
     }
 
+    /**
+     * @return the opening hours tag stored in this evaluator
+     */
     public String getOpeningHoursTag() {
         return openingHours;
     }
 
+    /**
+     * @return true if this evaluator is in strict parsing
+     */
     public boolean isStrictParsing() {
         return isStrict;
     }
 
+    /**
+     * Set the current opening hours tag of this evaluator. This will also
+     * reset the list of Rule stored in this evaluator, and any subsequent
+     * use of this evaluator will rely on this Rules created from input opening
+     * hours
+     * 
+     * @param openingHours opening hours tag to be set
+     */
     public void setOpeningHoursTag(String openingHours)
             throws OpeningHoursParseException {
         this.openingHours = openingHours;
@@ -49,11 +80,23 @@ public class OpeningHoursEvaluator {
         setRules(parser.rules(isStrict));
     }
 
+    /**
+     * Set the current Rules of this evaluator, and any subsequent use of this
+     * evaluator will rely on this opening hours
+     * 
+     * @param rules
+     */
     public void setRules(List<Rule> rules) {
         this.rules = rules;
         timeTraveller = new TimeTraveller(rules);
     }
 
+    /**
+     * Set the parsing mode (strict/non-strict) of this evaluator, and any
+     * subsequent resetting of opening hours tag will use this input mode
+     * 
+     * @param isStrict parsing mode to be set
+     */
     public void setStrictParsing(boolean isStrict) {
         this.isStrict = isStrict;
     }

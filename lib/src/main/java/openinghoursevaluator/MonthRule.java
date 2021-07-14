@@ -172,6 +172,15 @@ public class MonthRule {
         }
     }
 
+    /**
+     * Special processor for Rule with open end. If there's no modifier, a new
+     * Unknown modifier will be put in place, along with the default comment of
+     * open end. If there's a modifier and there's no comment, then the Rule
+     * will be set the default comment of open end.
+     * 
+     * @param rule Rule with open end
+     * @return a copy of input Rule but with extra adjustment
+     */
     private Rule processRuleWithOpenEnd(Rule rule) {
         Rule openEndRule = rule.copy();
         if (openEndRule.getModifier() != null) {

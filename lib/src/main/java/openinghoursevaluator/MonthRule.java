@@ -185,7 +185,7 @@ public class MonthRule {
         Rule openEndRule = rule.copy();
         if (openEndRule.getModifier() != null) {
             RuleModifier modifier = openEndRule.getModifier();
-            if (modifier.getComment() != null) {
+            if (modifier.getComment() == null) {
                 modifier.setComment(DateManager.DEFAULT_OPEN_END_COMMENT);
             }
         } else {

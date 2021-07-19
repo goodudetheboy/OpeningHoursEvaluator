@@ -40,13 +40,14 @@ public class MonthRule {
      * Also supports Week that is split between two months.
      * 
      * @param time input LocalDateTime
+     * @param geocode double array {latidue, longitude}
      * @throws OpeningHoursEvaluationException
      */
-    public void buildWeek(LocalDateTime time)
+    public void buildWeek(LocalDateTime time, double[] geocode)
             throws OpeningHoursEvaluationException {
-        populate(time);
+        populate(time, geocode);
         for (Rule rule : rules) {
-            simulateSpill(weekStorage.get(0), rule);
+            simulateSpill(weekStorage.get(0), rule, geocode);
             for (Week week : weekStorage) {
                 update(week, rule);
             }
@@ -58,16 +59,17 @@ public class MonthRule {
      * checkStatus()
      * 
      * @param time input LocalDateTime
+     * @param geocode double array {latidue, longitude}
      * @return a Week that contains only one WeekDayRule of the date
      *      from LocalDateTime
      * @throws OpeningHoursEvaluationException
      */
-    public Week buildOneDay(LocalDateTime time)
+    public Week buildOneDay(LocalDateTime time, double[] geocode)
             throws OpeningHoursEvaluationException {
         LocalDate date = time.toLocalDate();
-        Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()));
+        Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()), geocode);
         for (Rule rule : rules) {
-            simulateSpill(oneDay, rule);
+            simulateSpill(oneDay, rule, geocode);
             update(oneDay, rule);
         }
         oneDay.applyPreviousSpill();
@@ -212,11 +214,12 @@ public class MonthRule {
      * 
      * @param week a Week to be simulated
      * @param rule a Rule to be applied
+     * @param geocode geocode double array {latitude, longitude}
      * @throws OpeningHoursEvaluationException
      */
-    private void simulateSpill(Week week, Rule rule) 
+    private void simulateSpill(Week week, Rule rule, double[] geocode) 
             throws OpeningHoursEvaluationException {
-        Week dayBeforeWeek = new Week(week.getDayBefore());
+        Week dayBeforeWeek = new Week(week.getDayBefore(), geocode);
         update(dayBeforeWeek, rule);
     }
 
@@ -225,12 +228,14 @@ public class MonthRule {
      * Evaluate the stored OH string with a time to see if it's opening or closed
      * 
      * @param time input LocalDateTime
+     * @param geocode a geocode {latidue, longitude} where this MonthRule is
+     *      based around on
      * @return the result of the evaluation
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime time)
+    public Result checkStatus(LocalDateTime time, double[] geocode)
             throws OpeningHoursEvaluationException {
-        Week dayToCheck = buildOneDay(time);
+        Week dayToCheck = buildOneDay(time, geocode);
         dayToCheck.clean();
         return dayToCheck.checkStatus(time);
     }
@@ -286,8 +291,8 @@ public class MonthRule {
      * 
      * @param time input LocalDateTime
      */
-    public void populate(LocalDateTime time) {
-        weekStorage = Week.createEmptyWeek(time.toLocalDate());
+    public void populate(LocalDateTime time, double[] geocode) {
+        weekStorage = Week.createEmptyWeek(time.toLocalDate(), geocode);
     }
 
     /**

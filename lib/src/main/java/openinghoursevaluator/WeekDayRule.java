@@ -2,6 +2,7 @@ package openinghoursevaluator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -10,10 +11,13 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.shredzone.commons.suncalc.SunTimes;
+
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
 import ch.poole.openinghoursparser.Rule;
 import ch.poole.openinghoursparser.TimeSpan;
+import ch.poole.openinghoursparser.VariableTime;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
 
@@ -192,7 +196,7 @@ public class WeekDayRule {
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:fallback_rule_separator
      */
-    public void build(Rule rule) throws OpeningHoursEvaluationException {
+    public void build(Rule rule, double[] geocode) throws OpeningHoursEvaluationException {
         if (rule.isEmpty()) {
             throw new OpeningHoursEvaluationException("There's an empty rule, please remove it");
         }
@@ -201,7 +205,7 @@ public class WeekDayRule {
             clearOpeningHours();
         }
         flushSpill();
-        addRule(rule);
+        addRule(rule, geocode);
     }
 
     /**
@@ -211,7 +215,7 @@ public class WeekDayRule {
      * @param rule Rule to be added
      * @throws OpeningHoursEvaluationException
      */
-    public void addRule(Rule rule) throws OpeningHoursEvaluationException {
+    public void addRule(Rule rule, double[] geocode) throws OpeningHoursEvaluationException {
         String comment = (rule.getModifier() != null)
                             ? rule.getModifier().getComment()
                             : null;
@@ -226,8 +230,70 @@ public class WeekDayRule {
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            addTime(timespan, status, comment, rule, isFallback);
+            TimeSpan processed = processEventOfDay(timespan, geocode);
+            addTime(processed, status, comment, rule, isFallback);
         }
+    }
+
+    /**
+     * Process in the case the TimeSpan has events of day (dawn, dusk, sunrise,
+     * sunset) defined as one the points.
+     * 
+     * @param timespan TimeSpan to be processed
+     * @param geocode geocode {latitude, longitude}
+     * @return processed TimeSpan with start and end well-defined and filled
+     *      time of events of day, if any
+     */
+    private TimeSpan processEventOfDay(TimeSpan timespan, double[] geocode) {
+        TimeSpan processed = timespan.copy();
+        VariableTime startEvent = timespan.getStartEvent();
+        VariableTime endEvent = timespan.getEndEvent();
+        // TODO: handle time spilling here (sunset-sunrise and the likes)
+        if (startEvent != null) {
+            processed.setStart(getTimeOfEvent(startEvent, geocode));
+        }
+        if (endEvent != null) {
+            processed.setEnd(getTimeOfEvent(endEvent, geocode));
+        }
+        return processed;
+    }
+
+    /**
+     * Get time in minutes of event of day defined in varTime, offset included
+     * The returned time is plus 1 minutes compared to the calculated time
+     * 
+     * @param varTime VariableTime
+     * @param geocode 
+     * @return
+     */
+    private int getTimeOfEvent(VariableTime varTime, double[] geocode) {
+        int option = 1;
+        SunTimes events = null;
+        switch (varTime.getEvent()) {
+            case SUNRISE:
+                option = 0;
+            case SUNSET:
+                events = SunTimes.compute()
+                    .on(defDate)   // set a date
+                    .at(geocode[0], geocode[1])   // set a location
+                    .execute();     // get the results
+                break;
+            case DAWN:
+                option = 0;
+            case DUSK:
+                events = SunTimes.compute()
+                    .twilight(SunTimes.Twilight.CIVIL)
+                    .on(defDate)
+                    .at(geocode[0], geocode[1])
+                    .execute();
+                break;
+        }
+        if (events == null) {
+            throw new IllegalArgumentException("Event of day calculator not initialized, unexpected");
+        }
+        ZonedDateTime time = (option == 1) ? events.getSet()
+                                           : events.getRise();
+        return Utils.timeInMinute(time.toLocalDateTime()) + varTime.getOffset() + 1;
     }
 
     /**

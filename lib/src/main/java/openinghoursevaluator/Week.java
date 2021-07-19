@@ -30,6 +30,7 @@ public class Week {
     int     weekOfYear              = INVALID_NUM;
     int     weekOfMonth             = INVALID_NUM;
     int     reverseWeekOfMonth      = INVALID_NUM;
+    double[] geocode                = null;
 
     WeekDay startWeekDay            = null;
     WeekDay endWeekDay              = null;
@@ -46,13 +47,13 @@ public class Week {
         // nothing here
     }
 
-    public Week(LocalDate defDate) {
+    public Week(LocalDate defDate, double[] geocode) {
         // setting weekOfYear and weekOfMonth
-        this(defDate, WeekDay.MO, WeekDay.SU);
+        this(defDate, WeekDay.MO, WeekDay.SU, geocode);
     }
 
-    public Week(LocalDate defDate, WeekDay oneWeekDay) {
-        this(defDate, oneWeekDay, oneWeekDay);
+    public Week(LocalDate defDate, WeekDay oneWeekDay, double[] geocode) {
+        this(defDate, oneWeekDay, oneWeekDay, geocode);
     }
 
     /**
@@ -61,12 +62,14 @@ public class Week {
      * @param defDate
      * @param startWeekDay
      * @param endWeekDay
+     * @param geocode
      */
-    public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay) {
+    public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay, double[] geocode) {
         this.defDate = defDate;
         dissectDefDate(defDate);
         setStartWeekDay(startWeekDay);
         setEndWeekDay(endWeekDay);
+        setGeocode(geocode);
         weekDayStorage = new EnumMap<>(WeekDay.class);
         populate();
     }
@@ -76,14 +79,9 @@ public class Week {
      * 
      * @param weekDayRule WeekDayRule 
      */
-    Week (WeekDayRule weekDayRule) {
-        this.defDate = weekDayRule.getDefDate();
-        dissectDefDate(defDate);
-        WeekDay weekday = weekDayRule.getWeekDay();
-        setStartWeekDay(weekday);
-        setEndWeekDay(weekday);
-        weekDayStorage = new EnumMap<>(WeekDay.class);
-        weekDayStorage.put(weekday, weekDayRule);
+    Week (WeekDayRule weekDayRule, double[] geocode) {
+        this(weekDayRule.getDefDate(), weekDayRule.getWeekDay(), geocode);
+        weekDayStorage.put(weekDayRule.getWeekDay(), weekDayRule);
     }
 
     /** Helper function for constructor */
@@ -126,6 +124,13 @@ public class Week {
      */
     public int getWeekOfYear() {
         return weekOfYear;
+    }
+
+    /**
+     * @return a double array {latitude, longitude}
+     */
+    public double[] getGeocode() {
+        return geocode;
     }
 
     /**
@@ -219,6 +224,15 @@ public class Week {
                                                 + weekOfMonth);
         }
         this.reverseWeekOfMonth = reverseWeekOfMonth;
+    }
+
+    /**
+     * Set the geocode of this Week
+     * 
+     * @param geocode double array {latitude, longitude}
+     */
+    public void setGeocode(double[] geocode) {
+        this.geocode = geocode;
     }
 
     /**
@@ -381,7 +395,8 @@ public class Week {
     /** update() helper 
      * @throws OpeningHoursEvaluationException
      */
-    private void updateWithRange(Rule rule, WeekDayRange weekdays) throws OpeningHoursEvaluationException {
+    private void updateWithRange(Rule rule, WeekDayRange weekdays)
+            throws OpeningHoursEvaluationException {
         List<Nth> nths = weekdays.getNths();
         WeekDay current = weekdays.getStartDay();
         WeekDay end = (weekdays.getEndDay() != null)
@@ -390,7 +405,7 @@ public class Week {
         do {
             if (hasWeekDay(current)
                     && weekDayStorage.get(current).isApplicableNth(nths)) {
-                weekDayStorage.get(current).build(rule);
+                weekDayStorage.get(current).build(rule, geocode);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
@@ -403,7 +418,7 @@ public class Week {
         WeekDay end = endWeekDay;
         do {
             if (weekDayStorage.get(current).isApplicableOffset(weekdays)) {
-                weekDayStorage.get(current).build(rule);
+                weekDayStorage.get(current).build(rule, geocode);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
@@ -623,9 +638,11 @@ public class Week {
      * months), List<Week> will cotain two
      * 
      * @param date a LocalDate to be built around
+     * @param geocode a geocode {latidue, longitude} where the Week is based
+     *      around
      * @return a List<Week> built around LocalDate
      */
-    public static List<Week> createEmptyWeek(LocalDate date) {
+    public static List<Week> createEmptyWeek(LocalDate date, double[] geocode) {
         List<Week> result = new ArrayList<>();
         LocalDate firstDayOfWeek = WeekManager.getFirstDayOfWeek(date);
         LocalDate lastDayOfWeek = WeekManager.getLastDayOfWeek(date);
@@ -637,19 +654,19 @@ public class Week {
             // handles when input week of date is split between previous and this month
             cutoffDate = MonthRule.getLastDayOfMonth(firstDayOfWeek);
             WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
-            first = new Week(cutoffDate, WeekDay.MO, cutoff);
-            second = new Week(date, getNextWeekDay(cutoff), WeekDay.SU);
+            first = new Week(cutoffDate, WeekDay.MO, cutoff, geocode);
+            second = new Week(date, getNextWeekDay(cutoff), WeekDay.SU, geocode);
 
         } else if (lastDayOfWeek.getMonth() != date.getMonth()) {
             // handles when input week of date is split between this and next month
             cutoffDate = MonthRule.getFirstDayOfMonth(lastDayOfWeek);
             WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
-            first = new Week(date, WeekDay.MO, getPreviousWeekDay(cutoff));
-            second = new Week(cutoffDate, cutoff, WeekDay.SU);
+            first = new Week(date, WeekDay.MO, getPreviousWeekDay(cutoff), geocode);
+            second = new Week(cutoffDate, cutoff, WeekDay.SU, geocode);
 
         } else {
             // handles when input week of date is wholly in a month
-            Week week = new Week(date);
+            Week week = new Week(date, geocode);
             result.add(week);
             return result;
         }

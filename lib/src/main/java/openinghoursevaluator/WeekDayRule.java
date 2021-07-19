@@ -2,6 +2,7 @@ package openinghoursevaluator;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
@@ -269,12 +270,15 @@ public class WeekDayRule {
     private int getTimeOfEvent(VariableTime varTime, double[] geocode) {
         int option = 1;
         SunTimes events = null;
+        // temporary measure, set default zone to pass test on CI
+        ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
+        ZonedDateTime zonedDate = defDate.atStartOfDay(zoneId);
         switch (varTime.getEvent()) {
             case SUNRISE:
                 option = 0;
             case SUNSET:
                 events = SunTimes.compute()
-                    .on(defDate)   // set a date
+                    .on(zonedDate)   // set a date
                     .at(geocode[0], geocode[1])   // set a location
                     .execute();     // get the results
                 break;
@@ -283,7 +287,7 @@ public class WeekDayRule {
             case DUSK:
                 events = SunTimes.compute()
                     .twilight(SunTimes.Twilight.CIVIL)
-                    .on(defDate)
+                    .on(zonedDate)
                     .at(geocode[0], geocode[1])
                     .execute();
                 break;

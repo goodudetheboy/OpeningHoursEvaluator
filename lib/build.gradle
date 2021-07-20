@@ -53,11 +53,16 @@ dependencies {
     implementation 'com.google.guava:guava:29.0-jre'
 
     // OpeningHoursParser, used to parse opening hours
-    implementation "ch.poole:OpeningHoursParser:0.23.4"
+    implementation 'ch.poole:OpeningHoursParser:0.23.4'
 
     // This dependency is used to calculate sunrise/sunset time based on location
-    implementation "org.shredzone.commons:commons-suncalc:3.5"
+    implementation 'org.shredzone.commons:commons-suncalc:3.5'
 
+    // Used to get timezone based on latitude and longitude
+    implementation 'net.iakovlev:timeshape:2020d.11'
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    testImplementation 'org.slf4j:slf4j-simple:2.0.0-alpha2'
 }
 
 task testCI(type: JavaExec) {

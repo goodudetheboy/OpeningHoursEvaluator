@@ -244,8 +244,10 @@ public class WeekDayRule {
      * @param geocode geocode {latitude, longitude}
      * @return processed TimeSpan with start and end well-defined and filled
      *      time of events of day, if any
+     * @throws OpeningHoursEvaluationException
      */
-    private TimeSpan processEventOfDay(TimeSpan timespan, double[] geocode) {
+    private TimeSpan processEventOfDay(TimeSpan timespan, double[] geocode) 
+            throws OpeningHoursEvaluationException {
         TimeSpan processed = timespan.copy();
         VariableTime startEvent = timespan.getStartEvent();
         VariableTime endEvent = timespan.getEndEvent();
@@ -255,6 +257,9 @@ public class WeekDayRule {
         int endEventTime = (endEvent != null)
                         ? getTimeOfEvent(endEvent, geocode, 0)
                         : timespan.getEnd();
+        // error handling
+        checkErrorTimeSpan(startEventTime, endEventTime, timespan);
+        // end event time padding, in case like (sunset-sunset)
         if (endEvent != null && endEventTime < startEventTime) {
             endEventTime = getTimeOfEvent(endEvent, geocode, 1) + TimeRange.MAX_TIME;
         }
@@ -303,6 +308,31 @@ public class WeekDayRule {
         ZonedDateTime time = (option == 1) ? events.getSet()
                                            : events.getRise();
         return Utils.timeInMinute(time.toLocalDateTime()) + varTime.getOffset() + 1;
+    }
+
+    /**
+     * Error handling for checking variable time
+     * 
+     * @param startTime start time of a TimeSpan
+     * @param endTime end time of a TimeSpan
+     * @throws OpeningHoursEvaluationException
+     */
+    private void checkErrorTimeSpan(int startTime, int endTime, TimeSpan timespan)
+            throws OpeningHoursEvaluationException {
+        // check if start time less than 0
+        if (startTime < TimeRange.MIN_TIME) {
+            throw new OpeningHoursEvaluationException("Start time of "
+                                + timespan + " cannot be less than 0");
+        }
+        // check if end time has
+        if (endTime == TimeSpan.UNDEFINED_TIME) {
+            return;
+        }
+        // check end time less than 0
+        if (endTime < TimeRange.MIN_TIME) {
+            throw new OpeningHoursEvaluationException("End time of "
+                                + timespan + " cannot be less than 0");
+        }
     }
 
     /**
@@ -502,9 +532,14 @@ public class WeekDayRule {
      * @param end end time
      * @param status desired Status
      * @param comment optional comment
+     * @throws OpeningHoursEvaluationException
      */
     public void addTime(int start, int end, Status status, String comment,
-                        Rule defRule, boolean isFallback) {
+                        Rule defRule, boolean isFallback) 
+                    throws OpeningHoursEvaluationException {
+        if (start > TimeRange.MAX_TIME ||  start < TimeRange.MIN_TIME) {
+            throw new OpeningHoursEvaluationException("Start time must be within 24 hours");
+        }
         int endToday = end; // for the current day
         if (end != TimeSpan.UNDEFINED_TIME) {
             int timespill = end - TimeRange.MAX_TIME;

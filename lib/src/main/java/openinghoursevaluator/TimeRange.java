@@ -91,7 +91,7 @@ public class TimeRange implements Comparable<TimeRange> {
             throw new IllegalArgumentException("Start and end cannot be both at " + MAX_TIME);
         }
         if (start > end) {
-            throw new IllegalArgumentException("Start cannot be less than end");
+            throw new IllegalArgumentException("Start cannot be after end");
         }
         setStart(start);
         setEnd((start == end) ? ++end : end);

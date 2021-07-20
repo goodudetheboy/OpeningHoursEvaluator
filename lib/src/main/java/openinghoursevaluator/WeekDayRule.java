@@ -249,13 +249,17 @@ public class WeekDayRule {
         TimeSpan processed = timespan.copy();
         VariableTime startEvent = timespan.getStartEvent();
         VariableTime endEvent = timespan.getEndEvent();
-        // TODO: handle time spilling here (sunset-sunrise and the likes)
-        if (startEvent != null) {
-            processed.setStart(getTimeOfEvent(startEvent, geocode));
+        int startEventTime = (startEvent != null)
+                        ? getTimeOfEvent(startEvent, geocode, 0)
+                        : timespan.getStart();
+        int endEventTime = (endEvent != null)
+                        ? getTimeOfEvent(endEvent, geocode, 0)
+                        : timespan.getEnd();
+        if (endEvent != null && endEventTime < startEventTime) {
+            endEventTime = getTimeOfEvent(endEvent, geocode, 1) + TimeRange.MAX_TIME;
         }
-        if (endEvent != null) {
-            processed.setEnd(getTimeOfEvent(endEvent, geocode));
-        }
+        processed.setStart(startEventTime);
+        processed.setEnd(endEventTime);
         return processed;
     }
 
@@ -267,12 +271,13 @@ public class WeekDayRule {
      * @param geocode 
      * @return
      */
-    private int getTimeOfEvent(VariableTime varTime, double[] geocode) {
+    private int getTimeOfEvent(VariableTime varTime, double[] geocode, int dateOffset) {
         int option = 1;
         SunTimes events = null;
         // temporary measure, set default zone to pass test on CI
         ZoneId zoneId = ZoneId.of("Asia/Ho_Chi_Minh");
-        ZonedDateTime zonedDate = defDate.atStartOfDay(zoneId);
+        LocalDate adjusted = DateManager.getOffsetDate(defDate, dateOffset);
+        ZonedDateTime zonedDate = adjusted.atStartOfDay(zoneId);
         switch (varTime.getEvent()) {
             case SUNRISE:
                 option = 0;

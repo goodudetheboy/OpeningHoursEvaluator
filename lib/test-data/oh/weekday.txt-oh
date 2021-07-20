@@ -15,3 +15,5 @@ Mo,We,Fr 05:00-19:00, Tue,Thu 12:00-21:00 open "on special occasions only", Tue,
 Mo-We 15:00-21:00+, Th-Fr 12:00-15:00/01:00, Th-Fr 16:00-19:00+ closed "stuff happens", Sa-Su 13:00-02:00+, Fr 12:00-27:00, Su 16:00+
 Mo-Sa 12:00-22:00+ open; Su off
 Mo-Fr 09:00-18:00 || Mo-Fr 18:00+ "appointment", Sa-Su off || 06:00-15:00 "emergency only"
+sunrise-sunset
+sunset-sunrise

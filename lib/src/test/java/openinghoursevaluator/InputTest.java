@@ -1,7 +1,6 @@
 package openinghoursevaluator;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
@@ -70,22 +69,6 @@ public class InputTest {
     @Test
     public void evaluatorOpenLastTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         evaluateDifferingEventBatchCheck("test-data/oh/open-last.txt-oh", "test-data/input-time/open-last.txt", "test-data/answer/open-last.txt-answer", false);
-    }
-
-    @Test
-    public void unitTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED));
-        assertTrue(evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN));
-        
-        // open next test
-        LocalDateTime time = LocalDateTime.parse("2021-07-01T12:00");
-        LocalDateTime answerTime = LocalDateTime.parse("2021-07-01T14:00");
-        assertEquals(answerTime, getNextEvent("14:00-18:00 unknown", time).getNextEventTime());
-
-        // open last test
-        LocalDateTime time1 = LocalDateTime.parse("2021-06-30T12:00");
-        LocalDateTime answerTime1 = LocalDateTime.parse("2021-06-29T18:00");
-        assertEquals(answerTime1, getLastEvent("14:00-18:00 unknown", time1).getLastEventTime());
     }
 
     @Test
@@ -304,8 +287,8 @@ public class InputTest {
         Status givenAnswer = result.getStatus();
         if (givenAnswer != answer) {
             print(openingHours, inputTime);
-            System.out.println("Wrong answer for \"" + openingHours);
-            System.out.println("Input time: \"" + inputTime);
+            System.out.println("Wrong answer for \"" + openingHours + "\"");
+            System.out.println("Input time: \"" + inputTime + "\"");
             System.out.println("Correct answer: " + answer);
             System.out.println("Given answer: " + givenAnswer);
             return false;

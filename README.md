@@ -22,7 +22,8 @@ try {
 
     // Receive result of the evaluation
     LocalDateTime time = LocalDateTime.now();
-    Result result = evaluator.checkStatus(time);
+    Result result = evaluator.evaluate(time);
+    Status status = result.getStatus();
 
     // Get next differing event (open/close/unknown next)
     Result nextEvent = evaluator.getNextEvent(time);
@@ -30,6 +31,26 @@ try {
     // Get last differing event (open/close/unknown last)
     Result lastEvent = evaluator.getLastEvent(time);
 
+} catch (OpeningHoursParseException e) {
+    // Grammar-related exception
+} catch (OpeningHoursEvaluationException e) {
+    // Evaluation-relation exception
+}
+```
+
+The evaluator is by default set to Ho Chi Minh City, Vietnam as geolocation. Geolocation is used to calculate variable time such as dawn, dusk, sunset, sunrise time, if specificed in the opening hours tag. If you want to change the location, do as follows:
+
+``` java
+try {
+    // geolocation
+    double lat = 10.8231; // replace desired latitude here
+    double lng = 106.6297; // replace desired longitude here
+
+    String openingHours = "sunrise-sunset";
+    boolean isStrict = false; // strict or non-strict parsing option
+    OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator(openingHours, isStrict, lat, lng);
+
+    //....
 } catch (OpeningHoursParseException e) {
     // Grammar-related exception
 } catch (OpeningHoursEvaluationException e) {

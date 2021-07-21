@@ -312,7 +312,7 @@ public class InputTest {
             throws OpeningHoursEvaluationException, OpeningHoursParseException {
         OpeningHoursEvaluator evaluator
             = new OpeningHoursEvaluator(openingHours, false);
-        return evaluator.checkStatus(inputTime);
+        return evaluator.evaluate(inputTime);
     }
 
     /**

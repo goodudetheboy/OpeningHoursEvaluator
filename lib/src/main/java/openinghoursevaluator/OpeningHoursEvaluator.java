@@ -13,19 +13,14 @@ import ch.poole.openinghoursparser.Rule;
  *
  */
 public class OpeningHoursEvaluator {
-    // Geocoding of Ho Chi Minh City, Vietnam, taken from Google
-    public static final double DEFAULT_LATITUDE     = 10.8231;
-    public static final double DEFAULT_LONGITUDE    = 106.6297;
-
     // List to store rules from the parser
     List<Rule>      rules           = null;
     String          openingHours    = null;
     boolean         isStrict        = false;
     TimeTraveller   timeTraveller   = null;
 
-    // geocoding
-    double          latitude = DEFAULT_LATITUDE;
-    double          longitude = DEFAULT_LONGITUDE;
+    // geocoding, set default to default geocoder
+    Geocoder        geocoder        = new Geocoder();
 
     /**
      * Constructor with input time string according to opening hours
@@ -59,10 +54,15 @@ public class OpeningHoursEvaluator {
      * 
      * @param openingHours an opening hours tag
      * @param isStrict parsing mode of evaluator, true to turn on strict
-     * @param country
+     * @param lat latitude of the location
+     * @param lng longitude of the location
+     * @param country ISO 3166 2-letter country code
+     * @throws OpeningHoursParseException
      */
-    private OpeningHoursEvaluator(String openingHours, boolean isStrict, String country) {
-        // TODO: create a lookup table for country's geocode and populate self
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict, double lat, double lng, String country)
+            throws OpeningHoursParseException {
+        this(openingHours, isStrict);
+        geocoder = new Geocoder(lat, lng, country);
     }
 
     /**
@@ -87,24 +87,10 @@ public class OpeningHoursEvaluator {
     }
 
     /**
-     * @return the latitude of this evaluator
+     * @return the geocoder of this evaluator
      */
-    public double getLatitude() {
-        return latitude;
-    }
-
-    /**
-     * @return the longitude of this evaluator
-     */
-    public double getLongitude() {
-        return longitude;
-    }
-
-    /**
-     * @return the geocoding (in form of{latitude, longitude}) of this evaluator
-     */
-    public double[] getGeocode() {
-        return new double[]{ latitude, longitude };
+    public Geocoder getGeocoder() {
+        return geocoder;
     }
 
     /**
@@ -143,50 +129,61 @@ public class OpeningHoursEvaluator {
         this.isStrict = isStrict;
     }
 
-    /**
-     * Set the latitude of this evaluator, which will influence calculation of
-     * events of day like dawn, dusk, sunrise, sunset
-     *  
-     * @param latitude double value of a latitude
-     */
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
+
 
     /**
-     * Set the longitude of this evaluator, which will influence calculation of
-     * events of day like dawn, dusk, sunrise, sunset
-     *  
-     * @param latitude double value of a longitude
-     */
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    /**
-     * Set the geocoding of this evalutor, which will influence calculation of
-     * events of day like dawn, dusk, sunrise, sunset
-     * 
-     * @param latitude double value of a longitude
-     * @param longitude double value of a latitude
-     */
-    public void setGeocode(double latitude, double longitude) {
-        setLatitude(latitude);
-        setLongitude(longitude);
-    }
-
-    /**
-     * Check if avenue is closed or not according to an input time string in accordance with
-     * LocalDateTime parser
+     * Evaluate and return a structured Result based on the input time with the
+     * stored opening hours. See {@link Result} for more details on how to work
+     * with this
      * 
      * @param inputTime a LocalDateTime instance
-     * @param isStrict
+     * @return result of the evaluation
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime inputTime)
+    public Result evaluate(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
-        return monthRule.checkStatus(inputTime, getGeocode());
+        return monthRule.checkStatus(inputTime, geocoder);
+    }
+
+    /**
+     * Evaluate and return a structured Result based on the input time string
+     * with the stored opening hours. The input string must be parsable by
+     * LocalDateTime. See {@link Result} for more details on how to work with
+     * this.
+     * 
+     * @param inputTimeString a time string parsable LocalDateTime
+     * @return result of the evaluation
+     * @throws OpeningHoursEvaluationException
+     */
+    public Result evaluate(String inputTimeString) 
+            throws OpeningHoursEvaluationException {
+        return evaluate(LocalDateTime.parse(inputTimeString));
+    }
+
+    /**
+     * Get the Status of the current opening hours tag at the input time
+     * 
+     * @param inputTime a LocalDateTime instance
+     * @return a Status instance
+     * @throws OpeningHoursEvaluationException
+     */
+    public Status checkStatus(LocalDateTime inputTime)
+            throws OpeningHoursEvaluationException {
+        return evaluate(inputTime).getStatus();
+    }
+
+    /**
+     * Get the Status of the current opening hours tag at the input time string.
+     * The input time string must be parsable by LocalDateTime.
+     * 
+     * @param inputTimeString a time string parsable LocalDateTime
+     * @return a Status instance
+     * @throws OpeningHoursEvaluationException
+     */
+    public Status checkStatus(String inputTimeString)
+            throws OpeningHoursEvaluationException {
+        return checkStatus(LocalDateTime.parse(inputTimeString));
     }
 
     /**
@@ -199,7 +196,7 @@ public class OpeningHoursEvaluator {
      */
     public Result getNextEvent(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
-        return timeTraveller.getDifferingEvent(inputTime, true, getGeocode());
+        return timeTraveller.getDifferingEvent(inputTime, true, geocoder);
     }
 
     /**
@@ -212,7 +209,7 @@ public class OpeningHoursEvaluator {
      */
     public Result getLastEvent(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
-        return timeTraveller.getDifferingEvent(inputTime, false, getGeocode());
+        return timeTraveller.getDifferingEvent(inputTime, false, geocoder);
     }
 
     /**
@@ -224,7 +221,7 @@ public class OpeningHoursEvaluator {
     public String toString(LocalDateTime inputTime) {
         MonthRule monthRule = new MonthRule(rules);
         try {
-            monthRule.buildWeek(inputTime, getGeocode());
+            monthRule.buildWeek(inputTime, geocoder);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -242,7 +239,7 @@ public class OpeningHoursEvaluator {
     public String toDebugString(LocalDateTime inputTime) {
         MonthRule monthRule = new MonthRule(rules);
         try {
-            monthRule.buildWeek(inputTime, getGeocode());
+            monthRule.buildWeek(inputTime, geocoder);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }

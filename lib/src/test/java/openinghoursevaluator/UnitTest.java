@@ -49,7 +49,7 @@ public class UnitTest {
 
         for (int i=0; i<countries.length; i++) {
             OpeningHoursEvaluator evaluator
-                = new OpeningHoursEvaluator("sunrise-sunset", false, countries[i][0], countries[i][1]);
+                = new OpeningHoursEvaluator("sunrise-sunset", false, countries[i][0], countries[i][1], "");
             assertEquals(status[i], evaluator.checkStatus(inputTime[i]));
         }
 

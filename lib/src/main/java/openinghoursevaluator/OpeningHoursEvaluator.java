@@ -54,13 +54,15 @@ public class OpeningHoursEvaluator {
      * 
      * @param openingHours an opening hours tag
      * @param isStrict parsing mode of evaluator, true to turn on strict
-     * @param country
+     * @param lat latitude of the location
+     * @param lng longitude of the location
+     * @param country ISO 3166 2-letter country code
      * @throws OpeningHoursParseException
      */
-    public OpeningHoursEvaluator(String openingHours, boolean isStrict, double lat, double lng)
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict, double lat, double lng, String country)
             throws OpeningHoursParseException {
         this(openingHours, isStrict);
-        geocoder = new Geocoder(lat, lng);
+        geocoder = new Geocoder(lat, lng, country);
     }
 
     /**

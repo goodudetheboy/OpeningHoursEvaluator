@@ -21,6 +21,7 @@ public class Geocoder {
     double  lat         = DEFAULT_LATITUDE;
     double  lng         = DEFAULT_LONGITUDE;
     ZoneId  timezone    = ZoneId.of("Asia/Ho_Chi_Minh");
+    String  country     = "VN";
 
     /**
      * Constructor for a default geocoder, with geolocation set to Ho Chi
@@ -35,10 +36,12 @@ public class Geocoder {
      * 
      * @param lat latitude
      * @param lng longitude
+     * @param country ISO 3166 2-letter country code (e.g. "VN")
      */
-    public Geocoder(double lat, double lng) {
+    public Geocoder(double lat, double lng, String country) {
         setLatitude(lat);
         setLongitude(lng);
+        setCountry(country);
         refreshTimeZone();
     }
 
@@ -68,6 +71,13 @@ public class Geocoder {
      */
     public ZoneId getTimeZone() {
         return timezone;
+    }
+
+    /**
+     * @return the country of this geocoder
+     */
+    public String getCountry() {
+        return country;
     }
 
     /**
@@ -109,12 +119,22 @@ public class Geocoder {
     }
 
     /**
+     * Set the country code of this geocoder, which will influence calculation of
+     * holiday events in the evaluator
+     * 
+     * @param country a 2-character ISO country code
+     */
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    /**
      * Refresh the timezone of this geocoder with stored coordinates
      */
     public void refreshTimeZone() {
         timezone = getTimeZoneFromCoor(lat, lng);
     }
-    
+
     /**
      * Retrieve time zone based on coordinates. A Wrapper class for the query()
      * of TimeZoneEngine

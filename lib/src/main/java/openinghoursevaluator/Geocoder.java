@@ -114,7 +114,7 @@ public class Geocoder {
     public void refreshTimeZone() {
         timezone = getTimeZoneFromCoor(lat, lng);
     }
-
+    
     /**
      * Retrieve time zone based on coordinates. A Wrapper class for the query()
      * of TimeZoneEngine

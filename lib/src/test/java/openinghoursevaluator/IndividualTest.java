@@ -25,7 +25,7 @@ public class IndividualTest {
                     System.out.println("\nEvaluating " + timeString);
                     try {
                         LocalDateTime inputTime = LocalDateTime.parse(timeString);
-                        Result result = evaluator.checkStatus(inputTime);
+                        Result result = evaluator.evaluate(inputTime);
                         System.out.println("Current status: " + result.getStatus() +
                             ((result.hasComment()) ? ", comment: " + result.getComment() : ""));
                         System.out.println("Weekly schedule");

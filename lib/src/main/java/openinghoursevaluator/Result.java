@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import ch.poole.openinghoursparser.Rule;
 
 /**
- * A custom result class for the OpeningHoursEvaluator. This is also used for
+ * A structured result class for the OpeningHoursEvaluator. This is also used for
  * storing getting next event (open/close next)
  */
 public class Result {

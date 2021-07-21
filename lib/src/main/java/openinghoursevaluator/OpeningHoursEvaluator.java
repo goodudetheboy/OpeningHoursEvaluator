@@ -130,17 +130,58 @@ public class OpeningHoursEvaluator {
 
 
     /**
-     * Check if avenue is closed or not according to an input time string in accordance with
-     * LocalDateTime parser
+     * Evaluate and return a structured Result based on the input time with the
+     * stored opening hours. See {@link Result} for more details on how to work
+     * with this
      * 
      * @param inputTime a LocalDateTime instance
-     * @param isStrict
+     * @return result of the evaluation
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime inputTime)
+    public Result evaluate(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules);
         return monthRule.checkStatus(inputTime, geocoder);
+    }
+
+    /**
+     * Evaluate and return a structured Result based on the input time string
+     * with the stored opening hours. The input string must be parsable by
+     * LocalDateTime. See {@link Result} for more details on how to work with
+     * this.
+     * 
+     * @param inputTimeString a time string parsable LocalDateTime
+     * @return result of the evaluation
+     * @throws OpeningHoursEvaluationException
+     */
+    public Result evaluate(String inputTimeString) 
+            throws OpeningHoursEvaluationException {
+        return evaluate(LocalDateTime.parse(inputTimeString));
+    }
+
+    /**
+     * Get the Status of the current opening hours tag at the input time
+     * 
+     * @param inputTime a LocalDateTime instance
+     * @return a Status instance
+     * @throws OpeningHoursEvaluationException
+     */
+    public Status checkStatus(LocalDateTime inputTime)
+            throws OpeningHoursEvaluationException {
+        return evaluate(inputTime).getStatus();
+    }
+
+    /**
+     * Get the Status of the current opening hours tag at the input time string.
+     * The input time string must be parsable by LocalDateTime.
+     * 
+     * @param inputTimeString a time string parsable LocalDateTime
+     * @return a Status instance
+     * @throws OpeningHoursEvaluationException
+     */
+    public Status checkStatus(String inputTimeString)
+            throws OpeningHoursEvaluationException {
+        return checkStatus(LocalDateTime.parse(inputTimeString));
     }
 
     /**

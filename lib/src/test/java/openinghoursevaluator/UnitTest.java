@@ -33,7 +33,25 @@ public class UnitTest {
 
     @Test
     public void variableTimeTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
-        assertTrue(InputTest.evaluateCheck("sunset-sunrise", "2021-06-13T05:31", Status.OPEN));
-        assertTrue(InputTest.evaluateCheck("sunset-sunrise", "2021-06-13T05:32", Status.CLOSED));
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator("sunset-sunrise", false);
+        assertEquals(Status.OPEN, evaluator.checkStatus("2021-06-13T05:31"));
+        assertEquals(Status.CLOSED, evaluator.checkStatus("2021-06-13T05:32"));
+    }
+
+    @Test
+    public void diffCountryVarTimeTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        double[][] countries = {{ 31.2304   , 121.4737 }, // Shanghai, China
+                                { 41.8781   , -87.6298 }, // Chicago, USA
+                                { 52.5200   , 10.4515  } // Berlin, Germany
+                            }; 
+        String[] inputTime = { "2021-07-22T04:50", "2021-07-22T06:00", "2021-07-22T05:20" };
+        Status[] status = { Status.CLOSED, Status.OPEN, Status.CLOSED };
+
+        for (int i=0; i<countries.length; i++) {
+            OpeningHoursEvaluator evaluator
+                = new OpeningHoursEvaluator("sunrise-sunset", false, countries[i][0], countries[i][1]);
+            assertEquals(status[i], evaluator.checkStatus(inputTime[i]));
+        }
+
     }
 }

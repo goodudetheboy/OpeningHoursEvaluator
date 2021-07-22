@@ -66,6 +66,21 @@ public class OpeningHoursEvaluator {
     }
 
     /**
+     * Constructor with input time string according to opening hours, an option
+     * to set strict/non-strict parsing, and a predefined {@link Geocoder}
+     * 
+     * @param openingHours an opening hours tag
+     * @param isStrict parsing mode of evaluator, true to turn on strict
+     * @param geocoder a {@link Geocoder}
+     * @throws OpeningHoursParseException
+     */
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict, Geocoder geocoder)
+            throws OpeningHoursParseException {
+        this(openingHours, isStrict);
+        this.geocoder = geocoder;
+    }
+
+    /**
      * @return the current Rules stored in this evaluator
      */
     public List<Rule> getRules() {

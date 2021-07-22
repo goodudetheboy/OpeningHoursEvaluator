@@ -31,7 +31,7 @@ public class YearManager {
                 return processInterval(start, end, interval, yearNum);
             }
         } else {
-            return start == yearNum;
+            return (yearRange.isOpenEnded()) ? yearNum >= start : yearNum == start;
         }
     }
 

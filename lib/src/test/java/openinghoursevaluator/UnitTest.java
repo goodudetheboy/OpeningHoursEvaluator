@@ -15,6 +15,7 @@ public class UnitTest {
     public void timepointTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         assertTrue(InputTest.evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T15:00", Status.CLOSED));
         assertTrue(InputTest.evaluateCheck("00:00-02:00,12:00-14:00,17:00-24:00", "2021-06-09T18:00", Status.OPEN));
+        assertTrue(InputTest.evaluateCheck("2021 open", "2020-12-31T00:00", Status.CLOSED));
     }
 
     @Test

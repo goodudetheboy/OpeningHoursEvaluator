@@ -142,7 +142,9 @@ public class MonthRule {
                 // if found applicable YearRange move to check for update with
                 // WeekRange right away
                 if (yearManager.processYearRange(yearRange, week)) {
-                    updateWithWeekRange(rule, week);
+                    // Check of open-ended YearRange to fill accordingly
+                    Rule processed = (yearRange.isOpenEnded()) ? processOpenEndRule(rule) : rule;
+                    updateWithWeekRange(processed, week);
                     return;
                 }
             }
@@ -219,11 +221,9 @@ public class MonthRule {
                 restriction.setEndDay(Week.convertWeekDay(endWDay));
 
                 // check for open ended date range
-                if (DateManager.isOpenEndDateRange(dateRange)) {
-                    week.build(processOpenEndRule(rule), restriction);
-                } else {
-                    week.build(rule, restriction);
-                }
+                Rule processed = (DateManager.isOpenEndDateRange(dateRange))
+                            ? processOpenEndRule(rule) : rule;
+                week.build(processed, restriction);
             }
         }
     }

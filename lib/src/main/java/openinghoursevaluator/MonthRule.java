@@ -10,6 +10,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import ch.poole.openinghoursparser.DateRange;
@@ -23,16 +24,60 @@ import ch.poole.openinghoursparser.YearRange;
 import ch.poole.openinghoursparser.RuleModifier.Modifier;
 
 public class MonthRule {
-    List<Rule>  rules = null;
+    List<Rule>  rules       = null;
     List<Week>  weekStorage = null;
+    Geocoder    geocoder    = null;
 
     public MonthRule() {
         // nothing here
     }
 
-    public MonthRule(List<Rule> rules) {
+    /**
+     * Constructor to create a MonthRule with a list of rules and a geocoder
+     * 
+     * @param rules the list of Rules
+     * @param geocoder the geocoder
+     */
+    public MonthRule(List<Rule> rules, @Nonnull Geocoder geocoder) {
         weekStorage = new ArrayList<>();
         this.rules = rules;
+        this.geocoder = geocoder;
+    }
+
+    /**
+     * @return the list of rules stored in this MonthRule
+     */
+    public List<Rule> getRules() {
+        List<Rule> rulesList = new ArrayList<>();
+        for (Rule rule : rules) {
+            rulesList.add(new Rule(rule));
+        }
+        return rulesList;
+    }
+
+    /**
+     * @return the geocoder stored in this MonthRule
+     */
+    public Geocoder getGeocoder() {
+        return geocoder;
+    }
+
+    /**
+     * Set the list of Rules for this MonthRule
+     * 
+     * @param rules the list of Rules
+     */
+    public void setRules(List<Rule> rules) {
+        this.rules = rules;
+    }
+
+    /**
+     * Set the geocoder for this MonthRule
+     * 
+     * @param geocoder the geocoder to be set
+     */
+    public void setGeocoder(Geocoder geocoder) {
+        this.geocoder = geocoder;
     }
 
     /**
@@ -43,11 +88,11 @@ public class MonthRule {
      * @param geocoder double array {latidue, longitude}
      * @throws OpeningHoursEvaluationException
      */
-    public void buildWeek(LocalDateTime time, Geocoder geocoder)
+    public void buildWeek(LocalDateTime time)
             throws OpeningHoursEvaluationException {
-        populate(time, geocoder);
+        populate(time);
         for (Rule rule : rules) {
-            simulateSpill(weekStorage.get(0), rule, geocoder);
+            simulateSpill(weekStorage.get(0), rule);
             for (Week week : weekStorage) {
                 update(week, rule);
             }
@@ -64,12 +109,12 @@ public class MonthRule {
      *      from LocalDateTime
      * @throws OpeningHoursEvaluationException
      */
-    public Week buildOneDay(LocalDateTime time, Geocoder geocoder)
+    public Week buildOneDay(LocalDateTime time)
             throws OpeningHoursEvaluationException {
         LocalDate date = time.toLocalDate();
         Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()), geocoder);
         for (Rule rule : rules) {
-            simulateSpill(oneDay, rule, geocoder);
+            simulateSpill(oneDay, rule);
             update(oneDay, rule);
         }
         oneDay.applyPreviousSpill();
@@ -214,10 +259,9 @@ public class MonthRule {
      * 
      * @param week a Week to be simulated
      * @param rule a Rule to be applied
-     * @param geocoder geocoder double array {latitude, longitude}
      * @throws OpeningHoursEvaluationException
      */
-    private void simulateSpill(Week week, Rule rule, Geocoder geocoder) 
+    private void simulateSpill(Week week, Rule rule) 
             throws OpeningHoursEvaluationException {
         Week dayBeforeWeek = new Week(week.getDayBefore(), geocoder);
         update(dayBeforeWeek, rule);
@@ -233,9 +277,9 @@ public class MonthRule {
      * @return the result of the evaluation
      * @throws OpeningHoursEvaluationException
      */
-    public Result checkStatus(LocalDateTime time, Geocoder geocoder)
+    public Result checkStatus(LocalDateTime time)
             throws OpeningHoursEvaluationException {
-        Week dayToCheck = buildOneDay(time, geocoder);
+        Week dayToCheck = buildOneDay(time);
         dayToCheck.clean();
         return dayToCheck.checkStatus(time);
     }
@@ -291,7 +335,7 @@ public class MonthRule {
      * 
      * @param time input LocalDateTime
      */
-    public void populate(LocalDateTime time, Geocoder geocoder) {
+    public void populate(LocalDateTime time) {
         weekStorage = Week.createEmptyWeek(time.toLocalDate(), geocoder);
     }
 

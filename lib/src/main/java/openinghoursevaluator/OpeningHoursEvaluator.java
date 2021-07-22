@@ -131,7 +131,7 @@ public class OpeningHoursEvaluator {
      */
     public void setRules(List<Rule> rules) {
         this.rules = rules;
-        timeTraveller = new TimeTraveller(rules);
+        timeTraveller = new TimeTraveller(rules, geocoder);
     }
 
     /**
@@ -157,8 +157,8 @@ public class OpeningHoursEvaluator {
      */
     public Result evaluate(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
-        MonthRule monthRule = new MonthRule(rules);
-        return monthRule.checkStatus(inputTime, geocoder);
+        MonthRule monthRule = new MonthRule(rules, geocoder);
+        return monthRule.checkStatus(inputTime);
     }
 
     /**
@@ -211,7 +211,7 @@ public class OpeningHoursEvaluator {
      */
     public Result getNextEvent(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
-        return timeTraveller.getDifferingEvent(inputTime, true, geocoder);
+        return timeTraveller.getDifferingEvent(inputTime, true);
     }
 
     /**
@@ -224,7 +224,7 @@ public class OpeningHoursEvaluator {
      */
     public Result getLastEvent(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
-        return timeTraveller.getDifferingEvent(inputTime, false, geocoder);
+        return timeTraveller.getDifferingEvent(inputTime, false);
     }
 
     /**
@@ -234,9 +234,9 @@ public class OpeningHoursEvaluator {
      * @return week schedule created by inputTime using the stored opening hours
      */
     public String toString(LocalDateTime inputTime) {
-        MonthRule monthRule = new MonthRule(rules);
+        MonthRule monthRule = new MonthRule(rules, geocoder);
         try {
-            monthRule.buildWeek(inputTime, geocoder);
+            monthRule.buildWeek(inputTime);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }
@@ -252,9 +252,9 @@ public class OpeningHoursEvaluator {
      * @return week schedule created by inputTime using the stored opening hours
      */
     public String toDebugString(LocalDateTime inputTime) {
-        MonthRule monthRule = new MonthRule(rules);
+        MonthRule monthRule = new MonthRule(rules, geocoder);
         try {
-            monthRule.buildWeek(inputTime, geocoder);
+            monthRule.buildWeek(inputTime);
         } catch (OpeningHoursEvaluationException e) {
             throw new IllegalArgumentException(e.getMessage());
         }

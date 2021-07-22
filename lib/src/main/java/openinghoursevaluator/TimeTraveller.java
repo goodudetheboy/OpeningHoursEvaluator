@@ -17,13 +17,15 @@ public class TimeTraveller {
     public static final int MAX_PAST_WEEKS = 100;
 
     List<Rule>  rules       = null;
+    Geocoder    geocoder    = null;
 
     public TimeTraveller() {
         //empty
     }
 
-    public TimeTraveller(List<Rule> rules) {
+    public TimeTraveller(List<Rule> rules, Geocoder geocoder) {
         this.rules = rules;
+        this.geocoder = geocoder;
     }
 
     /**
@@ -36,13 +38,13 @@ public class TimeTraveller {
      *      status of the evaluation of inputTime against the stored rules)
      * @throws OpeningHoursEvaluationException
      */
-    public Result getDifferingEvent(LocalDateTime inputTime, boolean isNext, Geocoder geocoder)
+    public Result getDifferingEvent(LocalDateTime inputTime, boolean isNext)
             throws OpeningHoursEvaluationException {
-        MonthRule monthRule = new MonthRule(rules);
+        MonthRule monthRule = new MonthRule(rules, geocoder);
 
         // checking in current week in monthRule first
-        monthRule.buildWeek(inputTime, geocoder);
-        Status statusToCheck = monthRule.checkStatus(inputTime, geocoder).getStatus();
+        monthRule.buildWeek(inputTime);
+        Status statusToCheck = monthRule.checkStatus(inputTime).getStatus();
         Result result = monthRule.getDifferingEvent(inputTime, statusToCheck, isNext);
 
         // if nothing could be found, go to the future!
@@ -52,7 +54,7 @@ public class TimeTraveller {
             LocalDate lookahead = inputTime.toLocalDate();
             for (int i=0; i < MAX_FUTURE_WEEKS; i++) {
                 lookahead = DateManager.getOffsetDate(lookahead, (isNext) ? 7 : -7);
-                monthRule.buildWeek(lookahead.atStartOfDay(), geocoder);
+                monthRule.buildWeek(lookahead.atStartOfDay());
                 result = monthRule.getDifferingEvent(statusToCheck, isNext);
                 if (result != null) {
                     return result;

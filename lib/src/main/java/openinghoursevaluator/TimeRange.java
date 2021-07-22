@@ -183,6 +183,11 @@ public class TimeRange implements Comparable<TimeRange> {
         return isFallback;
     }
 
+    /**
+     * Set start time in minutes of this TimeRange
+     * 
+     * @param start start time to be set
+     */
     public void setStart(int start) {
         if (start > MAX_TIME || start < MIN_TIME) {
             throw new IllegalArgumentException("Start time " + start + " is outside current day");
@@ -190,6 +195,11 @@ public class TimeRange implements Comparable<TimeRange> {
         this.start = start;
     }
 
+    /**
+     * Set the end time in minutes of this TimeRange
+     * 
+     * @param end end time to be set
+     */
     public void setEnd(int end) {
         if (end > MAX_TIME || end < MIN_TIME) {
             throw new IllegalArgumentException("Invalid time" + end + ", please keep time in 24 hours");
@@ -197,22 +207,45 @@ public class TimeRange implements Comparable<TimeRange> {
         this.end = end;
     }
 
+    /**
+     * Set the Status of this TimeRange
+     * 
+     * @param status Status to be set
+     */
     public void setStatus(Status status) {
         this.status = status;
     }
 
+    /**
+     * Set the comment of this TimeRange
+     * 
+     * @param comment comment to be set
+     */
     public void setComment(String comment) {
         this.comment = comment;
     }
 
+    /**
+     * Set the defining rule of this TimeRange. (optional)
+     * 
+     * @param definingRule Rule that defines this TimeRange
+     */
     public void setDefiningRule(Rule defRule) {
         this.defRule = defRule;
     }
 
+    /**
+     * Set the fallback status of this TimeRange.
+     * 
+     * @param isFallback true to set as fallback
+     */
     public void setFallback(boolean isFallback) {
         this.isFallback = isFallback;
     }
 
+    /**
+     * Check if this TimeRange has a comment
+     */
     public boolean hasComment() {
         return comment != null;
     }

@@ -47,6 +47,26 @@ public class Week {
         // nothing here
     }
 
+    /**
+     * Constructor to clone another Week
+     * 
+     * @param defDate
+     * @param geolocation
+     */
+    public Week(Week other) {
+        this.defDate = other.defDate;
+        this.year = other.year;
+        this.month = other.month;
+        this.weekOfYear = other.weekOfYear;
+        this.geolocation = other.geolocation;
+        this.startWeekDay = other.startWeekDay;
+        this.endWeekDay = other.endWeekDay;
+        this.previousSpill = other.previousSpill;
+        this.dayBefore = other.dayBefore;
+        this.dayAfter = other.dayAfter;
+        this.weekDayStorage = other.weekDayStorage;
+    }
+
     public Week(LocalDate defDate, Geolocation geolocation) {
         // setting weekOfYear and weekOfMonth
         this(defDate, WeekDay.MO, WeekDay.SU, geolocation);
@@ -103,20 +123,6 @@ public class Week {
      */
     public Month getMonth() {
         return month;
-    }
-
-    /**
-     * @return the Week number of stored Month
-     */
-    public int getWeekOfMonth() {
-        return weekOfMonth;
-    }
-
-   /**
-     * @return the reverse Week number of stored month
-     */
-    public int getReverseWeekOfMonth() {
-        return reverseWeekOfMonth;
     }
 
     /**
@@ -201,6 +207,15 @@ public class Week {
     }
 
     /**
+     * Set the week of Year of this Week
+     * 
+     * @param weekOfYear week of year to be set
+     */
+    public void setWeekOfYear(int weekOfYear) {
+        this.weekOfYear = weekOfYear;
+    }
+
+    /**
      * Set the geolocation of this Week
      * 
      * @param geolocation double array {latitude, longitude}
@@ -240,6 +255,40 @@ public class Week {
             throw new IllegalArgumentException("Start weekday cannot be after end weekday");
         }
         this.endWeekDay = endWeekDay;
+    }
+
+    /**
+     * Set the dayBefore of this Week
+     * 
+     * @param dayBefore dayBefore to be set
+     */
+    public void setDayBefore(WeekDayRule dayBefore) {
+        this.dayBefore = dayBefore;
+    }
+
+    /**
+     * Set the dayAfter of this Week
+     * 
+     * @param dayAfter dayAfter to be set
+     */
+    public void setDayAfter(WeekDayRule dayAfter) {
+        this.dayAfter = dayAfter;
+    }    
+
+    /**
+     * Add a WeekDayRule to this Week. If there is any WeekDayRule already
+     * present in same WeekDay of WeekDayRule, the new WeekDayRule will replace
+     * the old WeekDayRule
+     * 
+     * @param wdr weekDa
+     */
+    public void addWeekDayRule(WeekDayRule wdr) {
+        WeekDayRule old = weekDayStorage.remove(wdr.getWeekDay());
+        if (old != null) {
+            wdr.setLastDayRule(old.getLastDayRule());
+            wdr.setNextDayRule(old.getNextDayRule());
+        }
+        weekDayStorage.put(wdr.getWeekDay(), wdr);
     }
 
     /**
@@ -586,6 +635,8 @@ public class Week {
         WeekDayRule lastEndDay = getEndWeekDayRule();
         lastEndDay.setNextDayRule(nextStartDay);
         nextStartDay.setLastDayRule(lastEndDay);
+        setDayAfter(nextStartDay);
+        other.setDayBefore(lastEndDay);
     }
 
     /**

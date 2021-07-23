@@ -28,8 +28,6 @@ public class Week {
     int     year                    = INVALID_NUM;
     Month   month                   = null;
     int     weekOfYear              = INVALID_NUM;
-    int     weekOfMonth             = INVALID_NUM;
-    int     reverseWeekOfMonth      = INVALID_NUM;
 
     // geolocation, temporary put here for visibility
     Geolocation geolocation         = null;
@@ -200,32 +198,6 @@ public class Week {
      */
     public void setMonth(Month month) {
         this.month = month;
-    }
-
-    /**
-     * Set the weekOfMonth of this Week
-     * 
-     * @param weekOfMonth weekOfMonth to be set
-     */
-    public void setWeekOfMonth(int weekOfMonth) {
-        if (weekOfMonth < 1 || weekOfMonth > 5) {
-            throw new IllegalArgumentException("Illegal nth week of month: "
-                                                + weekOfMonth);
-        }
-        this.weekOfMonth = weekOfMonth;
-    }
-
-    /**
-     * Set the reverseWeekOfMonth of this Week
-     * 
-     * @param weekOfMonth weekOfMonth to be set
-     */
-    public void setReverseWeekOfMonth(int reverseWeekOfMonth) {
-        if (reverseWeekOfMonth > -1 || reverseWeekOfMonth < -5) {
-            throw new IllegalArgumentException("Illegal reverse nth week of month: "
-                                                + weekOfMonth);
-        }
-        this.reverseWeekOfMonth = reverseWeekOfMonth;
     }
 
     /**

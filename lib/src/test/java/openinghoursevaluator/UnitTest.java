@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 import org.junit.Test;
 
@@ -53,6 +54,25 @@ public class UnitTest {
                 = new OpeningHoursEvaluator("sunrise-sunset", false, countries[i][0], countries[i][1], "");
             assertEquals(status[i], evaluator.checkStatus(inputTime[i]));
         }
+    }
 
+    @Test
+    public void localeBasedWeekTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        // US and some countries considers the first days of the year to be week 1
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator("week 1", false, 43.1566, -77.6088, "US");
+        assertEquals(Status.OPEN, evaluator.checkStatus("2021-01-01T05:31"));
+        evaluator.setOpeningHoursTag("week 53");
+        assertEquals(Status.CLOSED, evaluator.checkStatus("2021-01-01T05:32"));
+
+        OpeningHoursEvaluator evaluator2 = new OpeningHoursEvaluator("week 1", false, 46.2276, 2.2276, Locale.FRANCE);
+        assertEquals(Status.CLOSED, evaluator2.checkStatus("2021-01-01T05:31"));
+        evaluator2.setOpeningHoursTag("week 53");
+        assertEquals(Status.OPEN, evaluator2.checkStatus("2021-01-01T05:32"));
+    }
+
+    @Test
+    public void constructorTest() throws OpeningHoursParseException {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator("week 1", false, 43.1566, -77.6088, Locale.US);
+        assertEquals("US", evaluator.getGeolocation().getCountry());
     }
 }

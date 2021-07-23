@@ -3,6 +3,7 @@ package openinghoursevaluator;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 import ch.poole.openinghoursparser.OpeningHoursParseException;
 import ch.poole.openinghoursparser.OpeningHoursParser;
@@ -65,6 +66,13 @@ public class OpeningHoursEvaluator {
         geolocation = new Geolocation(lat, lng, country);
     }
 
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict, double lat, double lng, Locale locale)
+            throws OpeningHoursParseException {
+        this(openingHours, isStrict);
+        geolocation = new Geolocation(lat, lng, locale);
+    }
+
+
     /**
      * Constructor with input time string according to opening hours, an option
      * to set strict/non-strict parsing, and a predefined {@link Geolocation}
@@ -104,7 +112,7 @@ public class OpeningHoursEvaluator {
     /**
      * @return the geolocation of this evaluator
      */
-    public Geolocation getgeolocation() {
+    public Geolocation getGeolocation() {
         return geolocation;
     }
 

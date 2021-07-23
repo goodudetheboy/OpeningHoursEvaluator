@@ -6,9 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -373,29 +371,6 @@ public class MonthRule {
      */
     public static Month convertMonth(LocalDate date) {
         return Month.values()[date.getMonth().ordinal()];
-    }
-
-    /**
-     * Return the week of a month, based on a time and a Locale
-     * 
-     * @param date
-     * @return
-     */
-    public static int getNthWeekOfMonth(LocalDate date, Locale locale) {
-        Calendar c = Calendar.getInstance(locale);
-        c.set(date.getYear(), date.getMonthValue()-1, date.getDayOfMonth());
-        c.setMinimalDaysInFirstWeek(1);
-        return c.get(Calendar.WEEK_OF_MONTH);
-    }
-
-    /**
-     * Return the number of week of a month of an input time
-     * 
-     * @param time input time
-     * @return number of week of a month of an input time
-     */
-    public static int getNumOfWeekOfMonth(LocalDate date, Locale locale) {
-        return getNthWeekOfMonth(getLastDayOfMonth(date), locale);
     }
 
     /**

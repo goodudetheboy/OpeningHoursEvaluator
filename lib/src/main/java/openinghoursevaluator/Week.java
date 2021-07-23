@@ -32,7 +32,7 @@ public class Week {
     int     reverseWeekOfMonth      = INVALID_NUM;
 
     // geolocation, temporary put here for visibility
-    Geolocation geolocation               = null;
+    Geolocation geolocation         = null;
 
     WeekDay startWeekDay            = null;
     WeekDay endWeekDay              = null;
@@ -67,11 +67,11 @@ public class Week {
      * @param geolocation
      */
     public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay, Geolocation geolocation) {
+        setGeolocation(geolocation);
         this.defDate = defDate;
         dissectDefDate(defDate);
         setStartWeekDay(startWeekDay);
         setEndWeekDay(endWeekDay);
-        setGeocoder(geolocation);
         weekDayStorage = new EnumMap<>(WeekDay.class);
         populate();
     }
@@ -90,7 +90,7 @@ public class Week {
     private void dissectDefDate(LocalDate defDate) {
         this.year = defDate.getYear();
         this.month = MonthRule.convertMonth(defDate);
-        this.weekOfYear = getWeekOfYear(defDate, Locale.FRANCE);
+        this.weekOfYear = getWeekOfYear(defDate, geolocation.getLocale());
     }
 
     /**
@@ -233,7 +233,7 @@ public class Week {
      * 
      * @param geolocation double array {latitude, longitude}
      */
-    public void setGeocoder(Geolocation geolocation) {
+    public void setGeolocation(Geolocation geolocation) {
         this.geolocation = geolocation;
     }
 

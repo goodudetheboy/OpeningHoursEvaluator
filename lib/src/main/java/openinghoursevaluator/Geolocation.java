@@ -29,14 +29,13 @@ public class Geolocation {
     double  lng         = DEFAULT_LONGITUDE;
     ZoneId  timezone    = ZoneId.of("Asia/Ho_Chi_Minh");
     String  country     = "VN";
-    Locale  locale      = new Locale.Builder().setRegion("VN").build();
+    // TODO: Refactor answer to make this Locale more correct
+    Locale  locale      = new Locale.Builder().setRegion("VN").setLocale(Locale.FRANCE).build();
 
     /**
-     * Constructor for a default geolocation, with geolocation set to Ho Chi
-     * Minh City
+     * Constructor for a default geolocation, with data set to default
      */
     public Geolocation() {
-        // empty
     }
 
     /**

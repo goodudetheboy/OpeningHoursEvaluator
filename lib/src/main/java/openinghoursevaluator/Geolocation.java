@@ -8,10 +8,10 @@ import javax.annotation.Nullable;
 import net.iakovlev.timeshape.TimeZoneEngine;
 
 /**
- * A Geocoder class to provide geolocation information for use through the
+ * A Geolocation class to provide geolocation information for use through the
  * evaluator, for example, for getting location-dependent variable time
  */
-public class Geocoder {
+public class Geolocation {
     // TimeZoneEngine takes time to init, so it will only be done once
     public static final TimeZoneEngine engine = TimeZoneEngine.initialize();
     // Geocoding of Ho Chi Minh City, Vietnam, taken from Google
@@ -24,21 +24,21 @@ public class Geocoder {
     String  country     = "VN";
 
     /**
-     * Constructor for a default geocoder, with geolocation set to Ho Chi
+     * Constructor for a default geolocation, with geolocation set to Ho Chi
      * Minh City
      */
-    public Geocoder() {
+    public Geolocation() {
         // empty
     }
 
     /**
-     * Constructor for a geocoder, with input latitude and longitude
+     * Constructor for a geolocation, with input latitude and longitude
      * 
      * @param lat latitude
      * @param lng longitude
      * @param country ISO 3166 2-letter country code (e.g. "VN")
      */
-    public Geocoder(double lat, double lng, String country) {
+    public Geolocation(double lat, double lng, String country) {
         setLatitude(lat);
         setLongitude(lng);
         setCountry(country);
@@ -46,14 +46,14 @@ public class Geocoder {
     }
 
     /**
-     * @return the latitude of this geocoder
+     * @return the latitude of this geolocation
      */
     public double getLatitude() {
         return lat;
     }
 
     /**
-     * @return the longitude of this geocoder
+     * @return the longitude of this geolocation
      */
     public double getLongitude() {
         return lng;
@@ -67,21 +67,21 @@ public class Geocoder {
     }
 
     /**
-     * @return the ZoneId created from the stored coordinates in this geocoder
+     * @return the ZoneId created from the stored coordinates in this geolocation
      */
     public ZoneId getTimeZone() {
         return timezone;
     }
 
     /**
-     * @return the country of this geocoder
+     * @return the country of this geolocation
      */
     public String getCountry() {
         return country;
     }
 
     /**
-     * Set the latitude of this geocoder, which will influence calculation of
+     * Set the latitude of this geolocation, which will influence calculation of
      * events of day like dawn, dusk, sunrise, sunset in the evaluator
      *  
      * @param lat double value of a latitude
@@ -91,7 +91,7 @@ public class Geocoder {
     }
 
     /**
-     * Set the longitude of this geocoder, which will influence calculation of
+     * Set the longitude of this geolocation, which will influence calculation of
      * events of day like dawn, dusk, sunrise, sunset in the evaluator.
      * <p>
      * Make sure to refresh timezone after setting with
@@ -104,7 +104,7 @@ public class Geocoder {
     }
     
     /**
-     * Set the coordinates of this geocoder, which will influence calculation of
+     * Set the coordinates of this geolocation, which will influence calculation of
      * events of day like dawn, dusk, sunrise, sunset
      * <p>
      * Make sure to refresh timezone after setting with
@@ -119,7 +119,7 @@ public class Geocoder {
     }
 
     /**
-     * Set the country code of this geocoder, which will influence calculation of
+     * Set the country code of this geolocation, which will influence calculation of
      * holiday events in the evaluator
      * 
      * @param country a 2-character ISO country code
@@ -129,7 +129,7 @@ public class Geocoder {
     }
 
     /**
-     * Refresh the timezone of this geocoder with stored coordinates
+     * Refresh the timezone of this geolocation with stored coordinates
      */
     public void refreshTimeZone() {
         timezone = getTimeZoneFromCoor(lat, lng);

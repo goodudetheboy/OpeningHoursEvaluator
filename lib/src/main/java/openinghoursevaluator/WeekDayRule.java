@@ -197,7 +197,7 @@ public class WeekDayRule {
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:fallback_rule_separator
      */
-    public void build(Rule rule, Geocoder geocoder) throws OpeningHoursEvaluationException {
+    public void build(Rule rule, Geolocation geolocation) throws OpeningHoursEvaluationException {
         if (rule.isEmpty()) {
             throw new OpeningHoursEvaluationException("There's an empty rule, please remove it");
         }
@@ -206,7 +206,7 @@ public class WeekDayRule {
             clearOpeningHours();
         }
         flushSpill();
-        addRule(rule, geocoder);
+        addRule(rule, geolocation);
     }
 
     /**
@@ -216,7 +216,7 @@ public class WeekDayRule {
      * @param rule Rule to be added
      * @throws OpeningHoursEvaluationException
      */
-    public void addRule(Rule rule, Geocoder geocoder) throws OpeningHoursEvaluationException {
+    public void addRule(Rule rule, Geolocation geolocation) throws OpeningHoursEvaluationException {
         String comment = (rule.getModifier() != null)
                             ? rule.getModifier().getComment()
                             : null;
@@ -231,7 +231,7 @@ public class WeekDayRule {
             return;
         }
         for (TimeSpan timespan : rule.getTimes()) {
-            TimeSpan processed = processEventOfDay(timespan, geocoder);
+            TimeSpan processed = processEventOfDay(timespan, geolocation);
             addTime(processed, status, comment, rule, isFallback);
         }
     }
@@ -241,27 +241,27 @@ public class WeekDayRule {
      * sunset) defined as one the points.
      * 
      * @param timespan TimeSpan to be processed
-     * @param geocoder geocoder {latitude, longitude}
+     * @param geolocation geolocation {latitude, longitude}
      * @return processed TimeSpan with start and end well-defined and filled
      *      time of events of day, if any
      * @throws OpeningHoursEvaluationException
      */
-    private TimeSpan processEventOfDay(TimeSpan timespan, Geocoder geocoder) 
+    private TimeSpan processEventOfDay(TimeSpan timespan, Geolocation geolocation) 
             throws OpeningHoursEvaluationException {
         TimeSpan processed = timespan.copy();
         VariableTime startEvent = timespan.getStartEvent();
         VariableTime endEvent = timespan.getEndEvent();
         int startEventTime = (startEvent != null)
-                        ? getTimeOfEvent(startEvent, geocoder, 0)
+                        ? getTimeOfEvent(startEvent, geolocation, 0)
                         : timespan.getStart();
         int endEventTime = (endEvent != null)
-                        ? getTimeOfEvent(endEvent, geocoder, 0)
+                        ? getTimeOfEvent(endEvent, geolocation, 0)
                         : timespan.getEnd();
         // error handling
         checkErrorTimeSpan(startEventTime, endEventTime, timespan);
         // end event time padding, in case like (sunset-sunset)
         if (endEvent != null && endEventTime < startEventTime) {
-            endEventTime = getTimeOfEvent(endEvent, geocoder, 1) + TimeRange.MAX_TIME;
+            endEventTime = getTimeOfEvent(endEvent, geolocation, 1) + TimeRange.MAX_TIME;
         }
         processed.setStart(startEventTime);
         processed.setEnd(endEventTime);
@@ -273,16 +273,16 @@ public class WeekDayRule {
      * The returned time is plus 1 minutes compared to the calculated time
      * 
      * @param varTime VariableTime
-     * @param geocoder 
+     * @param geolocation 
      * @return time in minutes of event specified in VariableTime
      */
-    private int getTimeOfEvent(VariableTime varTime, Geocoder geocoder, int dateOffset) {
+    private int getTimeOfEvent(VariableTime varTime, Geolocation geolocation, int dateOffset) {
         int option = 1;
         SunTimes events = null;
-        ZoneId zoneId = geocoder.getTimeZone();
+        ZoneId zoneId = geolocation.getTimeZone();
         LocalDate adjusted = DateManager.getOffsetDate(defDate, dateOffset);
         ZonedDateTime zonedDate = adjusted.atStartOfDay(zoneId);
-        double[] coor = geocoder.getCoordinates();
+        double[] coor = geolocation.getCoordinates();
         switch (varTime.getEvent()) {
             case SUNRISE:
                 option = 0;

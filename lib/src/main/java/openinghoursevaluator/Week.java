@@ -31,9 +31,8 @@ public class Week {
     int     weekOfMonth             = INVALID_NUM;
     int     reverseWeekOfMonth      = INVALID_NUM;
 
-    // geocoder, temporary put here for visibility
-    // TODO: Refactor to remove this
-    Geocoder geocoder               = null;
+    // geolocation, temporary put here for visibility
+    Geolocation geolocation               = null;
 
     WeekDay startWeekDay            = null;
     WeekDay endWeekDay              = null;
@@ -50,13 +49,13 @@ public class Week {
         // nothing here
     }
 
-    public Week(LocalDate defDate, Geocoder geocoder) {
+    public Week(LocalDate defDate, Geolocation geolocation) {
         // setting weekOfYear and weekOfMonth
-        this(defDate, WeekDay.MO, WeekDay.SU, geocoder);
+        this(defDate, WeekDay.MO, WeekDay.SU, geolocation);
     }
 
-    public Week(LocalDate defDate, WeekDay oneWeekDay, Geocoder geocoder) {
-        this(defDate, oneWeekDay, oneWeekDay, geocoder);
+    public Week(LocalDate defDate, WeekDay oneWeekDay, Geolocation geolocation) {
+        this(defDate, oneWeekDay, oneWeekDay, geolocation);
     }
 
     /**
@@ -65,14 +64,14 @@ public class Week {
      * @param defDate
      * @param startWeekDay
      * @param endWeekDay
-     * @param geocoder
+     * @param geolocation
      */
-    public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay, Geocoder geocoder) {
+    public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay, Geolocation geolocation) {
         this.defDate = defDate;
         dissectDefDate(defDate);
         setStartWeekDay(startWeekDay);
         setEndWeekDay(endWeekDay);
-        setGeocoder(geocoder);
+        setGeocoder(geolocation);
         weekDayStorage = new EnumMap<>(WeekDay.class);
         populate();
     }
@@ -82,8 +81,8 @@ public class Week {
      * 
      * @param weekDayRule WeekDayRule 
      */
-    Week (WeekDayRule weekDayRule, Geocoder geocoder) {
-        this(weekDayRule.getDefDate(), weekDayRule.getWeekDay(), geocoder);
+    Week (WeekDayRule weekDayRule, Geolocation geolocation) {
+        this(weekDayRule.getDefDate(), weekDayRule.getWeekDay(), geolocation);
         weekDayStorage.put(weekDayRule.getWeekDay(), weekDayRule);
     }
 
@@ -91,7 +90,7 @@ public class Week {
     private void dissectDefDate(LocalDate defDate) {
         this.year = defDate.getYear();
         this.month = MonthRule.convertMonth(defDate);
-        this.weekOfYear = defDate.get(WeekFields.of(Locale.FRANCE).weekOfWeekBasedYear());
+        this.weekOfYear = getWeekOfYear(defDate, Locale.FRANCE);
     }
 
     /**
@@ -130,10 +129,10 @@ public class Week {
     }
 
     /**
-     * @return geocoder stored in this Week
+     * @return geolocation stored in this Week
      */
-    public Geocoder getGeocoder() {
-        return geocoder;
+    public Geolocation getGeocoder() {
+        return geolocation;
     }
 
     /**
@@ -230,12 +229,12 @@ public class Week {
     }
 
     /**
-     * Set the geocoder of this Week
+     * Set the geolocation of this Week
      * 
-     * @param geocoder double array {latitude, longitude}
+     * @param geolocation double array {latitude, longitude}
      */
-    public void setGeocoder(Geocoder geocoder) {
-        this.geocoder = geocoder;
+    public void setGeocoder(Geolocation geolocation) {
+        this.geolocation = geolocation;
     }
 
     /**
@@ -408,7 +407,7 @@ public class Week {
         do {
             if (hasWeekDay(current)
                     && weekDayStorage.get(current).isApplicableNth(nths)) {
-                weekDayStorage.get(current).build(rule, geocoder);
+                weekDayStorage.get(current).build(rule, geolocation);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
@@ -421,7 +420,7 @@ public class Week {
         WeekDay end = endWeekDay;
         do {
             if (weekDayStorage.get(current).isApplicableOffset(weekdays)) {
-                weekDayStorage.get(current).build(rule, geocoder);
+                weekDayStorage.get(current).build(rule, geolocation);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
@@ -641,11 +640,11 @@ public class Week {
      * months), List<Week> will cotain two
      * 
      * @param date a LocalDate to be built around
-     * @param geocoder a geocoder {latidue, longitude} where the Week is based
+     * @param geolocation a geolocation {latidue, longitude} where the Week is based
      *      around
      * @return a List<Week> built around LocalDate
      */
-    public static List<Week> createEmptyWeek(LocalDate date, Geocoder geocoder) {
+    public static List<Week> createEmptyWeek(LocalDate date, Geolocation geolocation) {
         List<Week> result = new ArrayList<>();
         LocalDate firstDayOfWeek = WeekManager.getFirstDayOfWeek(date);
         LocalDate lastDayOfWeek = WeekManager.getLastDayOfWeek(date);
@@ -657,19 +656,19 @@ public class Week {
             // handles when input week of date is split between previous and this month
             cutoffDate = MonthRule.getLastDayOfMonth(firstDayOfWeek);
             WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
-            first = new Week(cutoffDate, WeekDay.MO, cutoff, geocoder);
-            second = new Week(date, getNextWeekDay(cutoff), WeekDay.SU, geocoder);
+            first = new Week(cutoffDate, WeekDay.MO, cutoff, geolocation);
+            second = new Week(date, getNextWeekDay(cutoff), WeekDay.SU, geolocation);
 
         } else if (lastDayOfWeek.getMonth() != date.getMonth()) {
             // handles when input week of date is split between this and next month
             cutoffDate = MonthRule.getFirstDayOfMonth(lastDayOfWeek);
             WeekDay cutoff = convertWeekDay(cutoffDate.getDayOfWeek());
-            first = new Week(date, WeekDay.MO, getPreviousWeekDay(cutoff), geocoder);
-            second = new Week(cutoffDate, cutoff, WeekDay.SU, geocoder);
+            first = new Week(date, WeekDay.MO, getPreviousWeekDay(cutoff), geolocation);
+            second = new Week(cutoffDate, cutoff, WeekDay.SU, geolocation);
 
         } else {
             // handles when input week of date is wholly in a month
-            Week week = new Week(date, geocoder);
+            Week week = new Week(date, geolocation);
             result.add(week);
             return result;
         }

@@ -26,22 +26,22 @@ import ch.poole.openinghoursparser.RuleModifier.Modifier;
 public class MonthRule {
     List<Rule>  rules       = null;
     List<Week>  weekStorage = null;
-    Geocoder    geocoder    = null;
+    Geolocation    geolocation    = null;
 
     public MonthRule() {
         // nothing here
     }
 
     /**
-     * Constructor to create a MonthRule with a list of rules and a geocoder
+     * Constructor to create a MonthRule with a list of rules and a geolocation
      * 
      * @param rules the list of Rules
-     * @param geocoder the geocoder
+     * @param geolocation the geolocation
      */
-    public MonthRule(List<Rule> rules, @Nonnull Geocoder geocoder) {
+    public MonthRule(List<Rule> rules, @Nonnull Geolocation geolocation) {
         weekStorage = new ArrayList<>();
         this.rules = rules;
-        this.geocoder = geocoder;
+        this.geolocation = geolocation;
     }
 
     /**
@@ -56,10 +56,10 @@ public class MonthRule {
     }
 
     /**
-     * @return the geocoder stored in this MonthRule
+     * @return the geolocation stored in this MonthRule
      */
-    public Geocoder getGeocoder() {
-        return geocoder;
+    public Geolocation getGeocoder() {
+        return geolocation;
     }
 
     /**
@@ -72,12 +72,12 @@ public class MonthRule {
     }
 
     /**
-     * Set the geocoder for this MonthRule
+     * Set the geolocation for this MonthRule
      * 
-     * @param geocoder the geocoder to be set
+     * @param geolocation the geolocation to be set
      */
-    public void setGeocoder(Geocoder geocoder) {
-        this.geocoder = geocoder;
+    public void setGeocoder(Geolocation geolocation) {
+        this.geolocation = geolocation;
     }
 
     /**
@@ -85,7 +85,7 @@ public class MonthRule {
      * Also supports Week that is split between two months.
      * 
      * @param time input LocalDateTime
-     * @param geocoder double array {latidue, longitude}
+     * @param geolocation double array {latidue, longitude}
      * @throws OpeningHoursEvaluationException
      */
     public void buildWeek(LocalDateTime time)
@@ -104,7 +104,7 @@ public class MonthRule {
      * checkStatus()
      * 
      * @param time input LocalDateTime
-     * @param geocoder double array {latidue, longitude}
+     * @param geolocation double array {latidue, longitude}
      * @return a Week that contains only one WeekDayRule of the date
      *      from LocalDateTime
      * @throws OpeningHoursEvaluationException
@@ -112,7 +112,7 @@ public class MonthRule {
     public Week buildOneDay(LocalDateTime time)
             throws OpeningHoursEvaluationException {
         LocalDate date = time.toLocalDate();
-        Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()), geocoder);
+        Week oneDay = new Week(date, Week.convertWeekDay(date.getDayOfWeek()), geolocation);
         for (Rule rule : rules) {
             simulateSpill(oneDay, rule);
             update(oneDay, rule);
@@ -263,7 +263,7 @@ public class MonthRule {
      */
     private void simulateSpill(Week week, Rule rule) 
             throws OpeningHoursEvaluationException {
-        Week dayBeforeWeek = new Week(week.getDayBefore(), geocoder);
+        Week dayBeforeWeek = new Week(week.getDayBefore(), geolocation);
         update(dayBeforeWeek, rule);
     }
 
@@ -272,7 +272,7 @@ public class MonthRule {
      * Evaluate the stored OH string with a time to see if it's opening or closed
      * 
      * @param time input LocalDateTime
-     * @param geocoder a geocoder {latidue, longitude} where this MonthRule is
+     * @param geolocation a geolocation {latidue, longitude} where this MonthRule is
      *      based around on
      * @return the result of the evaluation
      * @throws OpeningHoursEvaluationException
@@ -336,7 +336,7 @@ public class MonthRule {
      * @param time input LocalDateTime
      */
     public void populate(LocalDateTime time) {
-        weekStorage = Week.createEmptyWeek(time.toLocalDate(), geocoder);
+        weekStorage = Week.createEmptyWeek(time.toLocalDate(), geolocation);
     }
 
     /**

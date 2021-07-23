@@ -17,13 +17,13 @@ public class TimeTraveller {
     public static final int MAX_PAST_WEEKS = 100;
 
     List<Rule>  rules       = null;
-    Geocoder    geocoder    = null;
+    Geolocation    geocoder    = null;
 
     public TimeTraveller() {
         //empty
     }
 
-    public TimeTraveller(List<Rule> rules, Geocoder geocoder) {
+    public TimeTraveller(List<Rule> rules, Geolocation geocoder) {
         this.rules = rules;
         this.geocoder = geocoder;
     }

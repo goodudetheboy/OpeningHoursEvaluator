@@ -19,8 +19,8 @@ public class OpeningHoursEvaluator {
     boolean         isStrict        = false;
     TimeTraveller   timeTraveller   = null;
 
-    // geocoding, set default to default geocoder
-    Geocoder        geocoder        = new Geocoder();
+    // geocoding, set default to default geolocation
+    Geolocation     geolocation     = new Geolocation();
 
     /**
      * Constructor with input time string according to opening hours
@@ -62,22 +62,22 @@ public class OpeningHoursEvaluator {
     public OpeningHoursEvaluator(String openingHours, boolean isStrict, double lat, double lng, String country)
             throws OpeningHoursParseException {
         this(openingHours, isStrict);
-        geocoder = new Geocoder(lat, lng, country);
+        geolocation = new Geolocation(lat, lng, country);
     }
 
     /**
      * Constructor with input time string according to opening hours, an option
-     * to set strict/non-strict parsing, and a predefined {@link Geocoder}
+     * to set strict/non-strict parsing, and a predefined {@link Geolocation}
      * 
      * @param openingHours an opening hours tag
      * @param isStrict parsing mode of evaluator, true to turn on strict
-     * @param geocoder a {@link Geocoder}
+     * @param geolocation a {@link Geolocation}
      * @throws OpeningHoursParseException
      */
-    public OpeningHoursEvaluator(String openingHours, boolean isStrict, Geocoder geocoder)
+    public OpeningHoursEvaluator(String openingHours, boolean isStrict, Geolocation geolocation)
             throws OpeningHoursParseException {
         this(openingHours, isStrict);
-        this.geocoder = geocoder;
+        this.geolocation = geolocation;
     }
 
     /**
@@ -102,10 +102,10 @@ public class OpeningHoursEvaluator {
     }
 
     /**
-     * @return the geocoder of this evaluator
+     * @return the geolocation of this evaluator
      */
-    public Geocoder getGeocoder() {
-        return geocoder;
+    public Geolocation getgeolocation() {
+        return geolocation;
     }
 
     /**
@@ -131,7 +131,7 @@ public class OpeningHoursEvaluator {
      */
     public void setRules(List<Rule> rules) {
         this.rules = rules;
-        timeTraveller = new TimeTraveller(rules, geocoder);
+        timeTraveller = new TimeTraveller(rules, geolocation);
     }
 
     /**
@@ -157,7 +157,7 @@ public class OpeningHoursEvaluator {
      */
     public Result evaluate(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
-        MonthRule monthRule = new MonthRule(rules, geocoder);
+        MonthRule monthRule = new MonthRule(rules, geolocation);
         return monthRule.checkStatus(inputTime);
     }
 
@@ -234,7 +234,7 @@ public class OpeningHoursEvaluator {
      * @return week schedule created by inputTime using the stored opening hours
      */
     public String toString(LocalDateTime inputTime) {
-        MonthRule monthRule = new MonthRule(rules, geocoder);
+        MonthRule monthRule = new MonthRule(rules, geolocation);
         try {
             monthRule.buildWeek(inputTime);
         } catch (OpeningHoursEvaluationException e) {
@@ -252,7 +252,7 @@ public class OpeningHoursEvaluator {
      * @return week schedule created by inputTime using the stored opening hours
      */
     public String toDebugString(LocalDateTime inputTime) {
-        MonthRule monthRule = new MonthRule(rules, geocoder);
+        MonthRule monthRule = new MonthRule(rules, geolocation);
         try {
             monthRule.buildWeek(inputTime);
         } catch (OpeningHoursEvaluationException e) {

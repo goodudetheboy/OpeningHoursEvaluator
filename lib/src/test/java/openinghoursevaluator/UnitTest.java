@@ -115,4 +115,18 @@ public class UnitTest {
         actual = evaluator.getSquashedWeekData(inputTime).getStartWeekDayRule().toString();
         assertEquals(expected, actual);
     }
+
+    /**
+     * A test for PH tag
+     */
+    @Test
+    public void publicHolidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        OpeningHoursEvaluator evaluator = new OpeningHoursEvaluator("PH open, PH -2 days unknown", false); // Vietnam geolocation
+        Result result = evaluator.evaluate("2021-04-30T00:00");
+        // PH open (30/4 and 1/5)
+        assertEquals(Status.OPEN, result.getStatus());
+        assertEquals("Day of liberating the South for national reunification", result.getComment());
+        // PH -2 days unknown
+        assertEquals(Status.UNKNOWN, evaluator.checkStatus("2021-04-28T00:00"));
+    }
 }

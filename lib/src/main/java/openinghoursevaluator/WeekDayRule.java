@@ -1,5 +1,7 @@
 package openinghoursevaluator;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -12,8 +14,10 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import org.json.JSONObject;
 import org.shredzone.commons.suncalc.SunTimes;
 
+import ch.poole.openinghoursparser.Holiday;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
 import ch.poole.openinghoursparser.Rule;
@@ -223,6 +227,24 @@ public class WeekDayRule {
         Status status = Status.convert(rule.getModifier());
         boolean isFallback = rule.isFallBack() || (rule.isAdditive() && isFallbackLast);
 
+        // handle rules with holiday selector
+        if (rule.getHolidays() != null) {
+            boolean isGood = false;
+            HolidayManager holidayManager = new HolidayManager(geolocation);
+            for (Holiday holiday : rule.getHolidays()) {
+                if (holidayManager.processHoliday(defDate, holiday)) {
+                    comment = (comment == null) ? holidayManager.getHolidayName() : comment;
+                    isGood = true;
+                    break;
+                }
+            }
+            // if no holiday satisfies, quit building
+            if (!isGood) {
+                return;
+            }
+        }
+
+        // handle 24/7 and rules with no time selector
         if (rule.isTwentyfourseven() || rule.getTimes() == null) {
             TimeSpan allDay = new TimeSpan();
             allDay.setStart(0);
@@ -230,11 +252,14 @@ public class WeekDayRule {
             addTime(allDay, status, comment, rule, isFallback);
             return;
         }
+
+        // handle rules with time selector
         for (TimeSpan timespan : rule.getTimes()) {
             TimeSpan processed = processEventOfDay(timespan, geolocation);
             addTime(processed, status, comment, rule, isFallback);
         }
     }
+
 
     /**
      * Process in the case the TimeSpan has events of day (dawn, dusk, sunrise,

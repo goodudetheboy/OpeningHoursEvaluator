@@ -275,6 +275,16 @@ public class OpeningHoursEvaluator {
     }
 
     /**
+     * Print the week schedule created by inputTime using the stored opening hours
+     * 
+     * @param inputTime a LocalDateTime time string
+     * @return week schedule created by inputTime using the stored opening hours
+     */
+    public String toString(String inputTime) {
+        return toString(LocalDateTime.parse(inputTime));
+    }
+
+    /**
      * Print the week schedule created by inputTime using the stored opening
      * hours, used for debugging purpose. This week includes more details
      * about each time of day
@@ -290,5 +300,17 @@ public class OpeningHoursEvaluator {
             throw new IllegalArgumentException(e.getMessage());
         }
         return monthRule.toDebugWeekString();
+    }
+
+    /**
+     * Print the week schedule created by inputTime using the stored opening
+     * hours, used for debugging purpose. This week includes more details
+     * about each time of day
+     * 
+     * @param inputTime a LocalDateTime time string
+     * @return week schedule created by inputTime using the stored opening hours
+     */
+    public String toDebugString(String inputTime) {
+        return toDebugString(LocalDateTime.parse(inputTime));
     }
 }

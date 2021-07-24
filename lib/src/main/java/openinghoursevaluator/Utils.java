@@ -1,5 +1,9 @@
 package openinghoursevaluator;
 
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,5 +139,22 @@ public class Utils {
      */
     public static <T extends Comparable<T>> boolean isOverlapped(T a1, T a2, T b1, T b2) {
         return overlapsCode(a1, a2, b1, b2) != 0;
+    }
+
+    /**
+     * Create a string from the content of input file, encoded by input charset
+     * <p>
+     * This code was adapted from the following Stack Overflow post:
+     * https://stackoverflow.com/questions/326390/how-do-i-create-a-java-string-from-the-contents-of-a-file
+     * 
+     * @param path path to the file
+     * @param encoding the charset to use
+     * @return String created from content of a file
+     * @throws IOException
+     * @author erickson, https://stackoverflow.com/users/3474/erickson
+     */
+    static String readFile(String path, Charset encoding) throws IOException {
+        byte[] encoded = Files.readAllBytes(Paths.get(path));
+        return new String(encoded, encoding);
     }
 }

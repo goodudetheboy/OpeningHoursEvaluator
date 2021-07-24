@@ -1,7 +1,5 @@
 package openinghoursevaluator;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -14,7 +12,6 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import org.json.JSONObject;
 import org.shredzone.commons.suncalc.SunTimes;
 
 import ch.poole.openinghoursparser.Holiday;

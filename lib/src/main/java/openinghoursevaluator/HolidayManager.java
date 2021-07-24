@@ -50,7 +50,6 @@ public class HolidayManager {
             holidayDataStr = Utils.readFile(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
             // TODO: consider returning false instead of returning exception
-            e.printStackTrace();
             throw new OpeningHoursEvaluationException("Some problem has occured with reading holiday data");
         }
 

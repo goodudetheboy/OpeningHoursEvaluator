@@ -4,13 +4,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Locale;
 
 import org.junit.Test;
 
 import ch.poole.openinghoursparser.OpeningHoursParseException;
-import io.github.goodudetheboy.worldholidaydates.holidaydata.Country;
 import io.github.goodudetheboy.worldholidaydates.holidaydata.HolidayData;
 
 public class UnitTest {
@@ -131,6 +129,14 @@ public class UnitTest {
         assertEquals("Day of liberating the South for national reunification", result.getComment());
         // PH -2 days unknown
         assertEquals(Status.UNKNOWN, evaluator.checkStatus("2021-04-28T00:00"));
+
+        // SH test
+        OpeningHoursEvaluator evaluator2 = new OpeningHoursEvaluator("SH open, PH -2 days unknown", false);
+        Result result2 = evaluator2.evaluate("2021-04-30T00:00");
+        // PH open (30/4 and 1/5)
+        assertEquals(Status.CLOSED, result2.getStatus());
+        // PH -2 days unknown
+        assertEquals(Status.UNKNOWN, evaluator2.checkStatus("2021-04-28T00:00"));
     }
     
     @Test

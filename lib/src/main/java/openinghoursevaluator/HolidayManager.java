@@ -1,16 +1,12 @@
 package openinghoursevaluator;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
+import ch.poole.openinghoursparser.Holiday.Type;
 import io.github.goodudetheboy.worldholidaydates.holidaydata.Country;
 import io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday;
 import io.github.goodudetheboy.worldholidaydates.holidaydata.HolidayData;
@@ -38,27 +34,58 @@ public class HolidayManager {
      * Checks if {@link defDate} is a holiday in the {@link holidayData}.
      * 
      * @param defDate date to check
-     * @param holiday name of the holiday to check
+     * @param holidayRule name of the holiday to check
      * @return the {@link Holiday} of that date if the date is a holiday, null otherwise
      */
     @Nullable
-    public Holiday processHoliday(LocalDate defDate, ch.poole.openinghoursparser.Holiday holiday) {
+    public Holiday processHoliday(LocalDate defDate, ch.poole.openinghoursparser.Holiday holidayRule) {
         Country country = holidayData.getCountry(geoloc.getCountry());
         if (country != null) {
             // apply offset and retrieve defining month and day
-            LocalDate offsetDate = DateManager.getOffsetDate(defDate, holiday.getOffset() * -1);
+            LocalDate offsetDate = DateManager.getOffsetDate(defDate, holidayRule.getOffset() * -1);
             int year = offsetDate.getYear();
 
             List<Holiday> holidays = country.getDays();
             for (Holiday h : holidays) {
                 int[] years = { year-1, year, year+1 };
                 for (int yearToCheck : years) {
-                    if (h.calculateDate(yearToCheck).equals(offsetDate)) {
+                    if (h.calculateDate(yearToCheck).equals(offsetDate)
+                     && checkType(h, holidayRule.getType())) {
                         return h;
                     }
                 }
             }
         }
         return null;
+    }
+
+    /**
+     * Checks the type of holiday rule and type of found holiday. Returns true if:
+     * <ol>
+     * <li> holiday rule is PH and found holiday is of type public, bank,
+     *      optional, observance, or unknown </li>
+     * <li> holiday rule is SH and found holiday is of type school </li>
+     * </ol> 
+     * 
+     * @param holiday found holiday
+     * @param ruleType type of holiday rule, PH or SH
+     * @return true if the holiday rule and found holiday match
+     */
+    private boolean checkType(Holiday holiday, @Nonnull Type ruleType) {
+        String hType = holiday.getType();
+        if (hType == null) {
+            return ruleType.equals(Type.PH);
+        }
+        switch (ruleType) {
+            case PH:
+                return hType.equals("public")
+                    || hType.equals("bank")
+                    || hType.equals("optional")
+                    || hType.equals("observance");
+            case SH:
+                return hType.equals("school");
+            default:
+                return false;
+        }
     }
 }

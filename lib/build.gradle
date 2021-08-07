@@ -72,6 +72,9 @@ dependencies {
 
     // JSON parser
     implementation 'org.json:json:20210307'
+
+    // World holiday data
+    implementation 'io.github.goodudetheboy:WorldHolidayDates:0.0.3'
 }
 
 task testCI(type: JavaExec) {

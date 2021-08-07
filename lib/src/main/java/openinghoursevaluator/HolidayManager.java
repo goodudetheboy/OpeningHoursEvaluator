@@ -3,18 +3,27 @@ package openinghoursevaluator;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import javax.annotation.Nullable;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import ch.poole.openinghoursparser.Holiday;
+import io.github.goodudetheboy.worldholidaydates.holidaydata.Country;
+import io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday;
+import io.github.goodudetheboy.worldholidaydates.holidaydata.HolidayData;
 
 /**
  * Helper class to process Holiday, and also parse holiday JSON data
  */
 public class HolidayManager {
+    public static final HolidayData holidayData = HolidayData.initializeData();
+    public static final String DEFAULT_HOLIDAY_COMMENT = "Unnamed holiday";
+
     Geolocation     geoloc          = null;
-    String          holidayName  = null;    
+    String          holidayName  = null;
     
     /**
      * Constructor to initialize the holiday manager with a Geolocation
@@ -26,83 +35,30 @@ public class HolidayManager {
     }
 
     /**
-     * @return a String containing the holiday comment
-     */
-    public String getHolidayName() {
-        return holidayName;
-    }
-
-    /**
-     * Set the holiday comment
+     * Checks if {@link defDate} is a holiday in the {@link holidayData}.
      * 
-     * @param holidayName a String containing the holiday comment
+     * @param defDate date to check
+     * @param holiday name of the holiday to check
+     * @return the {@link Holiday} of that date if the date is a holiday, null otherwise
      */
-    private void setHolidayName(String holidayName) {
-        this.holidayName = holidayName;
-    }
+    @Nullable
+    public Holiday processHoliday(LocalDate defDate, ch.poole.openinghoursparser.Holiday holiday) {
+        Country country = holidayData.getCountry(geoloc.getCountry());
+        if (country != null) {
+            // apply offset and retrieve defining month and day
+            LocalDate offsetDate = DateManager.getOffsetDate(defDate, holiday.getOffset() * -1);
+            int year = offsetDate.getYear();
 
-    public boolean processHoliday(LocalDate defDate, Holiday holiday) throws OpeningHoursEvaluationException {
-        // check for data availability
-        String country = geoloc.getCountry();
-        String holidayDataStr;
-        try {
-            String path = System.getProperty("user.dir") + "/src/main/resources/holiday-data/" + country + ".json";
-            holidayDataStr = Utils.readFile(path, StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            // TODO: consider returning false instead of returning exception
-            throw new OpeningHoursEvaluationException("Some problem has occured with reading holiday data");
-        }
-
-        // retrieve holiday data
-        JSONObject data = new JSONObject(holidayDataStr);
-        JSONObject holidayData = data.getJSONObject("holidays")
-                                     .getJSONObject(country)
-                                     .getJSONObject("days");
-        String[] holidayDates = JSONObject.getNames(holidayData);
-
-        // apply offset and retrieve defining month and day
-        LocalDate offsetDate = DateManager.getOffsetDate(defDate, holiday.getOffset() * -1);
-        int defMonth = offsetDate.getMonthValue();
-        int defDay = offsetDate.getDayOfMonth();
-
-        // TODO: check for PH and SH
-
-        // check holiday data for defining month and day
-        for (String dateString : holidayDates) {
-            int holidayMonth;
-            int holidayDay;
-            try {
-                holidayMonth = Integer.parseInt(dateString.substring(0, 2));
-                holidayDay = Integer.parseInt(dateString.substring(3, 5));
-                if (holidayMonth == defMonth && holidayDay == defDay) {
-                    JSONObject date = holidayData.getJSONObject(dateString);
-                    setHolidayName(getCommentFromJSON(date));
-                    return true;
+            List<Holiday> holidays = country.getDays();
+            for (Holiday h : holidays) {
+                int[] years = { year-1, year, year+1 };
+                for (int yearToCheck : years) {
+                    if (h.calculateDate(yearToCheck).equals(offsetDate)) {
+                        return h;
+                    }
                 }
-            } catch (NumberFormatException e) {
-                // ignore
             }
-        }                
-        return false;
-    }
-
-    /**
-     * Retrieve name of the holiday from the holiday date JSON object, if there
-     * is a "name" key in the JSON object, then the holiday name of the "en"
-     * key of the "name" JSON Object is returned, else null is returned.
-     * 
-     * @param holidayDate a holiday date JSON object
-     * @return a string with the name of the holiday, "en" only if has "name"
-     *      key
-     */
-    private String getCommentFromJSON(JSONObject holidayDate) {
-        String result = null;
-        try {
-            JSONObject name = holidayDate.getJSONObject("name");
-            result = name.getString("en");
-        } catch (JSONException e) {
-            // ignore
         }
-        return result;
+        return null;
     }
 }

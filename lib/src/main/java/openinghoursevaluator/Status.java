@@ -1,5 +1,7 @@
 package openinghoursevaluator;
 
+import java.time.chrono.HijrahDate;
+
 import ch.poole.openinghoursparser.RuleModifier;
 import ch.poole.openinghoursparser.RuleModifier.Modifier;
 

@@ -229,8 +229,10 @@ public class WeekDayRule {
             boolean isGood = false;
             HolidayManager holidayManager = new HolidayManager(geolocation);
             for (Holiday holiday : rule.getHolidays()) {
-                if (holidayManager.processHoliday(defDate, holiday)) {
-                    comment = (comment == null) ? holidayManager.getHolidayName() : comment;
+                io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday check
+                    = holidayManager.processHoliday(defDate, holiday);
+                if (check != null) {
+                    comment = processHolidayComment(comment, check);
                     isGood = true;
                     break;
                 }
@@ -257,7 +259,13 @@ public class WeekDayRule {
         }
     }
 
-
+    private String processHolidayComment(String comment, io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday holiday) {
+        if (holiday.getName() != null) {
+            return (comment == null) ? holiday.getName().get("en") : comment;
+        } else {
+            return (comment == null) ? HolidayManager.DEFAULT_HOLIDAY_COMMENT : comment;
+        }
+    }
     /**
      * Process in the case the TimeSpan has events of day (dawn, dusk, sunrise,
      * sunset) defined as one the points.

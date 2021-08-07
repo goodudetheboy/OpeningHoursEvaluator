@@ -4,11 +4,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 
 import org.junit.Test;
 
 import ch.poole.openinghoursparser.OpeningHoursParseException;
+import io.github.goodudetheboy.worldholidaydates.holidaydata.Country;
+import io.github.goodudetheboy.worldholidaydates.holidaydata.HolidayData;
 
 public class UnitTest {
 
@@ -128,5 +131,11 @@ public class UnitTest {
         assertEquals("Day of liberating the South for national reunification", result.getComment());
         // PH -2 days unknown
         assertEquals(Status.UNKNOWN, evaluator.checkStatus("2021-04-28T00:00"));
+    }
+    
+    @Test
+    public void dataInitializationTest() {
+        HolidayData holidayData = HolidayData.initializeData();
+        assertEquals(168, holidayData.getHolidays().size());
     }
 }

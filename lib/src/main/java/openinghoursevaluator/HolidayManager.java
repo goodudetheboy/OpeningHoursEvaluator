@@ -49,7 +49,8 @@ public class HolidayManager {
             for (Holiday h : holidays) {
                 int[] years = { year-1, year, year+1 };
                 for (int yearToCheck : years) {
-                    if (h.calculateDate(yearToCheck).equals(offsetDate)
+                    LocalDate date = h.calculateDate(yearToCheck);
+                    if (date.equals(offsetDate)
                      && checkType(h, holidayRule.getType())) {
                         return h;
                     }

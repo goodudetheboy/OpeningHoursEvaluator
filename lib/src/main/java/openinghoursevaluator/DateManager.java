@@ -33,12 +33,14 @@ public class DateManager {
     /**
      * Process the DateRange inside to a LocalDate range. Used to find applicable
      * WeekDay to which a Rule can apply.
+     * <p>
+     * Check this <a href="https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#monthday_range">link</a>
+     * for more information.
      * 
      * @param dateRange a DateRange
      * @param week a Week where this DateRange will apply
      * @return a LocalDate range processed from DateRange
-     * @throws OpeningHoursEvaluationException
-     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#monthday_range, explanation
+     * @throws OpeningHoursEvaluationException when there's a problem during evaluation
      */
     public List<List<LocalDate>> processDateRange(DateRange dateRange, Week week)
             throws OpeningHoursEvaluationException {
@@ -172,9 +174,8 @@ public class DateManager {
      * <p>
      * Failing condition TBU.
      * 
-     * @param start start DateWithOffset of a DateRange
-     * @param end end DateWithOffset of a DateRange
-     * @throws OpeningHoursEvaluationException
+     * @param dateRange a {@link DateRange}
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public void checkError(DateRange dateRange) throws OpeningHoursEvaluationException {
         DateWithOffset start = dateRange.getStartDate();
@@ -286,8 +287,8 @@ public class DateManager {
      * @param year valid Gregorian year
      * @return the date of Easter of input year
      * @author Bernhard Seebass, from https://stackoverflow.com/a/55278990/10154717
-     * @see "Meeus/Jones/Butcher" algorithm
-     * https://en.wikipedia.org/wiki/Date_of_Easter#Anonymous_Gregorian_algorithm
+     * @see <a href="https://en.wikipedia.org/wiki/Date_of_Easter#Anonymous_Gregorian_algorithm">
+     * "Meeus/Jones/Butcher" algorithm</a>
      */
     public static LocalDate getEasterDate(int year) {
         int a = year % 19;
@@ -312,9 +313,9 @@ public class DateManager {
      * Return the date that is offset by some days from the input date,
      * according to the following rule:
      * <ol>
-     * <li> offset < 0: return [offset] days before input date
-     * <li> offset > 0: return [offset] days after input date
-     * <li> offset = 0: return original date
+     * <li> offset less than 0: return [offset] days before input date
+     * <li> offset more than 0: return [offset] days after input date
+     * <li> offset equals 0: return original date
      * </ol>
      * <p>
      * 
@@ -337,9 +338,10 @@ public class DateManager {
      * input date. 
      * 
      * @param date a LocalDate to be searched from
-     * @param isForward 
-     * @param weekday
-     * @return
+     * @param isAfter true if is after
+     * @param weekday a {@link WeekDay}
+     * @return the first date of the specified week day after or before an
+     *      input date
      */
     @NonNull
     public static LocalDate findNextWeekDay(@NonNull LocalDate date, boolean isAfter, WeekDay weekday) {
@@ -368,9 +370,8 @@ public class DateManager {
      * Check if input WeekDay is between a start and end in a WeekDayRange
      * Supports WeekDay spanning between two weeks (e.g. Su is between Sa-Tu)
      * 
-     * @param value WeekDay to check
-     * @param start start WeekDay
-     * @param end endWeekDay
+     * @param value {@link WeekDay} to check
+     * @param weekdays a {@link WeekDayRange}
      * @return if value WeekDay is between start and end WeekDay
      */
     public static boolean isBetweenWeekDays(WeekDay value, WeekDayRange weekdays) {

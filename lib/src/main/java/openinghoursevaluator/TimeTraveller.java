@@ -36,7 +36,7 @@ public class TimeTraveller {
      * @param isNext true to look next differing event, false to look last
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Result getDifferingEvent(LocalDateTime inputTime, boolean isNext)
             throws OpeningHoursEvaluationException {

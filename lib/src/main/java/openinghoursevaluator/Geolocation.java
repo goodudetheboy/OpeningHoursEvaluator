@@ -178,7 +178,7 @@ public class Geolocation {
      * Make sure to refresh timezone after setting with
      * {@link #refreshTimeZone() refreshTimeZone}
      *  
-     * @param lat double value of a longitude
+     * @param lng double value of a longitude
      */
     public void setLongitude(double lng) {
         this.lng = lng;
@@ -216,7 +216,7 @@ public class Geolocation {
      * This will also reset the country code stored in this geolocation
      * 
      * @param locale a Locale to be set
-     * @see https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes, alpha-2 codes
+     * @see <a href="https://en.wikipedia.org/wiki/List_of_ISO_3166_country_codes">alpha-2 codes</a>
      */
     public void setLocale(Locale locale) {
         this.locale = locale;

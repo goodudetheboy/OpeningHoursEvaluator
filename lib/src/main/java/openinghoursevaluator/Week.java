@@ -43,6 +43,9 @@ public class Week {
     // weekday storage
     EnumMap<WeekDay, WeekDayRule>   weekDayStorage = null;
 
+    /**
+     * Default constructor
+     */
     public Week() {
         // nothing here
     }
@@ -50,8 +53,7 @@ public class Week {
     /**
      * Constructor to clone another Week
      * 
-     * @param defDate
-     * @param geolocation
+     * @param other the Week to clone
      */
     public Week(Week other) {
         this.defDate = other.defDate;
@@ -67,22 +69,39 @@ public class Week {
         this.weekDayStorage = other.weekDayStorage;
     }
 
+    /**
+     * Constructor for a Week with defining date and a geolocation. The start
+     * and end week will be set to MO and SU, respectively.
+     * 
+     * @param defDate a defining date
+     * @param geolocation a geolocation
+     */
     public Week(LocalDate defDate, Geolocation geolocation) {
         // setting weekOfYear and weekOfMonth
         this(defDate, WeekDay.MO, WeekDay.SU, geolocation);
     }
 
+    /**
+     * Constructor for a Week with defining date, a sole weekday, a geolocation.
+     * The resulting instance will contain only the WeekDayRule of the specified
+     * WeekDay.
+     * 
+     * @param defDate a defining date
+     * @param oneWeekDay a sole weekday
+     * @param geolocation a geolocation
+     */
     public Week(LocalDate defDate, WeekDay oneWeekDay, Geolocation geolocation) {
         this(defDate, oneWeekDay, oneWeekDay, geolocation);
     }
 
     /**
+     * A constructor for a Week with defining date, start/end weekday, and a
+     * geolocation
      * 
-     * @param rules 
-     * @param defDate
-     * @param startWeekDay
-     * @param endWeekDay
-     * @param geolocation
+     * @param defDate a defining date
+     * @param startWeekDay a start weekday
+     * @param endWeekDay a end weekday
+     * @param geolocation a geolocation
      */
     public Week(LocalDate defDate, WeekDay startWeekDay, WeekDay endWeekDay, Geolocation geolocation) {
         setGeolocation(geolocation);
@@ -294,8 +313,8 @@ public class Week {
     /**
      * Build Week with an input rule
      * 
-     * @param isStrict strict or not
-     * @throws OpeningHoursEvaluationException
+     * @param rule a Rule
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public void build(Rule rule) throws OpeningHoursEvaluationException {
         build(rule, null);
@@ -307,7 +326,7 @@ public class Week {
      * 
      * @param rule an input rule
      * @param restriction a WeekDayRange restriction
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public void build(Rule rule, WeekDayRange restriction) throws OpeningHoursEvaluationException {
         applyPreviousSpill();
@@ -319,7 +338,8 @@ public class Week {
      * Update Week with a rule
      * 
      * @param rule a Rule
-     * @throws OpeningHoursEvaluationException
+     * @param restriction a WeekDayRange restriction
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public void update(Rule rule, WeekDayRange restriction) throws OpeningHoursEvaluationException {
         List<WeekDayRange> weekdayRange;
@@ -658,14 +678,14 @@ public class Week {
     }
 
     /**
-     * Create and return a List<Week> created from an input date. The weekday data
+     * Create and return a List Week created from an input date. The weekday data
      * is extracted from the week of input date. If there's a cutoff (a week between
-     * months), List<Week> will cotain two
+     * months), List Week will cotain two
      * 
      * @param date a LocalDate to be built around
      * @param geolocation a geolocation {latidue, longitude} where the Week is based
      *      around
-     * @return a List<Week> built around LocalDate
+     * @return a List Week built around LocalDate
      */
     public static List<Week> createEmptyWeek(LocalDate date, Geolocation geolocation) {
         List<Week> result = new ArrayList<>();
@@ -705,16 +725,18 @@ public class Week {
      * Convert an integer from 0-6 that corresponds to weekday of a week, with
      * Monday being the start of the week
      * 
-     * @param i
-     * @return
+     * @param i an integer from 0-6 that corresponds to weekday of a week
+     * @return a WeekDay corresponding to the integer
      */
     public static WeekDay getWeekDayByInt(int i) {
         return WeekDay.values()[i % 7];
     }
 
     /**
+     * Calculates the week of year of input date w.r.t. a Locale.
      * 
-     * @param date
+     * @param date a date to find the week of year of
+     * @param locale a Locale
      * @return the week of year in which the input LocalDate is in
      */
     public static int getWeekOfYear(LocalDate date, Locale locale) {

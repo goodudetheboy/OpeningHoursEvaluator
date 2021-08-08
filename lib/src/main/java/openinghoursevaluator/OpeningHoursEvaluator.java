@@ -29,7 +29,7 @@ public class OpeningHoursEvaluator {
      * 
      * @param openingHours an opening hours tag
      * @param isStrict parsing mode of evaluator, true to turn on strict
-     * @throws OpeningHoursParseException
+     * @throws OpeningHoursParseException when there's problem during evaluation
      */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict)
             throws OpeningHoursParseException {
@@ -42,7 +42,7 @@ public class OpeningHoursEvaluator {
      * specification. The parsing mode is default set to false
      * 
      * @param openingHours an opening hours tag
-     * @throws OpeningHoursParseException
+     * @throws OpeningHoursParseException wwhen there's problem during evaluation
      */
     public OpeningHoursEvaluator(String openingHours) throws OpeningHoursParseException {
         this(openingHours, false);
@@ -58,7 +58,7 @@ public class OpeningHoursEvaluator {
      * @param lat latitude of the location
      * @param lng longitude of the location
      * @param country ISO 3166 2-letter country code
-     * @throws OpeningHoursParseException
+     * @throws OpeningHoursParseException when there's problem during parsing
      */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict, double lat, double lng, String country)
             throws OpeningHoursParseException {
@@ -80,7 +80,7 @@ public class OpeningHoursEvaluator {
      * @param openingHours an opening hours tag
      * @param isStrict parsing mode of evaluator, true to turn on strict
      * @param geolocation a {@link Geolocation}
-     * @throws OpeningHoursParseException
+     * @throws OpeningHoursParseException when there's problem during parse
      */
     public OpeningHoursEvaluator(String openingHours, boolean isStrict, Geolocation geolocation)
             throws OpeningHoursParseException {
@@ -123,6 +123,7 @@ public class OpeningHoursEvaluator {
      * hours
      * 
      * @param openingHours opening hours tag to be set
+     * @throws OpeningHoursParseException when there's problem during parsing
      */
     public void setOpeningHoursTag(String openingHours)
             throws OpeningHoursParseException {
@@ -135,7 +136,7 @@ public class OpeningHoursEvaluator {
      * Set the current Rules of this evaluator, and any subsequent use of this
      * evaluator will rely on this opening hours
      * 
-     * @param rules
+     * @param rules a list of {@link Rule} to be set
      */
     public void setRules(List<Rule> rules) {
         this.rules = rules;
@@ -161,7 +162,7 @@ public class OpeningHoursEvaluator {
      * 
      * @param inputTime a LocalDateTime instance
      * @return result of the evaluation
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Result evaluate(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
@@ -177,7 +178,7 @@ public class OpeningHoursEvaluator {
      * 
      * @param inputTimeString a time string parsable LocalDateTime
      * @return result of the evaluation
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Result evaluate(String inputTimeString) 
             throws OpeningHoursEvaluationException {
@@ -189,7 +190,7 @@ public class OpeningHoursEvaluator {
      * 
      * @param inputTime a LocalDateTime instance
      * @return a Status instance
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Status checkStatus(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
@@ -202,7 +203,7 @@ public class OpeningHoursEvaluator {
      * 
      * @param inputTimeString a time string parsable LocalDateTime
      * @return a Status instance
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Status checkStatus(String inputTimeString)
             throws OpeningHoursEvaluationException {
@@ -216,6 +217,7 @@ public class OpeningHoursEvaluator {
      * @param inputTime time to be checked
      * @return next differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Result getNextEvent(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
@@ -229,6 +231,7 @@ public class OpeningHoursEvaluator {
      * @param inputTime time to be checked
      * @return last differing event of the input time (status different from
      *      status of the evaluation of inputTime against the stored rules)
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Result getLastEvent(LocalDateTime inputTime)
             throws OpeningHoursEvaluationException {
@@ -238,7 +241,7 @@ public class OpeningHoursEvaluator {
     /**
      * @param inputTime time to be built from
      * @return a List of Week that was generated by building the stored Rules
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public List<Week> getWeekData(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules, geolocation);
@@ -250,7 +253,7 @@ public class OpeningHoursEvaluator {
      * @param inputTime time to be built from
      * @return a Week that is squashed from the List of Week that is generated
      *      by building the stored Rules
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public Week getSquashedWeekData(LocalDateTime inputTime) throws OpeningHoursEvaluationException {
         MonthRule monthRule = new MonthRule(rules, geolocation);

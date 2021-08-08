@@ -15,7 +15,7 @@ public class YearManager {
      * @param week input Week
      * @return if the year of Week is applicable according to weekRange a.k.a
      *      inside the year range
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public boolean processYearRange(YearRange yearRange, Week week)
             throws OpeningHoursEvaluationException {
@@ -61,7 +61,7 @@ public class YearManager {
      * Check for illegal YearRange
      * 
      * @param yearRange input YearRange
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public static void checkError(YearRange yearRange)
             throws OpeningHoursEvaluationException {

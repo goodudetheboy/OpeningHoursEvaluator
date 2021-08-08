@@ -32,7 +32,7 @@ public class HolidayManager {
     }
 
     /**
-     * Checks if {@link defDate} is a holiday in the {@link holidayData}.
+     * Checks if input defDate is a holiday in the {@link holidayData}.
      * 
      * @param defDate date to check
      * @param holidayRule name of the holiday to check

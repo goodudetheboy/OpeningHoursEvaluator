@@ -53,12 +53,19 @@ public class WeekDayRule {
 
     private List<Rule> overridenRules = null;
 
-    /** Default constructor, setting current to null and weekday to Monday */
+    /**
+     * Default constructor, setting current to null and weekday to Monday
+     */
     public WeekDayRule() {
         // nothing here
     }
-    
-    /** Constructor with Weekday */    
+
+    /**
+     * Constructor for a WeekDayRule with a defining date and a geolocation
+     * 
+     * @param defDate a defining date
+     * @param geolocation a geolocation
+     */
     public WeekDayRule(LocalDate defDate, Geolocation geolocation) {
         setDefiningDate(defDate);
         setGeolocation(geolocation);
@@ -216,10 +223,10 @@ public class WeekDayRule {
      * of an additive)
      * 
      * @param rule Rule to be used in building
-     * @throws OpeningHoursEvaluationException
-     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:rule_modifier:closed
-     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator
-     * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:fallback_rule_separator
+     * @throws OpeningHoursEvaluationException when there's problem during weekday
+     * @see <a href="https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:rule_modifier:closed">closed rule_modifier</a>
+     * @see <a href="https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator">Additional rule_separator</a>
+     * @see <a href="https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:fallback_rule_separator">Fallback rule_separator</a>
      */
     public void build(Rule rule) throws OpeningHoursEvaluationException {
         if (rule.isEmpty()) {
@@ -437,10 +444,9 @@ public class WeekDayRule {
     /**
      * Check if input weekOfMonth is within Nth range. Supports negative nth
      * 
-     * @param nth input Nth
-     * @param weekOfMonth week of month (max 5)
-     * @return if applicable or not
-     * @throws OpeningHoursEvaluationException
+     * @param nths input Nth
+     * @return true if applicable, false otherwise
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public boolean isApplicableNth(List<Nth> nths) throws OpeningHoursEvaluationException {
         if (nths == null) {
@@ -486,8 +492,9 @@ public class WeekDayRule {
     /**
      * Check if this WeekDayRule is affected by any day offset
      * 
-     * @return
-     * @throws OpeningHoursEvaluationException
+     * @param weekdays a WeekDayRange
+     * @return true if applicable, false otherwise
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public boolean isApplicableOffset(WeekDayRange weekdays)
             throws OpeningHoursEvaluationException {
@@ -524,8 +531,9 @@ public class WeekDayRule {
      * @param timespan TimeSpan to add
      * @param status desired Status
      * @param comment optional comment
+     * @param defRule a defining Rule
      * @param isFallback if time added is fallback rule
-     * @throws OpeningHoursEvaluationException
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public void addTime(TimeSpan timespan, Status status, String comment,
                         Rule defRule, boolean isFallback)
@@ -624,14 +632,18 @@ public class WeekDayRule {
     }
 
     /**
-     * Add the time with the specified start and end into this WeekDayRule, along with
-     * a Status and an optional comment. This supports time spilling (end > 24:00)
+     * Add the time with the specified start and end into this WeekDayRule,
+     * along with a Status and an optional comment. This supports time spilling
+     * (end more than 24:00).
      * 
-     * @param start start time (must be < 24:00 AKA 1440 and also less than end time)
+     * @param start start time (must be less than 24:00 AKA 1440 and also less
+     *      than end time)
      * @param end end time
      * @param status desired Status
      * @param comment optional comment
-     * @throws OpeningHoursEvaluationException
+     * @param defRule a defining Rule
+     * @param isFallback true if time added is fallback rule
+     * @throws OpeningHoursEvaluationException when there's problem during evaluation
      */
     public void addTime(int start, int end, Status status, String comment,
                         Rule defRule, boolean isFallback) 
@@ -659,7 +671,7 @@ public class WeekDayRule {
 
     /**
      * Add a TimeRange to this WeekDayRule. As per the specifications of TimeRange,
-     * this does not support time spilling (end > 24:00).
+     * this does not support time spilling (end more than 24:00).
      * An additional setting is whether to add as fallback. Adding fallback means the
      * input TimeRange will cut only TimeRange with Status.CLOSED, if any
      * 
@@ -678,7 +690,7 @@ public class WeekDayRule {
     /**
      * Add a TimeRange to this WeekDayRule
      * 
-     * @param timerange
+     * @param timerange a TimeRange to add
      */
     public void addTime(TimeRange timerange) {
         List<TimeRange> newOpeningTimes = new ArrayList<>();
@@ -693,7 +705,7 @@ public class WeekDayRule {
      * Add a fallback time range to this WeekDayRule. Adding fallback means the
      * input TimeRange will cut only TimeRange with Status.CLOSED, if any
      * 
-     * @param timerange
+     * @param timerange a TimeRange to add
      */
     public void addFallback(TimeRange timerange) {
         isFallbackLast = true;
@@ -845,7 +857,7 @@ public class WeekDayRule {
     /**
      * Add time spills to be flushed when build is called for this WeekDayRule
      * 
-     * @param timerange
+     * @param timerange a spilling TimeRange to add
      */
     public void addSpill(TimeRange timerange) {
         if (yesterdaySpill == null) {
@@ -884,23 +896,30 @@ public class WeekDayRule {
 
     /**
      * Similar to a compareTo(), but this is for comparing with a DateWithOffset.
-     * Using the defining date stored during construction
+     * Using the defining date stored during construction.
      * 
      * @param date input DateWithOffset
-     * @return <0 if this day is before, >0 if this day is after, =0 if same day
+     * @return less than 0 if this day is before, more than 0 if this day is
+     *      after, equals 0 if same day
      */
     public int compareToDate(LocalDate date) {
         return defDate.compareTo(date);
     }
 
     /** 
-     * Sort the TimeRange of input List<TimeRange> by order of start time
+     * Sort the TimeRange of input List of TimeRange by order of start time
+     * 
+     * @param timeranges a List of TimeRange to sort
      */
     public static void sort(List<TimeRange> timeranges) {
         Collections.sort(timeranges);
     }
 
-    /** Clean by sorting and removing duplicates of input List<TimeRange> */
+    /**
+     * Clean by sorting and removing duplicates of input timerange.
+     * 
+     * @param timeranges a list of TimeRange
+     */
     public static void clean(List<TimeRange> timeranges) {
         sort(timeranges);
         int i = 0;

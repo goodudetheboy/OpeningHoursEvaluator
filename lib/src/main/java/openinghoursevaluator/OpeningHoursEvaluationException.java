@@ -12,7 +12,7 @@ public class OpeningHoursEvaluationException extends Exception {
     /**
      * Construct an exception from a message
      * 
-     * @param message
+     * @param message the message
      */
     public OpeningHoursEvaluationException(String message) {
         this(message, null);
@@ -22,8 +22,8 @@ public class OpeningHoursEvaluationException extends Exception {
      * Construct an exception from a message and an optional Rule where the
      * exception happenend
      * 
-     * @param message
-     * @param failingRule
+     * @param message the message
+     * @param failingRule the {@link Rule} where the exception happenend
      */
     public OpeningHoursEvaluationException(String message, @Nullable Rule failingRule) {
         super(messsageBuilder(message, failingRule));

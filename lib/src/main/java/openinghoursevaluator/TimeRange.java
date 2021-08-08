@@ -37,7 +37,11 @@ public class TimeRange implements Comparable<TimeRange> {
         // empty on purpose
     }
 
-    /** Constructor for copying TimeRange */
+    /**
+     * Constructor for copying TimeRange
+     * 
+     * @param other the TimeRange to copy
+     */
     public TimeRange(TimeRange other) {
         setStart(other.start);
         setEnd(other.end);
@@ -66,9 +70,8 @@ public class TimeRange implements Comparable<TimeRange> {
      * <p>
      * Will throw error if timepoint = MAX_TIME aka 1440 aka at 24:00
      * 
-     * @param timepoint timepoint
+     * @param timespan timepoint
      * @param status Status to be set
-     * @param comment
      */
     public TimeRange(TimeSpan timespan, Status status) {
         this(timespan.getStart(),
@@ -107,7 +110,7 @@ public class TimeRange implements Comparable<TimeRange> {
      * 
      * @param timepoint timepoint
      * @param status Status to be set
-     * @param comment
+     * @param comment optional comment
      */
     public TimeRange(int timepoint, Status status, @Nullable String comment) {
         this(timepoint, ++timepoint, status, comment);
@@ -133,6 +136,7 @@ public class TimeRange implements Comparable<TimeRange> {
      * @param start start time, must be less than end time
      * @param end end time
      * @param status Status to be set
+     * @param comment optional comment
      */
     public TimeRange(int start, int end, Status status, @Nullable String comment) {
         this(start, end, status);
@@ -228,7 +232,7 @@ public class TimeRange implements Comparable<TimeRange> {
     /**
      * Set the defining rule of this TimeRange. (optional)
      * 
-     * @param definingRule Rule that defines this TimeRange
+     * @param defRule Rule that defines this TimeRange
      */
     public void setDefiningRule(Rule defRule) {
         this.defRule = defRule;
@@ -244,7 +248,8 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Check if this TimeRange has a comment
+     * @return true if this TimeRange has a comment
+     * 
      */
     public boolean hasComment() {
         return comment != null;
@@ -332,9 +337,8 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Cut the TimeRange t with the TimeRange other
+     * Cut this {@link TimeRange} with the other {@link TimeRange}.
      * 
-     * @param t the TimeRange to be cut
      * @param other the TimeRange that will cut t
      * @return a List containing TimeRange(s) resulting from the cut
      */
@@ -438,10 +442,10 @@ public class TimeRange implements Comparable<TimeRange> {
     }
 
     /**
-     * Similar to toString(), but this also includes defining Rule from which
+     * Similar to {@link #toString}, but this also includes defining Rule from which
      * this TimeRange was created
      * 
-     * @return
+     * @return a debug version of {@link #toString}
      */
     public String toDebugString() {
         return toString() + " [" + defRule + "]";

@@ -17,12 +17,13 @@ public class Utils {
     }
 
     /**
-     * Check if input value is in between the two start and end value i.e. start <= value <= end
+     * Check if input value is in between the two start and end value
      * 
+     * @param <T> a Comparable object
      * @param value value to be checked 
      * @param start start value
      * @param end end value
-     * @return whether start <= value <= end
+     * @return true if input value is in between the two start and end value
      */
     public static <T extends Comparable <T>> boolean isBetween(T value, T start, T end) {
         return value.compareTo(start) >= 0 && value.compareTo(end) <= 0;
@@ -32,6 +33,7 @@ public class Utils {
      * Convert hour and minute of a LocalDateTime instance to minutes
      *  
      * @param time a LocalDateTime instance
+     * @return minutes
     */
     public static int timeInMinute(LocalDateTime time) {
         return time.getHour()*60 + time.getMinute();
@@ -42,15 +44,14 @@ public class Utils {
      * Get the overlap range of the alpha range (a1 to a2) and the beta
      * range(b1 to b2).
      * <p>
-     * Note that the start must be less or equal to the ends AKA
-     * a1.compareTo(a2) <= 0 and b1.compareTo(b2) <= 0
+     * Note that the start must be less or equal to the ends
      * 
      * @param <T> a Comparable object
      * @param a1 the start value of the alpha range
      * @param a2 the end value of the alpha range
      * @param b1 the start value of the beta range
      * @param b2 the end value of the beta range
-     * @return the overlap range in the form of List<T>
+     * @return the overlap range in the form of List T
      */
     public static <T extends Comparable<T>> List<T> getOverlap(T a1, T a2, T b1, T b2) {
         int overlapsCode = overlapsCode(a1, a2, b1, b2);
@@ -99,8 +100,7 @@ public class Utils {
      * <li>4: The beta range is inside the alpha range
      * </ul>
      * <p>
-     * Note that the start must be less or equal to the ends AKA
-     * a1.compareTo(a2) <= 0 and b1.compareTo(b2) <= 0
+     * Note that the start must be less or equal to the ends
      * 
      * @param <T> a Comparable object
      * @param a1 the start value of the alpha range
@@ -127,8 +127,7 @@ public class Utils {
      * Check if an alpha range (a1 to a2) has an overlap with a beta range 
      * (b1 to b2).
      * <p>
-     * Note that the start must be less or equal to the ends AKA
-     * a1.compareTo(a2) <= 0 and b1.compareTo(b2) <= 0
+     * Note that the start must be less or equal to the ends
      * 
      * @param <T> a Comparable object
      * @param a1 the start value of the alpha range

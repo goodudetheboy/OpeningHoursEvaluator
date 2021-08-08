@@ -69,7 +69,9 @@ public class WeekManager {
     }
 
     /**
-     * @param time the LocalDateTime of desired week
+     * Calculates the first weekday of the week of the input date.
+     * 
+     * @param date the LocalDate of desired week
      * @return the LocalDate of the first weekday in the week of input date
      */
     public static LocalDate getFirstDayOfWeek(LocalDate date) {
@@ -77,7 +79,9 @@ public class WeekManager {
     }
 
     /**
-     * @param time the LocalDateTime of desired week
+     * Calculates the last weekday of the week of the input date.
+     * 
+     * @param date the LocalDate of desired week
      * @return the LocalDate of the last weekday in the week of input date
      */
     public static LocalDate getLastDayOfWeek(LocalDate date) {
@@ -85,9 +89,10 @@ public class WeekManager {
     }
 
     /**
+     * Gets the week day of the week of the input date.
      * 
-     * @param date
-     * @param weekday
+     * @param date the LocalDate of desired week
+     * @param weekday the weekday to find
      * @return the LocalDate of an input weekday in the week of input date
      */
     public static LocalDate getWeekDayOfWeek(LocalDate date, WeekDay weekday) {

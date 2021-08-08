@@ -63,7 +63,7 @@ public class Result {
     /**
      * Constructor for a Result with a TimeRange
      * 
-     * @param timerange
+     * @param timerange a {@link TimeRange}
      */
     public Result(TimeRange timerange) {
         this(timerange.getStatus(), timerange.getComment(), timerange.getDefiningRule());

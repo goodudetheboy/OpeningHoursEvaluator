@@ -137,7 +137,18 @@ public class UnitTest {
         // PH -2 days unknown
         assertEquals(Status.UNKNOWN, e2.checkStatus("2021-04-28T00:00"));
 
-        // other type test
+        OpeningHoursEvaluator e6 = new OpeningHoursEvaluator("12:00-01:00; PH 13:00-15:00 open", false);
+        assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T00:00"));
+        assertEquals(Status.CLOSED, e6.checkStatus("2021-09-02T02:00"));
+        assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T14:00"));
+
+        OpeningHoursEvaluator e7 = new OpeningHoursEvaluator("08:00-13:00, PH 13:00-15:00 open", false);
+        assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T08:00"));
+        assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T14:00"));
+    }
+
+    @Test
+    public void otherCountryHolidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         OpeningHoursEvaluator e3 = new OpeningHoursEvaluator("PH open", false, 58.5953, 25.0136, "EE"); // Estonia
         assertEquals(Status.OPEN, e3.checkStatus("2021-02-24T00:00"));
         assertEquals(Status.CLOSED, e3.checkStatus("2021-02-23T00:00"));
@@ -153,17 +164,8 @@ public class UnitTest {
         assertEquals(Status.UNKNOWN, e5.checkStatus("2021-12-24T15:00"));
         assertEquals(Status.OPEN, e5.checkStatus("2021-12-26T13:00"));
         assertEquals(Status.UNKNOWN, e5.checkStatus("2021-12-26T15:00"));
-
-        OpeningHoursEvaluator e6 = new OpeningHoursEvaluator("12:00-01:00; PH 13:00-15:00 open", false);
-        assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T00:00"));
-        assertEquals(Status.CLOSED, e6.checkStatus("2021-09-02T02:00"));
-        assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T14:00"));
-
-        OpeningHoursEvaluator e7 = new OpeningHoursEvaluator("08:00-13:00, PH 13:00-15:00 open", false);
-        assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T08:00"));
-        assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T14:00"));
     }
-    
+
     @Test
     public void dataInitializationTest() {
         HolidayData holidayData = HolidayData.initializeData();

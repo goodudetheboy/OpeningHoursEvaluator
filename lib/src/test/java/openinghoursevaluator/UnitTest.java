@@ -1,6 +1,7 @@
 package openinghoursevaluator;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
@@ -118,7 +119,16 @@ public class UnitTest {
     }
 
     /**
-     * A test for PH tag
+     * A test for holiday data initialization
+     */
+    @Test
+    public void holidayDataInitializationTest() {
+        HolidayData holidayData = HolidayData.initializeData();
+        assertEquals(168, holidayData.getHolidays().size());
+    }
+
+    /**
+     * A test for PH, SH tag
      */
     @Test
     public void holidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
@@ -147,6 +157,9 @@ public class UnitTest {
         assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T14:00"));
     }
 
+    /**
+     * A test for other country holiday test
+     */
     @Test
     public void otherCountryHolidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         OpeningHoursEvaluator e3 = new OpeningHoursEvaluator("PH open", false, 58.5953, 25.0136, "EE"); // Estonia
@@ -166,9 +179,15 @@ public class UnitTest {
         assertEquals(Status.UNKNOWN, e5.checkStatus("2021-12-26T15:00"));
     }
 
+    /**
+     * A test for checking override
+     */
     @Test
-    public void dataInitializationTest() {
-        HolidayData holidayData = HolidayData.initializeData();
-        assertEquals(168, holidayData.getHolidays().size());
+    public void overrideWarningTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        OpeningHoursEvaluator e1 = new OpeningHoursEvaluator("Mo 12:00-15:00; 24/7; Mo 13:00", false);
+        Result r1 = e1.evaluate("2021-08-09T00:00");
+        assertNotNull(r1.getWarnings());
+        assertEquals(1, r1.getWarnings().size());
+        assertEquals("Rules overridden on 2021-08-09: Mo 12:00-15:00; 24/7; ", r1.getWarnings().get(0));
     }
 }

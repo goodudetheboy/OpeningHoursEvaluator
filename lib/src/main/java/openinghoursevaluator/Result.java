@@ -1,6 +1,8 @@
 package openinghoursevaluator;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -9,7 +11,7 @@ import ch.poole.openinghoursparser.Rule;
 
 /**
  * A structured result class for the OpeningHoursEvaluator. This is also used for
- * storing getting next event (open/close next)
+ * storing getting next event (open/close next).
  */
 public class Result {
     Status  status      = null;
@@ -20,6 +22,12 @@ public class Result {
     LocalDateTime   nextEventTime   = null;
     LocalDateTime   lastEventTime   = null;
     boolean         isAlways        = false;
+
+    /**
+     * A list of warnings, including overriding other rules.
+     * TODO: create more structured warnings
+     */
+    List<String>    warnings        = null;
 
     /**
      * Default constructor
@@ -40,8 +48,18 @@ public class Result {
         setStatus(status);
         setComment(comment);
         setDefiningRule(defRule);
+        setWarnings(new ArrayList<>());
     }
 
+    /**
+     * Constructor for a {@link Result} with a Status.
+     * 
+     * @param status a {@link Status}
+     */
+    public Result(@Nonnull Status status) {
+        this(status, null, null);
+    }
+    
     /**
      * Constructor for a Result with a TimeRange
      * 
@@ -106,7 +124,14 @@ public class Result {
     }
 
     /**
-     * Set the status of this Result. 
+     * @return the list of warnings
+     */
+    public List<String> getWarnings() {
+        return warnings;
+    }
+
+    /**
+     * Sets the status of this Result. 
      * 
      * @param status status to be set
      */
@@ -115,7 +140,7 @@ public class Result {
     }
 
     /**
-     * Set the comment of this Result
+     * Sets the comment of this Result
      * 
      * @param comment comment to be set
      */
@@ -124,7 +149,7 @@ public class Result {
     }
 
     /**
-     * Set the defining Rule of this Result
+     * Sets the defining Rule of this Result
      * 
      * @param defRule defining Rule to be set
      */
@@ -133,7 +158,7 @@ public class Result {
     }
  
     /**
-     * Set next differing event. A Status should also be set alongside this
+     * Sets next differing event. A Status should also be set alongside this
      * 
      * @param nextEventTime next differing event time
      */
@@ -142,7 +167,7 @@ public class Result {
     }
 
     /**
-     * Set last differing event. A Status should also be set alongside this
+     * Sets last differing event. A Status should also be set alongside this
      * 
      * @param lastEventTime last differing event time
      */
@@ -151,12 +176,21 @@ public class Result {
     }
 
     /**
-     * Set if this.status is always happening in near future
+     * Sets if this.status is always happening in near future
      * 
      * @param isAlways check if always to be set
      */
     public void setAlways(boolean isAlways) {
         this.isAlways = isAlways;
+    }
+
+    /**
+     * Sets the list of warnings
+     * 
+     * @param warnings the list of warnings
+     */
+    public void setWarnings(List<String> warnings) {
+        this.warnings = warnings;
     }
 
     @Override

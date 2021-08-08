@@ -15,6 +15,7 @@ Currently, this evaluator has supported evaluation of most of evaluation syntax,
 
 ``` java
 try {
+
     // Initialize evaluator
     String openingHours = "Jul 2-Jun 14 open; Jul 20-Jun 4 unknown";
     boolean isStrict = false; // strict or non-strict parsing option
@@ -25,17 +26,35 @@ try {
     Result result = evaluator.evaluate(time);
     Status status = result.getStatus();
 
-    // Get next differing event (open/close/unknown next)
-    Result nextEvent = evaluator.getNextEvent(time);
-
-    // Get last differing event (open/close/unknown last)
-    Result lastEvent = evaluator.getLastEvent(time);
-
 } catch (OpeningHoursParseException e) {
     // Grammar-related exception
 } catch (OpeningHoursEvaluationException e) {
     // Evaluation-relation exception
 }
+```
+
+There are also options to get next/last differing events. To use it, do the following:
+
+```java
+try {
+    
+    // Get next differing event (open/close/unknown next)
+    Result nextEvent = evaluator.getNextEvent(time);
+    LocalDateTime nextEventTime = nextEvent.getNextEventTime();
+
+    // Get last differing event (open/close/unknown last)
+    Result lastEvent = evaluator.getLastEvent(time);
+    LocalDateTime lastEventTime = lastEvent.getLastEventTime();
+
+} catch (OpeningHoursParseException e) {
+    // Grammar-related exception
+}
+```
+
+The evaluator also reports any evaluation-related warning, such as if there are any rules overriden by another rule. Check for warnings with:
+
+```java
+List<String> warnings = result.getWarnings();
 ```
 
 The evaluator is by default set to Ho Chi Minh City, Vietnam as geolocation. Geolocation is used to calculate variable time such as dawn, dusk, sunset, sunrise time, if specificed in the opening hours tag. If you want to change the location, do as follows:

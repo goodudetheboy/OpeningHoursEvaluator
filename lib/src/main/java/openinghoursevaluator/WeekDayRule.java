@@ -49,7 +49,9 @@ public class WeekDayRule {
     // used when need to traverse through a Week, and also in creation of Week
     boolean         isDummy         = false;
 
-    private boolean isFallbackLast = false;
+    private boolean isFallbackLast  = false;
+
+    private List<Rule> overridenRules = null;
 
     /** Default constructor, setting current to null and weekday to Monday */
     public WeekDayRule() {
@@ -63,6 +65,7 @@ public class WeekDayRule {
         dissectDefDate(defDate);
         openingTimes = new ArrayList<>();
         yesterdaySpill = new ArrayList<>();
+        overridenRules = new ArrayList<>();
     }
 
     /**
@@ -718,6 +721,9 @@ public class WeekDayRule {
 
     /** Clear the current opening times in this WeekdayRule */
     public void clearOpeningHours() {
+        for (TimeRange openingTime : openingTimes) {
+            overridenRules.add(openingTime.getDefiningRule());
+        }
         openingTimes = new ArrayList<>();
     }
 
@@ -738,16 +744,44 @@ public class WeekDayRule {
      * @return a Result containg info on Status and comment
      */
     Result checkStatus(int inputTime) {
+        String warning = checkOverridenRules();
         for (TimeRange openingTime : openingTimes) {
             if (inputTime >= openingTime.getStart()
                     && inputTime < openingTime.getEnd()) {
-                return new Result(openingTime);
+                Result result = new Result(openingTime);
+                if (warning != null) {
+                    result.getWarnings().add(warning);
+                }
+                return result;
             }
         }
         // return CLOSED if no fitting opening times is detected
-        return new Result(Status.CLOSED, null, null);
+        Result result = new Result(Status.CLOSED);
+        if (warning != null) {
+            result.getWarnings().add(warning);
+        }
+        return result;
     }
 
+    /**
+     * Checks is there's any overriden rules in this {@link WeekDayRule} during
+     * building. If yes, then build according warning String.
+     * 
+     * @return warning string, if there are any overriden rules
+     */
+    @Nullable
+    private String checkOverridenRules() {
+        if (overridenRules != null && !overridenRules.isEmpty()) {
+            StringBuilder b = new StringBuilder();
+            b.append("Rules overridden on " + defDate.toString() + ": ");
+            
+            for (Rule rule : overridenRules) {
+                b.append(rule.toString() + "; ");
+            }
+            return b.toString();
+        }
+        return null;
+    }
         
     /**
      * Return the TimeRange whose Status is different from the TimeRange that

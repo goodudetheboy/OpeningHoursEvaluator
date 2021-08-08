@@ -250,30 +250,12 @@ public class WeekDayRule {
      * @param rule Rule to be added
      * @throws OpeningHoursEvaluationException
      */
-    public void addRule(Rule rule) throws OpeningHoursEvaluationException {
+    private void addRule(Rule rule) throws OpeningHoursEvaluationException {
         String comment = (rule.getModifier() != null)
                             ? rule.getModifier().getComment()
                             : null;
         Status status = Status.convert(rule.getModifier());
         boolean isFallback = rule.isFallBack() || (rule.isAdditive() && isFallbackLast);
-
-        // handle rules with holiday selector
-        if (rule.getHolidays() != null) {
-            boolean isGood = false;
-            HolidayManager holidayManager = new HolidayManager(geolocation);
-            for (ch.poole.openinghoursparser.Holiday defHoliday : rule.getHolidays()) {
-                Holiday check = holidayManager.processHoliday(defDate, defHoliday);
-                if (check != null) {
-                    comment = processHolidayComment(comment, check);
-                    isGood = true;
-                    break;
-                }
-            }
-            // if no holiday satisfies, quit building
-            if (!isGood) {
-                return;
-            }
-        }
 
         // handle 24/7 and rules with no time selector
         if (rule.isTwentyfourseven() || rule.getTimes() == null) {
@@ -291,6 +273,20 @@ public class WeekDayRule {
         }
     }
 
+    /**
+     * Checks if there the holiday name can be used as the comment, only when:
+     * <ol>
+     * <li> there's no comment from the rule
+     * <li> the holiday name is not empty
+     * </ol>
+     * 
+     * In case there should be a holiday name as the comment, if there's no name
+     * of the holiday, the comment will be set to{@link HolidayManager#DEFAULT_HOLIDAY_COMMENT}.
+     * 
+     * @param comment
+     * @param holiday
+     * @return
+     */
     private String processHolidayComment(String comment, Holiday holiday) {
         if (holiday.getName() != null) {
             return (comment == null) ? holiday.getName().get("en") : comment;

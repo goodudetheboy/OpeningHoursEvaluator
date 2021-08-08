@@ -158,6 +158,10 @@ public class UnitTest {
         assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T00:00"));
         assertEquals(Status.CLOSED, e6.checkStatus("2021-09-02T02:00"));
         assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T14:00"));
+
+        OpeningHoursEvaluator e7 = new OpeningHoursEvaluator("08:00-13:00, PH 13:00-15:00 open", false);
+        assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T08:00"));
+        assertEquals(Status.OPEN, e7.checkStatus("2021-09-02T14:00"));
     }
     
     @Test

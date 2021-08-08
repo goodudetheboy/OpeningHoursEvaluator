@@ -121,7 +121,7 @@ public class UnitTest {
      * A test for PH tag
      */
     @Test
-    public void publicHolidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+    public void holidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
         OpeningHoursEvaluator e1 = new OpeningHoursEvaluator("PH open, PH -2 days unknown", false); // Vietnam geolocation
         Result result = e1.evaluate("2021-04-30T00:00");
         // PH open (30/4 and 1/5)
@@ -146,11 +146,18 @@ public class UnitTest {
         OpeningHoursEvaluator e4 = new OpeningHoursEvaluator("PH open", false, 61.9241, 25.7482, "FI"); // Finland
         assertEquals(Status.OPEN, e4.checkStatus("2021-06-25T00:00"));
 
-        OpeningHoursEvaluator e5 = new OpeningHoursEvaluator("SH open, PH unknown", false, 42.7339, 25.4858, "BG"); // Bulgaria
+        OpeningHoursEvaluator e5 = new OpeningHoursEvaluator("12:00-15:00 open; SH open, PH 15:00-16:00 unknown", false, 42.7339, 25.4858, "BG"); // Bulgaria
         Result r5 = e5.evaluate("2021-11-01T00:00");
         assertEquals(Status.OPEN, r5.getStatus());
         assertEquals("Revival Leaders' Day", r5.getComment());
-        assertEquals(Status.UNKNOWN, e5.checkStatus("2021-12-24T00:00"));
+        assertEquals(Status.UNKNOWN, e5.checkStatus("2021-12-24T15:00"));
+        assertEquals(Status.OPEN, e5.checkStatus("2021-12-26T13:00"));
+        assertEquals(Status.UNKNOWN, e5.checkStatus("2021-12-26T15:00"));
+
+        OpeningHoursEvaluator e6 = new OpeningHoursEvaluator("12:00-01:00; PH 13:00-15:00 open", false);
+        assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T00:00"));
+        assertEquals(Status.CLOSED, e6.checkStatus("2021-09-02T02:00"));
+        assertEquals(Status.OPEN, e6.checkStatus("2021-09-02T14:00"));
     }
     
     @Test

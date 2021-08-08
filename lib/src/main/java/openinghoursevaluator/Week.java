@@ -428,7 +428,7 @@ public class Week {
         do {
             if (hasWeekDay(current)
                     && weekDayStorage.get(current).isApplicableNth(nths)) {
-                weekDayStorage.get(current).build(rule, geolocation);
+                weekDayStorage.get(current).build(rule);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
@@ -441,7 +441,7 @@ public class Week {
         WeekDay end = endWeekDay;
         do {
             if (weekDayStorage.get(current).isApplicableOffset(weekdays)) {
-                weekDayStorage.get(current).build(rule, geolocation);
+                weekDayStorage.get(current).build(rule);
             }
         } while ((current = getNextWeekDay(current)) != getNextWeekDay(end));
     }
@@ -585,7 +585,7 @@ public class Week {
         WeekDayRule startWeekRule = getStartWeekDayRule();
         LocalDate dateBefore 
             = DateManager.getOffsetDate(startWeekRule.getDefDate(), -1);
-        dayBefore = new WeekDayRule(dateBefore);
+        dayBefore = new WeekDayRule(dateBefore, geolocation);
         dayBefore.setDummy(true);
         startWeekRule.setLastDayRule(dayBefore);
         dayBefore.setNextDayRule(startWeekRule);
@@ -594,7 +594,7 @@ public class Week {
         WeekDayRule endWeekRule = getEndWeekDayRule();
         LocalDate dateAfter 
             = DateManager.getOffsetDate(endWeekRule.getDefDate(), 1);
-        dayAfter = new WeekDayRule(dateAfter);
+        dayAfter = new WeekDayRule(dateAfter, geolocation);
         dayAfter.setDummy(true);
         endWeekRule.setNextDayRule(dayAfter);
 
@@ -611,7 +611,7 @@ public class Week {
     /** Helper of populate() */
     private void populateHelper(WeekDay current) {
         LocalDate dateOfCurrent = WeekManager.getWeekDayOfWeek(defDate, current);
-        WeekDayRule newWeekDay = new WeekDayRule(dateOfCurrent);
+        WeekDayRule newWeekDay = new WeekDayRule(dateOfCurrent, geolocation);
         weekDayStorage.put(current, newWeekDay);
 
         // create next weekday rule

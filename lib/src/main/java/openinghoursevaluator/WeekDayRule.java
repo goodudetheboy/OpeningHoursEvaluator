@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 
 import org.shredzone.commons.suncalc.SunTimes;
 
-import ch.poole.openinghoursparser.Holiday;
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
 import ch.poole.openinghoursparser.Rule;
@@ -22,13 +21,15 @@ import ch.poole.openinghoursparser.TimeSpan;
 import ch.poole.openinghoursparser.VariableTime;
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekDayRange;
+import io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday;
 
 public class WeekDayRule {
     public static final int INVALID_NUM = Integer.MIN_VALUE;
 
     // store the defining LocalDate of this WeekDayRule
     LocalDate       defDate         = null;
-
+    Geolocation     geolocation     = null;
+    
     // used used during eval
     int             year            = INVALID_NUM;
     Month           month           = null;
@@ -56,8 +57,9 @@ public class WeekDayRule {
     }
     
     /** Constructor with Weekday */    
-    public WeekDayRule(LocalDate defDate) {
-        this.defDate = defDate;
+    public WeekDayRule(LocalDate defDate, Geolocation geolocation) {
+        setDefiningDate(defDate);
+        setGeolocation(geolocation);
         dissectDefDate(defDate);
         openingTimes = new ArrayList<>();
         yesterdaySpill = new ArrayList<>();
@@ -105,15 +107,22 @@ public class WeekDayRule {
     }
 
     /**
-     * @return the defining LocalDate upon which this WeeDayRule is built
+     * @return the defining LocalDate upon which this {@link WeekDayRule} is built
      */
     public LocalDate getDefDate() {
         return defDate;
     }
 
     /**
-     * A dummy WeekDayRule is used for a Week, where there is a need to set a
-     * nextDayRule to the endWeekDay's WeekDayRule
+     * @return the geolocation of this {@link WeekDayRule}
+     */
+    public Geolocation getGeolocation() {
+        return geolocation;
+    }
+
+    /**
+     * A dummy {@link WeekDayRule} is used for a Week, where there is a need to set a
+     * nextDayRule to the endWeekDay's {@link WeekDayRule}.
      * 
      * @return check if this Week is dummy, useful during traversal
      */
@@ -158,10 +167,21 @@ public class WeekDayRule {
     }
 
     /**
-     * @param defDate set the defining date of this WeekDayRule
+     * Sets the defining LocalDate upon which this {@link WeekDayRule} is built
+     * 
+     * @param defDate the defining date to be set
      */
     public void setDefiningDate(LocalDate defDate) {
         this.defDate = defDate;
+    }
+
+    /**
+     * Sets the geolocation of this {@link WeekDayRule}.
+     * 
+     * @param geolocation the geolocation to be set
+     */
+    public void setGeolocation(Geolocation geolocation) {
+        this.geolocation = geolocation;
     }
 
     /**
@@ -198,16 +218,29 @@ public class WeekDayRule {
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:additional_rule_separator
      * @see https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification#explain:fallback_rule_separator
      */
-    public void build(Rule rule, Geolocation geolocation) throws OpeningHoursEvaluationException {
+    public void build(Rule rule) throws OpeningHoursEvaluationException {
         if (rule.isEmpty()) {
             throw new OpeningHoursEvaluationException("There's an empty rule, please remove it");
+        }
+        if (rule.getHolidays() != null) {
+            HolidayManager holidayManager = new HolidayManager(geolocation);
+            Holiday holiday = null;
+            for (ch.poole.openinghoursparser.Holiday defHoliday : rule.getHolidays()) {
+                holiday = holidayManager.processHoliday(defDate, defHoliday);
+                if (holiday != null) {
+                    break;
+                }
+            }
+            flushSpill();
+            addHolidayRule(rule, holiday);
+            return;
         }
         if (!rule.isAdditive() && !rule.isFallBack()
                 && Status.convert(rule.getModifier()) != Status.CLOSED) {
             clearOpeningHours();
         }
         flushSpill();
-        addRule(rule, geolocation);
+        addRule(rule);
     }
 
     /**
@@ -217,7 +250,7 @@ public class WeekDayRule {
      * @param rule Rule to be added
      * @throws OpeningHoursEvaluationException
      */
-    public void addRule(Rule rule, Geolocation geolocation) throws OpeningHoursEvaluationException {
+    public void addRule(Rule rule) throws OpeningHoursEvaluationException {
         String comment = (rule.getModifier() != null)
                             ? rule.getModifier().getComment()
                             : null;
@@ -228,9 +261,8 @@ public class WeekDayRule {
         if (rule.getHolidays() != null) {
             boolean isGood = false;
             HolidayManager holidayManager = new HolidayManager(geolocation);
-            for (Holiday holiday : rule.getHolidays()) {
-                io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday check
-                    = holidayManager.processHoliday(defDate, holiday);
+            for (ch.poole.openinghoursparser.Holiday defHoliday : rule.getHolidays()) {
+                Holiday check = holidayManager.processHoliday(defDate, defHoliday);
                 if (check != null) {
                     comment = processHolidayComment(comment, check);
                     isGood = true;
@@ -259,13 +291,51 @@ public class WeekDayRule {
         }
     }
 
-    private String processHolidayComment(String comment, io.github.goodudetheboy.worldholidaydates.holidaydata.Holiday holiday) {
+    private String processHolidayComment(String comment, Holiday holiday) {
         if (holiday.getName() != null) {
             return (comment == null) ? holiday.getName().get("en") : comment;
         } else {
             return (comment == null) ? HolidayManager.DEFAULT_HOLIDAY_COMMENT : comment;
         }
     }
+
+    /**
+     * Add a {@link Rule} when there's a holiday definition and the defining
+     * date is in a holiday
+     * 
+     * @param rule the rule to be added
+     * @param holiday the holiday definition
+     * @throws OpeningHoursEvaluationException
+     */
+    private void addHolidayRule(Rule rule, Holiday holiday) throws OpeningHoursEvaluationException {
+        if (holiday == null) {
+            return;
+        }
+
+        String comment = (rule.getModifier() != null)
+                        ? rule.getModifier().getComment()
+                        : null;
+        Status status = Status.convert(rule.getModifier());
+        boolean isFallback = rule.isFallBack() || (rule.isAdditive() && isFallbackLast);
+
+        comment = processHolidayComment(comment, holiday);
+
+        // handle 24/7 and rules with no time selector
+        if (rule.isTwentyfourseven() || rule.getTimes() == null) {
+            TimeSpan allDay = new TimeSpan();
+            allDay.setStart(0);
+            allDay.setEnd(1440);
+            addTime(allDay, status, comment, rule, isFallback);
+            return;
+        }
+
+        // handle rules with time selector
+        for (TimeSpan timespan : rule.getTimes()) {
+            TimeSpan processed = processEventOfDay(timespan, geolocation);
+            addTime(processed, status, comment, rule, isFallback);
+        }
+    }
+
     /**
      * Process in the case the TimeSpan has events of day (dawn, dusk, sunrise,
      * sunset) defined as one the points.
@@ -425,7 +495,7 @@ public class WeekDayRule {
         checkOffsetError(weekdays);
         int offset = weekdays.getOffset();
         LocalDate offsetDate = DateManager.getOffsetDate(defDate, -offset);
-        WeekDayRule offsetDay = new WeekDayRule(offsetDate);
+        WeekDayRule offsetDay = new WeekDayRule(offsetDate, geolocation);
         WeekDay offsetWeekDay = offsetDay.getWeekDay();
         return offsetWeekDay == weekdays.getStartDay()
                 && offsetDay.isApplicableNth(weekdays.getNths());

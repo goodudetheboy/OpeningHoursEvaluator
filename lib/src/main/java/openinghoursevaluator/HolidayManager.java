@@ -19,7 +19,6 @@ public class HolidayManager {
     public static final String DEFAULT_HOLIDAY_COMMENT = "Unnamed holiday";
 
     Geolocation     geoloc          = null;
-    String          holidayName  = null;
     
     /**
      * Constructor to initialize the holiday manager with a Geolocation

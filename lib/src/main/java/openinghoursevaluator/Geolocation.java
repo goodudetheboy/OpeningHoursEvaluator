@@ -20,26 +20,58 @@ public class Geolocation {
     // Load the ISO 3166-1 alpha-3 to alpha-2 country code map
     private static Map<String, Locale> localeMap = initISOConversionMap();
 
-    // Geocoding of Ho Chi Minh City, Vietnam, taken from Google
+    /**
+     * Geocoding of Ho Chi Minh City, Vietnam, taken from Google
+     */
     public static final double DEFAULT_LATITUDE     = 10.8231;
     public static final double DEFAULT_LONGITUDE    = 106.6297;
 
-
+    /**
+     * Coordinates of the country, used during variable times calculation
+     */
     double  lat         = DEFAULT_LATITUDE;
     double  lng         = DEFAULT_LONGITUDE;
+
+    /**
+     * Timezone of the country
+     */
     ZoneId  timezone    = ZoneId.of("Asia/Ho_Chi_Minh");
+
+    /**
+     * 2-character country code
+     */
     String  country     = "VN";
-    // TODO: Refactor answer to make this Locale more correct
+
+    /**
+     * The locale of the country
+     * 
+     * TODO: Refactor answer to make this Locale more correct
+     */
     Locale  locale      = new Locale.Builder().setRegion("VN").setLocale(Locale.FRANCE).build();
+
+    /**
+     * Extra geolocation variable, useful for more specific state-dependent
+     * or region-dependent holidays. This should be in the shortened form of
+     * the name of the state or region, refer to https://github.com/commenthol/date-holidays#supported-countries-states-regions
+     * for more information on which is supported. Note that some may not work
+     * since there can be more updates to more states and regions to the holiday
+     * data.
+     * <p>
+     * Refer to https://github.com/commenthol/date-holidays/tree/master/data/countries
+     * for more on the supported states and regions.
+     */
+    String subRegion    = null;
 
     /**
      * Constructor for a default geolocation, with data set to default
      */
     public Geolocation() {
+        // empty
     }
 
     /**
-     * Constructor for a geolocation, with input latitude and longitude
+     * Constructor for a geolocation, with input latitude, longitude, and a
+     * country code.
      * 
      * @param lat latitude
      * @param lng longitude
@@ -50,6 +82,20 @@ public class Geolocation {
         setLongitude(lng);
         setCountry(country);
         refreshTimeZone();
+    }
+
+    /**
+     * Constructor for a geolocation, with input latitude, longitude, a country
+     * code, and a subregion shortened name.
+     * 
+     * @param lat latitude
+     * @param lng longitude
+     * @param county ISO 3166 2-letter country code (e.g. "VN")
+     * @param subRegion a subregion shortened name
+     */
+    public Geolocation(double lat, double lng, String county, String subRegion) {
+        this(lat, lng, county);
+        setSubRegion(subRegion);
     }
 
     /**
@@ -102,12 +148,17 @@ public class Geolocation {
     }
 
     /**
-     * Get the locale of this geolocation
-     * 
      * @return the locale of this geolocation
      */
     public Locale getLocale() {
         return locale;
+    }
+
+    /**
+     * @return the subregion of the country stored in this geolocation
+     */
+    public String getSubRegion() {
+        return subRegion;
     }
 
     /**
@@ -170,6 +221,17 @@ public class Geolocation {
     public void setLocale(Locale locale) {
         this.locale = locale;
         this.country = iso3CountryCodeToIso2CountryCode(locale.getISO3Country());
+    }
+
+    /**
+     * Sets the subregion of the country stored in this geolocation.
+     * See [this](https://github.com/commenthol/date-holidays#supported-countries-states-regions)
+     * for more information on the supported subregions.
+     * 
+     * @param subRegion a shortened name of the subregion of the country
+     */    
+    public void setSubRegion(String subRegion) {
+        this.subRegion = subRegion;
     }
 
     /**

@@ -180,6 +180,18 @@ public class UnitTest {
     }
 
     /**
+     * A test for checking sub regions holiday
+     */
+    @Test
+    public void subRegionsHolidayTest() throws OpeningHoursParseException, OpeningHoursEvaluationException {
+        Geolocation geolocation = new Geolocation(40.7128, -74.0060, "US", "NY");
+        OpeningHoursEvaluator e = new OpeningHoursEvaluator("PH open", false, geolocation);
+        Result r = e.evaluate("2021-02-12T00:00");
+        assertEquals(Status.OPEN, r.getStatus());
+        assertEquals("Lincoln's Birthday", r.getComment());
+    }
+
+    /**
      * A test for checking override
      */
     @Test

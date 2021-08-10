@@ -1,12 +1,13 @@
 package openinghoursevaluator;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
 
 import ch.poole.openinghoursparser.Rule;
 

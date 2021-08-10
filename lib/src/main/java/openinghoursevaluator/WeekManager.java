@@ -1,7 +1,8 @@
 package openinghoursevaluator;
 
-import java.time.LocalDate;
-import java.time.temporal.WeekFields;
+
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.temporal.WeekFields;
 
 import ch.poole.openinghoursparser.WeekDay;
 import ch.poole.openinghoursparser.WeekRange;

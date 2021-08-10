@@ -27,7 +27,3 @@ open; 2:00-5:00, 7:00-8:00, 14:00-18:00 off
 10:00-15:00 || 12:00-16:00 unknown || 13:00-17:00 unknown, 08:00-12:00 "maybe"
 10:00-15:00 || 12:00-16:00 unknown, 13:00-17:00 unknown || 08:00-12:00 "maybe"
 20:00-02:00 || 21:00-06:00 unknown, 23:00-07:00 unknown
-dawn-dusk
-sunrise-sunset
-(dawn+2:00)-sunset
-sunrise-(dusk-3:00)

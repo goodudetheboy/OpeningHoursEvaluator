@@ -1,15 +1,16 @@
 package openinghoursevaluator;
 
-import java.time.chrono.ChronoLocalDate;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import org.threeten.bp.DayOfWeek;
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.YearMonth;
+import org.threeten.bp.chrono.ChronoLocalDate;
 
 import ch.poole.openinghoursparser.DateRange;
 import ch.poole.openinghoursparser.Month;

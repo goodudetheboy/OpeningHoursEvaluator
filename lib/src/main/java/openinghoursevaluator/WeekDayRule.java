@@ -1,18 +1,19 @@
 package openinghoursevaluator;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.Nullable;
 
 import org.shredzone.commons.suncalc.SunTimes;
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.ZoneId;
+import org.threeten.bp.ZonedDateTime;
+import org.threeten.bp.temporal.ChronoField;
+import org.threeten.bp.temporal.TemporalAdjusters;
 
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;
@@ -232,19 +233,19 @@ public class WeekDayRule {
         if (rule.isEmpty()) {
             throw new OpeningHoursEvaluationException("There's an empty rule, please remove it");
         }
-        if (rule.getHolidays() != null) {
-            HolidayManager holidayManager = new HolidayManager(geolocation);
-            Holiday holiday = null;
-            for (ch.poole.openinghoursparser.Holiday defHoliday : rule.getHolidays()) {
-                holiday = holidayManager.processHoliday(defDate, defHoliday);
-                if (holiday != null) {
-                    break;
-                }
-            }
-            flushSpill();
-            addHolidayRule(rule, holiday);
-            return;
-        }
+        // if (rule.getHolidays() != null) {
+        //     HolidayManager holidayManager = new HolidayManager(geolocation);
+        //     Holiday holiday = null;
+        //     for (ch.poole.openinghoursparser.Holiday defHoliday : rule.getHolidays()) {
+        //         holiday = holidayManager.processHoliday(defDate, defHoliday);
+        //         if (holiday != null) {
+        //             break;
+        //         }
+        //     }
+        //     flushSpill();
+        //     addHolidayRule(rule, holiday);
+        //     return;
+        // }
         if (!rule.isAdditive() && !rule.isFallBack()
                 && Status.convert(rule.getModifier()) != Status.CLOSED) {
             clearOpeningHours();
@@ -385,16 +386,15 @@ public class WeekDayRule {
     private int getTimeOfEvent(VariableTime varTime, Geolocation geolocation, int dateOffset) {
         int option = 1;
         SunTimes events = null;
-        ZoneId zoneId = geolocation.getTimeZone();
         LocalDate adjusted = DateManager.getOffsetDate(defDate, dateOffset);
-        ZonedDateTime zonedDate = adjusted.atStartOfDay(zoneId);
+        Date date = new Date(adjusted.getYear(), adjusted.getMonthValue(), adjusted.getDayOfMonth());
         double[] coor = geolocation.getCoordinates();
         switch (varTime.getEvent()) {
             case SUNRISE:
                 option = 0;
             case SUNSET:
                 events = SunTimes.compute()
-                    .on(zonedDate)   // set a date
+                    .on(date)   // set a date
                     .at(coor[0], coor[1])   // set a location
                     .execute();     // get the results
                 break;
@@ -403,7 +403,7 @@ public class WeekDayRule {
             case DUSK:
                 events = SunTimes.compute()
                     .twilight(SunTimes.Twilight.CIVIL)
-                    .on(zonedDate)
+                    .on(date)
                     .at(coor[0], coor[1])
                     .execute();
                 break;
@@ -411,9 +411,8 @@ public class WeekDayRule {
         if (events == null) {
             throw new IllegalArgumentException("Event of day calculator not initialized, unexpected");
         }
-        ZonedDateTime time = (option == 1) ? events.getSet()
-                                           : events.getRise();
-        return Utils.timeInMinute(time.toLocalDateTime()) + varTime.getOffset() + 1;
+        Date time = (option == 1) ? events.getSet() : events.getRise();
+        return Utils.timeInMinute(DateManager.utilDateToLocalDate(time)) + varTime.getOffset() + 1;
     }
 
     /**

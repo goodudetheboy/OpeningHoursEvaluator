@@ -1,9 +1,10 @@
 package openinghoursevaluator;
 
 import java.io.ByteArrayInputStream;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
+
+import org.threeten.bp.LocalDateTime;
 
 import ch.poole.openinghoursparser.OpeningHoursParseException;
 import ch.poole.openinghoursparser.OpeningHoursParser;

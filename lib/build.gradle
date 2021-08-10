@@ -62,7 +62,7 @@ dependencies {
     implementation 'ch.poole:OpeningHoursParser:0.25.0'
 
     // This dependency is used to calculate sunrise/sunset time based on location
-    implementation 'org.shredzone.commons:commons-suncalc:3.5'
+    implementation 'org.shredzone.commons:commons-suncalc:2.12'
 
     // Used to get timezone based on latitude and longitude
     implementation 'net.iakovlev:timeshape:2020d.11'
@@ -72,6 +72,9 @@ dependencies {
 
     // World holiday data
     implementation 'io.github.goodudetheboy:WorldHolidayDates:0.0.3'
+
+    // ThreeTen Backport for Java 7, provides Java 8 Date and Time API
+    implementation 'org.threeten:threetenbp:1.5.1'
 }
 
 task testCI(type: JavaExec) {

@@ -1,16 +1,17 @@
 package openinghoursevaluator;
 
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 
 import javax.annotation.Nullable;
+
+import org.threeten.bp.DayOfWeek;
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
+import org.threeten.bp.LocalTime;
+import org.threeten.bp.temporal.WeekFields;
 
 import ch.poole.openinghoursparser.Month;
 import ch.poole.openinghoursparser.Nth;

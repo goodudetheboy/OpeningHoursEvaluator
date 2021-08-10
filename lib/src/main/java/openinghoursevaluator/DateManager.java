@@ -1,10 +1,12 @@
 package openinghoursevaluator;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.threeten.bp.LocalDate;
+import org.threeten.bp.LocalDateTime;
 
 import ch.poole.openinghoursparser.DateRange;
 import ch.poole.openinghoursparser.DateWithOffset;
@@ -386,5 +388,16 @@ public class DateManager {
      */
     public static boolean isOpenEndDateRange(DateRange dateRange) {
         return dateRange.getStartDate().isOpenEnded();
+    }
+
+    /**
+     * Converts an input java.util.Date to a org.threeten.bp.LocalDateTime
+     * 
+     * @param date a java.util.Date
+     * @return a corresponding org.threeten.bp.LocalDateTime
+     */
+    public static LocalDateTime utilDateToLocalDate(Date date) {
+        return LocalDateTime.of(date.getYear(), date.getMonth(), date.getDate(),
+                                date.getHours(), date.getMinutes());
     }
 }

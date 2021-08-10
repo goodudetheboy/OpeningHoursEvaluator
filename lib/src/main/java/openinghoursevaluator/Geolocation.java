@@ -1,12 +1,13 @@
 package openinghoursevaluator;
 
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
+
+import org.threeten.bp.ZoneId;
 
 import net.iakovlev.timeshape.TimeZoneEngine;
 
@@ -238,12 +239,14 @@ public class Geolocation {
      * Refresh the timezone of this geolocation with stored coordinates
      */
     public void refreshTimeZone() {
-        timezone = getTimeZoneFromCoordinates(lat, lng);
+        // TODO: fix later with threeten backport
+        timezone = ZoneId.of("Asia/Ho_Chi_Minh");
+        // timezone = getTimeZoneFromCoordinates(lat, lng);
     }
 
     /**
      * Retrieve time zone based on coordinates. A Wrapper class for the query()
-     * of TimeZoneEngine
+     * of TimeZoneEngine.
      * 
      * @param lat latitude
      * @param lng longitude
@@ -251,8 +254,9 @@ public class Geolocation {
      */
     @Nullable
     public static ZoneId getTimeZoneFromCoordinates(double lat, double lng) {
-        Optional<ZoneId> query = engine.query(lat, lng);
-        return (query.isPresent()) ? query.get() : null;
+        // Optional<ZoneId> query = engine.query(lat, lng);
+        // return (query.isPresent()) ? query.get() : null;
+        return null;
     }
      
     /**

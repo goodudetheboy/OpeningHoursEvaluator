@@ -2,7 +2,9 @@ package openinghoursevaluator;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.time.LocalDateTime;
 import java.util.Locale;
@@ -201,5 +203,13 @@ public class UnitTest {
         assertNotNull(r1.getWarnings());
         assertEquals(1, r1.getWarnings().size());
         assertEquals("Rules overridden on 2021-08-09: Mo 12:00-15:00; 24/7; ", r1.getWarnings().get(0));
+        assertEquals("Mo 12:00-15:00", r1.getOverriddenRules().get(0).toString());
+        assertEquals("24/7", r1.getOverriddenRules().get(1).toString());
+        try {
+            r1.getOverriddenRules().get(3);
+            fail("Should have failed");
+        } catch (IndexOutOfBoundsException e) {
+            // expected
+        }
     }
 }

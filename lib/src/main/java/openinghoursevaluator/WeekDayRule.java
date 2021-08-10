@@ -51,7 +51,7 @@ public class WeekDayRule {
 
     private boolean isFallbackLast  = false;
 
-    private List<Rule> overridenRules = null;
+    private List<Rule> overriddenRules = null;
 
     /**
      * Default constructor, setting current to null and weekday to Monday
@@ -72,7 +72,7 @@ public class WeekDayRule {
         dissectDefDate(defDate);
         openingTimes = new ArrayList<>();
         yesterdaySpill = new ArrayList<>();
-        overridenRules = new ArrayList<>();
+        overriddenRules = new ArrayList<>();
     }
 
     /**
@@ -734,7 +734,7 @@ public class WeekDayRule {
     /** Clear the current opening times in this WeekdayRule */
     public void clearOpeningHours() {
         for (TimeRange openingTime : openingTimes) {
-            overridenRules.add(openingTime.getDefiningRule());
+            overriddenRules.add(openingTime.getDefiningRule());
         }
         openingTimes = new ArrayList<>();
     }
@@ -756,11 +756,12 @@ public class WeekDayRule {
      * @return a Result containg info on Status and comment
      */
     Result checkStatus(int inputTime) {
-        String warning = checkOverridenRules();
         for (TimeRange openingTime : openingTimes) {
             if (inputTime >= openingTime.getStart()
                     && inputTime < openingTime.getEnd()) {
                 Result result = new Result(openingTime);
+                result.setOverriddenRules(overriddenRules);
+                String warning = result.generateOverridenWarning(defDate);
                 if (warning != null) {
                     result.getWarnings().add(warning);
                 }
@@ -769,30 +770,12 @@ public class WeekDayRule {
         }
         // return CLOSED if no fitting opening times is detected
         Result result = new Result(Status.CLOSED);
+        result.setOverriddenRules(overriddenRules);
+        String warning = result.generateOverridenWarning(defDate);
         if (warning != null) {
             result.getWarnings().add(warning);
         }
         return result;
-    }
-
-    /**
-     * Checks is there's any overriden rules in this {@link WeekDayRule} during
-     * building. If yes, then build according warning String.
-     * 
-     * @return warning string, if there are any overriden rules
-     */
-    @Nullable
-    private String checkOverridenRules() {
-        if (overridenRules != null && !overridenRules.isEmpty()) {
-            StringBuilder b = new StringBuilder();
-            b.append("Rules overridden on " + defDate.toString() + ": ");
-            
-            for (Rule rule : overridenRules) {
-                b.append(rule.toString() + "; ");
-            }
-            return b.toString();
-        }
-        return null;
     }
         
     /**

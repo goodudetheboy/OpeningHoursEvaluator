@@ -1,5 +1,6 @@
 package openinghoursevaluator;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +26,13 @@ public class Result {
 
     /**
      * A list of warnings, including overriding other rules.
-     * TODO: create more structured warnings
      */
     List<String>    warnings        = null;
+
+    /**
+     * A list of Rule which is overridden in the day where the Result comes from.
+     */
+    List<Rule>      overriddenRules = null;
 
     /**
      * Default constructor
@@ -131,6 +136,13 @@ public class Result {
     }
 
     /**
+     * @return the list of overridden rules
+     */
+    public List<Rule> getOverriddenRules() {
+        return overriddenRules;
+    }
+
+    /**
      * Sets the status of this Result. 
      * 
      * @param status status to be set
@@ -191,6 +203,35 @@ public class Result {
      */
     public void setWarnings(List<String> warnings) {
         this.warnings = warnings;
+    }
+
+    /**
+     * Sets the list of overridden rules
+     * 
+     * @param overriddenRules the list of overridden rules
+     */
+    public void setOverriddenRules(List<Rule> overriddenRules) {
+        this.overriddenRules = new ArrayList<>(overriddenRules);
+    }
+
+    /**
+     * Checks is there's any overriden rules in this {@link WeekDayRule} during
+     * building. If yes, then build according warning String.
+     * 
+     * @return warning string, if there are any overriden rules
+     */
+    @Nullable
+    String generateOverridenWarning(LocalDate defDate) {
+        if (overriddenRules != null && !overriddenRules.isEmpty()) {
+            StringBuilder b = new StringBuilder();
+            b.append("Rules overridden on " + defDate.toString() + ": ");
+            
+            for (Rule rule : overriddenRules) {
+                b.append(rule.toString() + "; ");
+            }
+            return b.toString();
+        }
+        return null;
     }
 
     @Override

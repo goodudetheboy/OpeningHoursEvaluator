@@ -70,11 +70,6 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
     testImplementation 'org.slf4j:slf4j-simple:2.0.0-alpha2'
 
-    implementation 'io.github.assimbly:docconverter:1.3.0'
-
-    // JSON parser
-    implementation 'org.json:json:20210307'
-
     // World holiday data
     implementation 'io.github.goodudetheboy:WorldHolidayDates:0.0.3'
 }

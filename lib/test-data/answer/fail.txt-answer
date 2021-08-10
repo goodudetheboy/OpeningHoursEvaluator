@@ -3,6 +3,3 @@ Year must be defined at start rather than end, this range (May 12 - 2021 Jun 30)
 Illegal range (2021 May 12 - 2019 May 11), start date cannot be after end date
 Illegal range (2021-2020), start year cannot be after end year
 Currently open ended with ambiguous date of month without a year is not supported, please provide an exact year for Dec+
-Start time must be within 24 hours
-Start time of (sunrise-07:00)-30:00 cannot be less than 0
-End time of sunrise-(sunset-24:00) cannot be less than 0

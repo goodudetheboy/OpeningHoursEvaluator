@@ -11,9 +11,13 @@ plugins {
     id 'java-library'
     id "org.sonarqube" version "3.3"
     id 'jacoco'
+    id 'maven-publish'
+    id 'signing'
 }
 
+group = 'dev.vespucci.gsoc.vh'
 archivesBaseName = 'OpeningHoursEvaluator'
+version = '0.0.1'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
@@ -102,3 +106,63 @@ task individualTestingStrict(type: JavaExec) {
 }
 individualTestingStrict.group = 'verification'
 individualTestingStrict.description = "REPL instance to test the evaluator upon an input of an opening hours tag and a LocalDateTime string, with parser running on strict mode. Recommended running with '--console=plain'."
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'OpeningHoursEvaluator fat jar',
+        'Implementation-Version': "${project.version}"
+    }
+    baseName = project.archivesBaseName + '-all'
+    from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+ext {
+    repoUrl = 'https://github.com/goodudetheboy/OpeningHoursEvaluator.git'
+    spdxId = 'MIT'
+}
+
+publishing {
+    publications {
+        Release(MavenPublication) {
+            groupId 'dev.vespucci.gsoc.vh'
+            artifactId 'OpeningHoursEvaluator'
+            from components.java
+            pom {
+                name = artifactId
+                description = 'An evaluator for opening hours tag according to OSM opening hours specification'    
+                url = 'https://github.com/goodudetheboy/OpeningHoursEvaluator'
+                scm {
+                    url = repoUrl
+                }
+                licenses {
+                    license {
+                        name = spdxId
+                        url = 'https://github.com/goodudetheboy/OpeningHoursEvaluator/blob/main/LICENSE'
+                    }
+                }
+                developers {
+                    developer {
+                        name = 'Vuong Ho'
+                    }
+                }
+            }
+            repositories {
+                maven {
+                    name = 'sonatype'
+                    credentials {
+                        username ossrhUsername
+                        password ossrhPassword
+                    }
+                    def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+                    def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+                    url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+                }
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.Release
+}

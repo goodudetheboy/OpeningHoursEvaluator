@@ -11,6 +11,55 @@ An evaluator for opening hours tag according to OSM opening hours specification.
 
 Currently, this evaluator has supported evaluation of most of evaluation syntax, albeit still under construction (to add geocoding etc.)
 
+## Features ##
+
+This opening hours evaluator currently supports all the syntax defined in the [specification](https://wiki.openstreetmap.org/wiki/Key:opening_hours/specification), including:
+
+- All rule modifier: `open`, `closed`/`off`, `unknown`
+- All rule separators: normal, additional, and fallback rules
+- 24/7 time
+- OH with both wide range and small range selector
+- Time selector:
+  - Time range
+  - Open-ended time (e.g. `18:00+`)
+  - Extended time (time over 24:00, e.g. `23:00-25:00`, which equates to from 23:00 to 2:00 the next day)
+  - Variable time: `dawn`, `dusk`, `sunrise`, `sunset`
+- Week selector:
+  - Weekday range
+  - Supports for public and school holiday
+  - Nth weekday and weekday with offset
+- Week selector:
+  - Week number of year (1-53)
+  - Week sequence
+  - Interval
+- Month selector:
+  - Monthday range, including specific date
+  - Open-ended month day
+  - Supports for `easter`
+- Year selector:
+  - Year range, for year from 1900
+  - Year with open-ended
+  - Year with month
+  - Interval
+
+Full documentation will be added at a later date.
+
+## Installation ##
+
+This project is published on Maven Central. Add the following snippets of codes to your `build.gradle` file to install it:
+
+```
+repositories {
+    mavenCentral()
+}
+```
+
+```
+dependencies {
+    implementation 'dev.vespucci.gsoc.vh:WorldHolidayDates:<LATEST-VERSION>'
+}
+```
+
 ## Usage ##
 
 ``` java
@@ -84,3 +133,13 @@ The project uses gradle for building. Standard gradle tasks for the java plugin 
 ## Testing ##
 
 There is a REPL instance that you can run on CLI in order to test the evaluator in its current state. Run `gradle individualTesting --console=plain` in a Gradle environment  to test this out, or `gradle individualTestingStrict --console=plain` to run with evaluator in strict mode.
+
+## Contribution ##
+
+Pull requests are always welcomed! You can try taking a look at the [Issues](https://github.com/goodudetheboy/OpeningHoursEvaluator/issues) section and use that to get a start on what to contribute. Since this project is still a bit immature, you can expect some issues to be there.
+
+## Acknowledgements ##
+
+I want to thank [Simon Poole](https://github.com/simonpoole) and [Rebecca Schmidt](https://github.com/rebeccasc) for mentoring me in this project. They were of very great help during the construction of this project, providing me with extremely useful technical help and support. I also want to especially thank Simon for hosting the DNS that is the namespace for this project.
+
+I want to thank [Robin Schneider](https://github.com/ypid) and the creators of [opening_hours.js](https://github.com/opening-hours/opening_hours.js) for their JavaScript version of the evaluator, which has guided my design for my evaluator along the way, and the helpful UI that its website has to offer.
